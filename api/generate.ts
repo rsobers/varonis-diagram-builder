@@ -111,8 +111,12 @@ export async function handleGenerate(req: IncomingMessage, res: ServerResponse):
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
+        // Claude Sonnet 4.6 has plenty of output context; 4k was too tight
+        // for even a modest diagram — the model would truncate mid-JSON
+        // and the client would see a 502 "Model did not return parseable
+        // JSON" with a mysteriously-valid-looking start.
         model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
+        max_tokens: 16000,
         messages: [{
           role: 'user',
           content: [
@@ -134,11 +138,19 @@ export async function handleGenerate(req: IncomingMessage, res: ServerResponse):
   }
 
   const data = await anthropicResp.json();
+  const stopReason = (data as { stop_reason?: string }).stop_reason;
   const text = extractText(data);
   const doc = tryParseJson(text);
   if (!doc) {
+    if (stopReason === 'max_tokens') {
+      return sendJson(res, 502, {
+        error: 'The model hit its output token limit before finishing the diagram. Try a simpler image or a smaller region.',
+        raw: text.slice(0, 500),
+      });
+    }
     return sendJson(res, 502, {
       error: 'Model did not return parseable JSON.',
+      stopReason,
       raw: text.slice(0, 500),
     });
   }
