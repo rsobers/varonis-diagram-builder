@@ -10,7 +10,7 @@ import { createGenerateDialog } from './generateDialog';
 import { exportSvg, exportPng, downloadBlob, suggestedFilename } from '../export';
 
 const EMPTY_DOC: DiagramDoc = {
-  version: 1,
+  version: 2,
   width: 1200,
   height: 800,
   items: [],

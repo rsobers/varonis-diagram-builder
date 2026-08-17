@@ -3,6 +3,7 @@ import type { ItemDraft } from '../model';
 import { PALETTE, type ColorName } from '../tokens';
 import { allowedElementColors } from '../validate';
 import { ICONS, namedIcon } from '../icons';
+import { LOGOS, logoUrl } from '../logos';
 
 // 1x1 transparent PNG used to hide the browser's default drag ghost so we
 // can render our own real-size preview inside the canvas.
@@ -111,18 +112,12 @@ const ENTRIES: Entry[] = [
     make: (_c, x, y) => ({ kind: 'inlineControl', x, y, label: 'WAF', icon: namedIcon('shield') }),
   },
 
-  // Boundaries.
+  // Boundary — one entry per §3.4 v2.3. Fill is derived from nesting depth.
   {
-    id: 'boundary:plain',
-    section: 'Boundaries', label: 'Dashed boundary', usesFill: false,
+    id: 'boundary',
+    section: 'Boundaries', label: 'Boundary', usesFill: false,
     chip: () => `<svg width="30" height="20" aria-hidden="true"><rect x="1" y="2" width="28" height="16" fill="none" stroke="#a9b2bd" stroke-dasharray="4 3"/></svg>`,
     make: (_c, x, y) => ({ kind: 'boundary', x, y, w: 300, h: 200, label: 'Boundary name' }),
-  },
-  {
-    id: 'boundary:filled',
-    section: 'Boundaries', label: 'Filled region', usesFill: false,
-    chip: () => `<svg width="30" height="20" aria-hidden="true"><rect x="1" y="2" width="28" height="16" fill="#f8f9fa" stroke="#a9b2bd" stroke-dasharray="4 3"/></svg>`,
-    make: (_c, x, y) => ({ kind: 'boundary', x, y, w: 300, h: 200, label: 'Region name', filled: true }),
   },
 
   // Zone divider.
@@ -167,6 +162,7 @@ const SECTIONS = ['Elements', 'Grouped', 'Inline control', 'Boundaries', 'Zones'
 export function createPalette(container: HTMLElement, editor: Editor): () => void {
   container.classList.add('palette');
   let currentFill: ColorName = 'white';
+  let markSearch = '';
 
   function render(state: EditorState): void {
     const allowed = allowedElementColors(state.doc.encoding);
@@ -209,11 +205,37 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
       html.push('</div>');
     }
 
+    // §8 — Vendor marks. Searchable. Each entry places a Medium element
+    // with the mark set (no icon).
+    html.push('<h3>Vendor marks</h3>');
+    if (LOGOS.length === 0) {
+      html.push('<p class="palette-hint muted">Registry is empty. See <code>assets/logos/README.md</code> for sourcing.</p>');
+    } else {
+      html.push('<input type="search" class="palette-mark-search" placeholder="Search marks…">');
+      html.push('<div class="palette-list palette-marks-list">');
+      const q = markSearch.toLowerCase();
+      const matches = q
+        ? LOGOS.filter((l) => l.id.toLowerCase().includes(q) || l.name.toLowerCase().includes(q) || l.aliases.some((a) => a.toLowerCase().includes(q)))
+        : LOGOS;
+      for (const l of matches) {
+        const url = logoUrl(l.id) ?? '';
+        html.push(
+          `<button type="button" class="palette-btn" draggable="false" data-mark="${l.id}">` +
+          `<span class="palette-chip"><img alt="" src="${url}" width="20" height="20" style="display:block"></span>` +
+          `<span class="palette-label">${l.name}</span></button>`
+        );
+      }
+      html.push('</div>');
+    }
+
     // Connect mode help.
     html.push('<h3>Connectors</h3>');
     html.push('<p class="palette-hint muted">Switch to <b>Connect</b>, click a source element, then a target.</p>');
 
     container.innerHTML = html.join('');
+    // Restore search value if we just re-rendered mid-typing.
+    const searchInput = container.querySelector<HTMLInputElement>('.palette-mark-search');
+    if (searchInput) searchInput.value = markSearch;
   }
 
   // Delegated event handlers survive re-renders.
@@ -228,6 +250,20 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
       render(editor.getState());
       return;
     }
+    const markBtn = t.closest<HTMLButtonElement>('[data-mark]');
+    if (markBtn) {
+      const id = markBtn.dataset.mark!;
+      const state = editor.getState();
+      const label = LOGOS.find((l) => l.id === id)?.name ?? id;
+      const intent: PlacingIntent = {
+        label: `Mark: ${label}`,
+        factory: (x, y) => ({ kind: 'element', x, y, size: 'md', color: 'white', label, markId: id }),
+      };
+      const same = state.placing?.label === intent.label;
+      editor.dispatch({ kind: 'setPlacing', intent: same ? null : intent });
+      return;
+    }
+
     const addBtn = t.closest<HTMLButtonElement>('[data-add]');
     if (addBtn) {
       const spec = addBtn.dataset.add!;
@@ -241,6 +277,17 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
       // Toggle: clicking the active entry again cancels.
       const same = state.placing?.label === entry.label;
       editor.dispatch({ kind: 'setPlacing', intent: same ? null : intent });
+    }
+  });
+
+  container.addEventListener('input', (ev) => {
+    const t = ev.target as HTMLElement;
+    if (t.classList.contains('palette-mark-search')) {
+      markSearch = (t as HTMLInputElement).value;
+      render(editor.getState());
+      // Re-focus and restore cursor position after the innerHTML reset.
+      const s = container.querySelector<HTMLInputElement>('.palette-mark-search');
+      s?.focus();
     }
   });
 

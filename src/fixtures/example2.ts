@@ -6,7 +6,7 @@ import { namedIcon } from '../icons';
  * emitted SVG layers stack the same way.
  */
 export const example2: DiagramDoc = {
-  version: 1,
+  version: 2,
   width: 1160,
   height: 930,
   title: [
@@ -14,9 +14,9 @@ export const example2: DiagramDoc = {
     'Color encoding: State. Amber marks where untrusted content is handled.',
   ],
   items: withIds([
-    { kind: 'boundary', x: 400, y: 386, w: 300, h: 128, label: 'Messaging cloud (MNET)', filled: true },
+    { kind: 'boundary', x: 400, y: 386, w: 300, h: 128, label: 'Messaging cloud (MNET)' },
     { kind: 'boundary', x: 400, y: 580, w: 300, h: 258, label: 'Phishing sandbox (SNET)', tint: 'amber' },
-    { kind: 'boundary', x: 50, y: 600, w: 250, h: 148, label: 'Threat intelligence (SREP)', filled: true },
+    { kind: 'boundary', x: 50, y: 600, w: 250, h: 148, label: 'Threat intelligence (SREP)' },
 
     // mail path — every box shares centre line x=545
     { kind: 'element', x: 455, y: 82, label: 'Customer Exchange Online', size: 'lg', icon: namedIcon('mail') },

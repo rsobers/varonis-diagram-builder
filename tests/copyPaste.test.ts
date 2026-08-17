@@ -3,7 +3,7 @@ import { buildCopy, buildPaste } from '../src/copyPaste';
 import { withIds, type Item, type ItemDraft } from '../src/model';
 
 function docWith<T extends ItemDraft>(items: T[]) {
-  return { version: 1 as const, width: 800, height: 600, items: withIds(items) as unknown as Item[] };
+  return { version: 2 as const, width: 800, height: 600, items: withIds(items) as unknown as Item[] };
 }
 
 const seqNewId = () => {

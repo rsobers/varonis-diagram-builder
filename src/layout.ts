@@ -156,6 +156,34 @@ function bboxCaption(c: Caption): BBox {
   return { x: c.x, y: c.y - 11, w: textWidth(c.text, 11), h: 14 };
 }
 
+/**
+ * Nesting depth of a Boundary: the count of *other* boundaries in the doc
+ * that strictly contain it. Depth 0 = top level, 1 = nested inside one,
+ * etc. Used to derive Boundary fill per §3.4 (fill by depth, not choice).
+ * Strict containment: outer must fully cover inner AND not be identical.
+ */
+export function containmentDepth(id: string, doc: DiagramDoc): number {
+  const inner = doc.items.find((it) => it.id === id);
+  if (!inner || inner.kind !== 'boundary') return 0;
+  let depth = 0;
+  for (const other of doc.items) {
+    if (other.id === id || other.kind !== 'boundary') continue;
+    if (strictlyContains(other, inner)) depth++;
+  }
+  return depth;
+}
+
+function strictlyContains(outer: Boundary, inner: Boundary): boolean {
+  if (outer.x <= inner.x
+    && outer.y <= inner.y
+    && outer.x + outer.w >= inner.x + inner.w
+    && outer.y + outer.h >= inner.y + inner.h) {
+    // Not identical.
+    return !(outer.x === inner.x && outer.y === inner.y && outer.w === inner.w && outer.h === inner.h);
+  }
+  return false;
+}
+
 function bboxConnector(c: Connector, resolved: Map<string, BBox>): BBox | null {
   const from = resolved.get(c.from);
   const to = resolved.get(c.to);

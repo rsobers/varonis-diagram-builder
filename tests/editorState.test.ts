@@ -6,7 +6,7 @@ import { withIds, type DiagramDoc, type Item, type ItemDraft } from '../src/mode
 import { namedIcon } from '../src/icons';
 
 function docWith<T extends ItemDraft>(items: T[]): DiagramDoc {
-  return { version: 1, width: 500, height: 500, items: withIds(items) as unknown as Item[] };
+  return { version: 2, width: 500, height: 500, items: withIds(items) as unknown as Item[] };
 }
 
 function seed(): EditorState {

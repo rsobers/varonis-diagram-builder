@@ -1,5 +1,5 @@
 import { TOKENS } from './tokens';
-import type { DiagramDoc, Item, ItemDraft, Encoding, Grouped } from './model';
+import { migrateDoc, type DiagramDoc, type Item, type ItemDraft, type Encoding, type Grouped } from './model';
 import type { IconRef } from './icons';
 import { clampToCanvas } from './layout';
 
@@ -100,6 +100,28 @@ export function reduce(state: EditorState, action: EditorAction): EditorState {
         for (const [k, v] of Object.entries(action.patch)) {
           if (v === undefined) delete next[k];
           else next[k] = v;
+        }
+        // §8.2 invariants — mark and icon are mutually exclusive on elements,
+        // and marks are only valid on white/gray fills.
+        if (next['kind'] === 'element') {
+          const settingMark = 'markId' in action.patch && action.patch['markId'] !== undefined;
+          const settingIcon = 'icon' in action.patch && action.patch['icon'] !== undefined;
+          if (settingMark) {
+            delete next['icon'];
+            // Fill guard: block markId on non-white/gray fills.
+            const color = (next['color'] as string | undefined) ?? 'white';
+            if (color !== 'white' && color !== 'gray') {
+              delete next['markId'];
+            }
+          }
+          if (settingIcon) delete next['markId'];
+          // Changing color to something non-white/non-gray clears markId.
+          if ('color' in action.patch) {
+            const color = (next['color'] as string | undefined) ?? 'white';
+            if (color !== 'white' && color !== 'gray' && 'markId' in next) {
+              delete next['markId'];
+            }
+          }
         }
         return next as Item;
       });
@@ -205,7 +227,7 @@ export function reduce(state: EditorState, action: EditorAction): EditorState {
       return { ...state, doc: { ...state.doc, items } };
     }
     case 'load': return {
-      ...initialState(action.doc),
+      ...initialState(migrateDoc(action.doc)),
       snap: state.snap,
       gridSize: state.gridSize,
     };

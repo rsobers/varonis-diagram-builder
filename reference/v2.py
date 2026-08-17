@@ -33,6 +33,16 @@ def icon(key, x, y, scale=0.667, fill=ICON_C):
 WARNINGS = []
 
 
+def _contains(outer, inner):
+    """True if outer's rect fully encloses inner's rect (strict)."""
+    return (outer['x'] <= inner['x']
+            and outer['y'] <= inner['y']
+            and outer['x'] + outer['w'] >= inner['x'] + inner['w']
+            and outer['y'] + outer['h'] >= inner['y'] + inner['h']
+            and not (outer['x'] == inner['x'] and outer['y'] == inner['y']
+                     and outer['w'] == inner['w'] and outer['h'] == inner['h']))
+
+
 def _cw(ch, size):
     """Approximate advance width for Segoe UI / system-ui at a given size."""
     if ch in "iljt.,:;'!|[]()":
@@ -78,28 +88,53 @@ class Diagram:
     def __init__(self, w, h, title=None):
         self.w, self.h, self.title = w, h, title
         self.boundaries, self.blabels, self.edges, self.nodes, self.labels = [], [], [], [], []
+        # Boundaries are queued and resolved in svg(); fill depends on
+        # containment depth, so we can't emit them one-by-one.
+        self._pending_boundaries = []
 
     # ---- containers -------------------------------------------------
-    def boundary(self, x, y, w, h, label, filled=False, label_side='left', tint=None):
-        """tint: only under a State encoding, when the zone itself is the claim."""
-        if tint:
-            fill, stroke = PALETTE[tint]
-            back = fill
-        else:
-            fill = '#f8f9fa' if filled else 'none'
-            stroke = BND_S
-            back = '#f8f9fa' if filled else '#ffffff'
-        self.boundaries.append(
-            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{fill}" '
-            f'stroke="{stroke}" stroke-width="1.2" stroke-dasharray="6 4"/>')
-        tw = text_width(label, 12) + 12
-        if label_side == 'right':
-            tx, anchor, bx = x + w - 15, ' text-anchor="end"', x + w - 15 - tw + 6
-        else:
-            tx, anchor, bx = x + 15, '', x + 9
-        self.blabels.append(
-            f'<rect x="{bx}" y="{y+8}" width="{tw}" height="18" fill="{back}"/>'
-            f'<text x="{tx}" y="{y+21}"{anchor} font-size="12" fill="{SUB}">{esc(label)}</text>')
+    def boundary(self, x, y, w, h, label, label_side='left', tint=None):
+        """Queue a boundary. Fill is derived from nesting depth in _emit_boundaries().
+
+        tint: only under a State encoding, when the zone itself is the claim.
+        """
+        self._pending_boundaries.append({
+            'x': x, 'y': y, 'w': w, 'h': h,
+            'label': label, 'label_side': label_side, 'tint': tint,
+        })
+
+    def _emit_boundaries(self):
+        """Resolve boundary fills by containment depth. Outer boundaries
+        emit first so nested ones layer on top with their derived fill."""
+        pend = self._pending_boundaries
+        depths = []
+        for i, b in enumerate(pend):
+            depth = sum(1 for j, o in enumerate(pend)
+                        if j != i and _contains(o, b))
+            depths.append(depth)
+            if depth > 2:
+                WARNINGS.append(f'boundary "{b["label"]}" is nested {depth} deep; §3.4 caps at 2')
+
+        for depth, b in sorted(zip(depths, pend), key=lambda p: p[0]):
+            if b['tint']:
+                fill, stroke = PALETTE[b['tint']]
+                back = fill
+            else:
+                fill = '#f8f9fa' if depth >= 1 else 'none'
+                stroke = BND_S
+                back = '#f8f9fa' if depth >= 1 else '#ffffff'
+            x, y, w, h, label = b['x'], b['y'], b['w'], b['h'], b['label']
+            self.boundaries.append(
+                f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{fill}" '
+                f'stroke="{stroke}" stroke-width="1.2" stroke-dasharray="6 4"/>')
+            tw = text_width(label, 12) + 12
+            if b['label_side'] == 'right':
+                tx, anchor, bx = x + w - 15, ' text-anchor="end"', x + w - 15 - tw + 6
+            else:
+                tx, anchor, bx = x + 15, '', x + 9
+            self.blabels.append(
+                f'<rect x="{bx}" y="{y+8}" width="{tw}" height="18" fill="{back}"/>'
+                f'<text x="{tx}" y="{y+21}"{anchor} font-size="12" fill="{SUB}">{esc(label)}</text>')
 
     def zone_divider(self, x, y1, y2, label):
         """Linear trust demarcation. Label chip is horizontal, at the top."""
@@ -243,6 +278,7 @@ class Diagram:
 
     # ---- output -----------------------------------------------------
     def svg(self):
+        self._emit_boundaries()
         defs = (f'<defs>'
                 f'<marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" '
                 f'markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="{CONN}"/></marker>'

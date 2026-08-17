@@ -41,7 +41,7 @@ test('golden path — screenshots for bug hunt', async ({ page }) => {
   await shot(page, '03-after-drag');
 
   // Place a boundary + drag an element into it.
-  await page.locator('.palette-btn[data-add="boundary:plain"]').click();
+  await page.locator('.palette-btn[data-add="boundary"]').click();
   await page.mouse.click(cb.x + 200, cb.y + 400);
   await shot(page, '04-boundary-placed');
 

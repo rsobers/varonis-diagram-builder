@@ -55,7 +55,7 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
     if (!confirm('Clear the canvas? This cannot be undone.')) return;
     editor.dispatch({
       kind: 'load',
-      doc: { version: 1, width: editor.getState().doc.width, height: editor.getState().doc.height, items: [] },
+      doc: { version: 2, width: editor.getState().doc.width, height: editor.getState().doc.height, items: [] },
     });
   });
 

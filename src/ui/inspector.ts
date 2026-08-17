@@ -1,6 +1,7 @@
 import type { Editor, EditorState } from '../editorState';
 import type { Item, Element, Grouped, InlineControl, Boundary, ZoneDivider, Actor, Connector, Legend, Caption } from '../model';
 import { ICON_KIT, ICON_NAMES, namedIcon, type IconRef } from '../icons';
+import { LOGOS, logoUrl, findLogo } from '../logos';
 import { PALETTE, type ColorName } from '../tokens';
 import { allowedElementColors } from '../validate';
 
@@ -92,7 +93,10 @@ function renderElement(form: HTMLFormElement, item: Element, state: EditorState,
   text(form, 'Second line', item.sub ?? '', (v) => update(ed, item.id, { sub: v === '' ? undefined : v }));
   select(form, 'Size', item.size ?? 'sm', ['sm', 'md', 'lg'], (v) => update(ed, item.id, { size: v as 'sm' | 'md' | 'lg' }));
   colorPicker(form, 'Fill', item.color ?? 'white', state.doc.encoding, (c) => update(ed, item.id, { color: c }));
+  // §8.2 — Icon or Mark are mutually exclusive; the reducer enforces that
+  // picking one clears the other. Marks are only valid on white/gray fills.
   iconGrid(form, item.icon, (icon) => update(ed, item.id, { icon }));
+  markPicker(form, item.markId, item.color ?? 'white', (id) => update(ed, item.id, { markId: id }));
   numberPair(form, 'x', 'y', item.x, item.y,
     (x) => update(ed, item.id, { x }),
     (y) => update(ed, item.id, { y }));
@@ -170,7 +174,7 @@ function renderInlineControl(form: HTMLFormElement, item: InlineControl, ed: Edi
 
 function renderBoundary(form: HTMLFormElement, item: Boundary, state: EditorState, ed: Editor): void {
   text(form, 'Label', item.label, (v) => update(ed, item.id, { label: v }));
-  checkbox(form, 'Filled region', !!item.filled, (v) => update(ed, item.id, { filled: v }));
+  // v2.3: fill is derived from nesting depth per §3.4 — no user toggle.
   select(form, 'Label side', item.labelSide ?? 'left', ['left', 'right'], (v) => update(ed, item.id, { labelSide: v as 'left' | 'right' }));
 
   // Tint is only valid under State encoding per §3.4.
@@ -180,6 +184,8 @@ function renderBoundary(form: HTMLFormElement, item: Boundary, state: EditorStat
       (v) => update(ed, item.id, { tint: v === '' ? undefined : (v as ColorName) })
     );
   }
+  // §8.3 — Boundaries can carry a vendor mark badge (top-right corner).
+  markPicker(form, item.markId, 'white', (id) => update(ed, item.id, { markId: id }));
   numberPair(form, 'x', 'y', item.x, item.y,
     (x) => update(ed, item.id, { x }),
     (y) => update(ed, item.id, { y }));
@@ -485,6 +491,74 @@ function iconGrid(parent: HTMLElement, current: IconRef | undefined, on: (icon: 
 
 function update(editor: Editor, id: string, patch: Record<string, unknown>): void {
   editor.dispatch({ kind: 'update', id, patch });
+}
+
+/**
+ * Vendor-mark picker. Grid of registered marks + a "None" option. Blocked
+ * with an explanation when the item's color is not white/gray (§8.2).
+ */
+function markPicker(parent: HTMLElement, current: string | undefined, color: string, on: (id: string | undefined) => void): void {
+  const wrap = document.createElement('div');
+  wrap.className = 'field mark-picker';
+
+  const header = document.createElement('div');
+  header.className = 'mark-picker-head';
+  const span = document.createElement('span');
+  span.textContent = 'Vendor mark';
+  const status = document.createElement('span');
+  status.className = 'mark-picker-current muted';
+  status.textContent = current
+    ? `Current: ${findLogo(current)?.name ?? current}`
+    : 'Current: none';
+  header.append(span, status);
+  wrap.appendChild(header);
+
+  const allowedFill = color === 'white' || color === 'gray';
+  if (!allowedFill) {
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.style.fontSize = '11px';
+    note.textContent = `Marks only sit on white or gray fills (§8.2). Change the fill to add a mark.`;
+    wrap.appendChild(note);
+    parent.appendChild(wrap);
+    return;
+  }
+
+  if (LOGOS.length === 0) {
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.style.fontSize = '11px';
+    note.textContent = 'No vendor marks in the registry — see assets/logos/README.md.';
+    wrap.appendChild(note);
+    parent.appendChild(wrap);
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'icon-grid';
+
+  const none = document.createElement('button');
+  none.type = 'button';
+  none.className = 'icon-cell' + (current ? '' : ' active');
+  none.title = 'No mark';
+  none.setAttribute('aria-label', 'No mark');
+  none.innerHTML = `<svg width="16" height="16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" stroke="#8c98a6" fill="none"/></svg>`;
+  none.addEventListener('click', () => on(undefined));
+  grid.appendChild(none);
+
+  for (const l of LOGOS) {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'icon-cell' + (current === l.id ? ' active' : '');
+    cell.title = l.name;
+    cell.setAttribute('aria-label', l.name);
+    const url = logoUrl(l.id) ?? '';
+    cell.innerHTML = `<img alt="" src="${url}" width="16" height="16" style="display:block">`;
+    cell.addEventListener('click', () => on(l.id));
+    grid.appendChild(cell);
+  }
+  wrap.appendChild(grid);
+  parent.appendChild(wrap);
 }
 
 function kindLabel(item: Item): string {

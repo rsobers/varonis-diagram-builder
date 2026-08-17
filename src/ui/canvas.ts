@@ -68,7 +68,7 @@ export function createCanvas(container: HTMLElement, editor: Editor, toast?: Toa
     // the live SVG's markers.
     const state = editor.getState();
     const synthetic = {
-      version: 1 as const,
+      version: 2 as const,
       width: state.doc.width,
       height: state.doc.height,
       items: [{ ...draft, id: '__preview__' } as Parameters<typeof render>[0]['items'][number]],

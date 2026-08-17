@@ -1,6 +1,6 @@
 # Varonis Diagram Style Guide
 
-**Version 2.2 — August 2026**
+**Version 2.3 — August 2026**
 Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and system diagrams only. Charts, graphs, and infographics are a separate system with separate rules — do not apply this guide to data visualization.
 
 This file is the source of truth for both people and tooling. Humans read sections 1–10. Build tooling reads section 11.
@@ -38,6 +38,8 @@ This file is the source of truth for both people and tooling. Humans read sectio
 | 11 | **Icons are now opt-in, with peer-group consistency required** (section 7.1–7.2). | Icons were being applied by default, adding weight without information. |
 | 12 | **Connectors spaced evenly and centred on shared edges**; aligned elements share a centre line. | Arrows were landing near corners and boxes sat a few pixels out of true. |
 | 13 | **40px minimum between unconnected stacked elements**; use the smallest size that fits. | Unrelated elements were reading as groups, and oversized boxes implied false importance. |
+| 14 | **Boundary fill derived from nesting depth**, not offered as a choice. Max two levels of nesting. | "Dashed boundary" and "filled region" behaved identically because the rule was never mechanical — and the reference examples applied it inconsistently. |
+| 15 | **Section 8 rewritten** around when a vendor mark is warranted, plus platform badges on boundaries. | The old section covered how to place a mark but never when to use one. |
 
 **Migration:** existing diagrams don't need retroactive rework. Apply v2.0 the next time a diagram is edited. The two changes worth backporting immediately are un-rotating text and removing decorative red/green.
 
@@ -87,8 +89,10 @@ The distinction from a connector label is deliberate and load-bearing: a connect
 ### 3.4 Boundary
 A trust zone, network, cloud account, tenant, or ownership perimeter.
 
-- Dashed rectangle, square corners, 1.2px stroke `#a9b2bd`, dash `6 4`, **no fill**
-- Optional filled variant `#f8f9fa` when boundaries nest and need separation
+- Dashed rectangle, square corners, 1.2px stroke `#a9b2bd`, dash `6 4`
+- **Fill is derived from nesting depth, never chosen.** A top-level boundary has no fill. A boundary nested inside another is filled `#f8f9fa` so it separates from its parent. There is no "dashed boundary" versus "filled region" decision to make — there is one Boundary, and depth determines its fill
+- **Maximum two levels of nesting.** Three deep is unreadable; flatten it or split the diagram
+- A tinted zone (§6.3.7) overrides the derived fill, since the tint is carrying a claim
 - Label top-left, inset 15px, 12px, `#5a6570`, sentence case
 - **Never colored.** A red boundary makes everything inside it read as dangerous
 - Minimum 20px padding between the boundary edge and any element inside it
@@ -260,13 +264,43 @@ Corrected: firewall and WAF become grayscale Inline Controls. Blue is declared a
 
 ---
 
-## 8. Third-party logos
+## 8. Vendor marks
 
-- Use official SVG brand marks at 24px (0.33in), matching icon sizing
-- Third-party marks identify vendors and platforms — AWS, Azure, Okta, Microsoft
-- **The Varonis mark appears at most once per diagram**, and only when the diagram contains both Varonis and non-Varonis components at the same level. Varonis components are identified by the blue Ownership fill, not by repeating the logo
-- Never recolor, rotate, outline, or place a third-party mark on a colored fill
-- Marks not in the kit come from the Brand Team. Do not trace, redraw, or pull them from a search result
+### 8.1 When a mark is warranted
+
+A vendor logo is a claim that **this specific vendor** matters to the diagram. Use one only when the claim is true.
+
+**Use a mark when:**
+- The vendor's identity is load-bearing — the diagram is about running in *AWS*, landing data in *Snowflake*, federating with *Okta*. Swap the vendor and the diagram means something different
+- The element represents a specific named platform, account, or tenant the reader will recognize
+
+**Do not use a mark when:**
+- The element is a category rather than a product. `SaaS applications`, `IaaS platforms`, and `Identity providers` take an icon, not a logo. A vendor mark on a generic category implies an exclusivity or a depth of integration you may not mean
+- The vendor is one example among many. If the honest label is "for example, Databricks", the element should say `Data warehouse` and the vendor belongs in the narration
+- The mark is there to signal breadth. A grid of vendor tiles is a marketing claim about coverage, not an architecture statement. It belongs on a web page, not in a system diagram
+
+**Peer-group consistency applies exactly as it does for icons (§7.2):** within a boundary or a row of sibling elements, either all carry marks or none do.
+
+### 8.2 Placement and sizing
+
+- Official SVG brand marks only, at 24px (0.33in) — the same slot and size as an icon: inline-left on Small elements, centred above the label on Medium and Large
+- A mark **replaces** the icon. Never both
+- Never recolor, rotate, outline, crop, or add effects
+- **Marks sit on white or gray fills only.** A mark on a blue or State-colored element is a violation
+
+### 8.3 Platform badges on boundaries
+
+Where a boundary represents a specific cloud account, tenant, or platform, the mark sits in the **top-right corner of the boundary**, opposite the label, at 24px. This identifies the environment without claiming that anything inside it belongs to that vendor — which is why an AWS badge on the boundary and a blue Varonis service inside it do not contradict each other.
+
+### 8.4 The Varonis mark
+
+**The Varonis mark appears at most once per diagram**, and only where a diagram mixes Varonis and non-Varonis components at the same level and the distinction would otherwise be unclear. Varonis components are identified by the blue Ownership fill, not by repeating the logo.
+
+### 8.5 Sourcing and rights
+
+Marks come from each vendor's official brand page. Do not trace, redraw, screenshot, or pull a logo from a search result — wrong versions and outdated marks are the most common way a diagram ends up looking unofficial. Requests for marks not in the library go to the Brand Team.
+
+Vendor marks carry trademark obligations, and using one can imply a partnership or endorsement that does not exist. Anything customer-facing that shows a vendor mark in a partnership, certification, or co-selling context goes past Legal before it ships. This guide governs how a mark is drawn, not whether you have the right to use it.
 
 ---
 
@@ -345,7 +379,7 @@ Machine-readable spec for build tooling. These values are authoritative; the pro
 
 ```json
 {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "canvas": { "grid": 10, "minElementGap": 60, "minUnconnectedGap": 40, "boundaryPadding": 20, "maxElements": 18 },
   "palette": {
     "white":  { "fill": "#ffffff", "stroke": "#d3d9e0", "role": "default" },
@@ -370,7 +404,8 @@ Machine-readable spec for build tooling. These values are authoritative; the pro
                        "padding": { "side": 10, "top": 15, "headerToRow": 15, "rowGap": 5, "bottom": 10 },
                        "rowHeight": 30 },
     "inlineControl": { "shape": "stadium", "minWidth": 90, "height": 36, "stroke": 1.5, "fill": "#ffffff", "iconSize": 16 },
-    "boundary":      { "radius": 0, "stroke": 1.2, "dash": "6 4", "strokeColor": "#a9b2bd", "fill": "none", "fillVariant": "#f8f9fa",
+    "boundary":      { "radius": 0, "stroke": 1.2, "dash": "6 4", "strokeColor": "#a9b2bd",
+                       "fillByDepth": { "0": "none", "1+": "#f8f9fa" }, "maxNestingDepth": 2,
                        "innerPadding": 20, "labelSide": ["left","right"], "labelAboveConnectors": true,
                        "colorable": "stateEncodingZoneClaimOnly" },
     "zoneDivider":   { "stroke": 1, "dash": "6 4", "strokeColor": "#a9b2bd", "colorable": false, "labelPosition": "start" },
@@ -416,6 +451,11 @@ Machine-readable spec for build tooling. These values are authoritative; the pro
     "colorAloneCarriesMeaning": false,
     "legendRequiredAbove": 6,
     "legendRequiredForState": true
+  },
+  "vendorMarks": {
+    "size": 24, "replacesIcon": true, "allowedFills": ["white", "gray"],
+    "boundaryBadgePosition": "top-right", "peerGroupConsistency": true,
+    "varonisMarkMaxPerDiagram": 1
   },
   "export": { "png": { "scale": 2, "background": "transparent" }, "svg": true, "jpg": false }
 }

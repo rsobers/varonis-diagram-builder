@@ -22,7 +22,7 @@ describe('projectPointToSegment', () => {
 });
 
 function doc<T extends ItemDraft>(items: T[]): DiagramDoc {
-  return { version: 1, width: 1200, height: 800, items: withIds(items) as unknown as Item[] };
+  return { version: 2, width: 1200, height: 800, items: withIds(items) as unknown as Item[] };
 }
 
 describe('snapInlineControlToNearestConnector', () => {

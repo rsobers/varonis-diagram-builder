@@ -146,8 +146,10 @@ body {
 .field-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5a6570; }
 
 .icon-picker { gap: 6px; }
-.icon-picker-head { display: flex; justify-content: space-between; align-items: baseline; }
-.icon-picker-current { font-size: 11px; }
+.icon-picker-head, .mark-picker-head { display: flex; justify-content: space-between; align-items: baseline; }
+.icon-picker-current, .mark-picker-current { font-size: 11px; }
+.mark-picker { gap: 6px; }
+.palette-mark-search { width: 100%; padding: 5px 7px; border: 1px solid #d3d9e0; border-radius: 4px; font: inherit; font-size: 12px; margin-bottom: 4px; }
 .icon-picker-search {
   padding: 5px 7px;
   border: 1px solid #d3d9e0;

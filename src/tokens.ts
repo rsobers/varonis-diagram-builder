@@ -4,7 +4,7 @@
  * tests/tokens.test.ts asserts this object still matches section 11's JSON.
  */
 export const TOKENS = {
-  version: '2.2.0',
+  version: '2.3.0',
   canvas: { grid: 10, minElementGap: 60, minUnconnectedGap: 40, boundaryPadding: 20, maxElements: 18 },
   palette: {
     white: { fill: '#ffffff', stroke: '#d3d9e0', role: 'default' },
@@ -39,7 +39,7 @@ export const TOKENS = {
     },
     boundary: {
       radius: 0, stroke: 1.2, dash: '6 4', strokeColor: '#a9b2bd',
-      fill: 'none', fillVariant: '#f8f9fa',
+      fillByDepth: { '0': 'none', '1+': '#f8f9fa' }, maxNestingDepth: 2,
       innerPadding: 20, labelSide: ['left', 'right'], labelAboveConnectors: true,
       colorable: 'stateEncodingZoneClaimOnly',
     },
@@ -88,6 +88,11 @@ export const TOKENS = {
     colorAloneCarriesMeaning: false,
     legendRequiredAbove: 6,
     legendRequiredForState: true,
+  },
+  vendorMarks: {
+    size: 24, replacesIcon: true, allowedFills: ['white', 'gray'],
+    boundaryBadgePosition: 'top-right', peerGroupConsistency: true,
+    varonisMarkMaxPerDiagram: 1,
   },
   export: { png: { scale: 2, background: 'transparent' }, svg: true, jpg: false },
 } as const;

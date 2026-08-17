@@ -11,7 +11,7 @@ import type { IconRef } from './icons';
 export type Encoding = 'ownership' | 'emphasis' | 'state';
 
 export type DiagramDoc = {
-  version: 1;
+  version: 2;
   width: number;
   height: number;
   title?: [string, string];
@@ -38,9 +38,10 @@ export type Boundary = WithId & {
   kind: 'boundary';
   x: number; y: number; w: number; h: number;
   label: string;
-  filled?: boolean;
   labelSide?: 'left' | 'right';
   tint?: ColorName;
+  /** Vendor mark id from `assets/logos/logos.json`; rendered as a top-right badge (§8.3). */
+  markId?: string;
 };
 
 export type ZoneDivider = WithId & {
@@ -56,6 +57,12 @@ export type Element = WithId & {
   size?: SizeName;
   color?: ColorName;
   icon?: IconRef;
+  /**
+   * Vendor mark id from `assets/logos/logos.json`. Mutually exclusive with
+   * `icon` (§8.2 — a mark replaces the icon). Only allowed on white/gray
+   * fills (§8.2).
+   */
+  markId?: string;
   sub?: string;
 };
 
@@ -152,4 +159,50 @@ export type ItemDraft = Item extends infer T
  */
 export function withIds<T extends { kind: string }>(items: T[]): Array<T & { id: string }> {
   return items.map((item, i) => ({ ...item, id: `i${i}` }));
+}
+
+/**
+ * Upgrade any older document version to the current format. Applied on
+ * every load — the editor never touches v1 shapes internally, only their
+ * migrated equivalents.
+ *
+ * Migrations:
+ *  - v1 → v2 (boundary fill from nesting depth, §3.4 rewrite):
+ *      Drop the `filled` field from every boundary item. Fill is now
+ *      derived from containment depth at render time.
+ */
+export function migrateDoc(raw: unknown): DiagramDoc {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('migrateDoc: expected a document object');
+  }
+  const doc = raw as Record<string, unknown>;
+  const version = typeof doc['version'] === 'number' ? doc['version'] : 1;
+  const items = Array.isArray(doc['items']) ? doc['items'] as Array<Record<string, unknown>> : [];
+
+  let migrated = items;
+  if (version < 2) {
+    migrated = migrated.map((it) => {
+      if (it['kind'] === 'boundary' && 'filled' in it) {
+        const clone = { ...it };
+        delete clone['filled'];
+        return clone;
+      }
+      return it;
+    });
+  }
+
+  const out: DiagramDoc = {
+    version: 2,
+    width: typeof doc['width'] === 'number' ? doc['width'] : 1200,
+    height: typeof doc['height'] === 'number' ? doc['height'] : 800,
+    items: migrated as unknown as Item[],
+  };
+  if (Array.isArray(doc['title']) && doc['title'].length === 2) {
+    out.title = doc['title'] as [string, string];
+  }
+  const enc = doc['encoding'];
+  if (enc === 'ownership' || enc === 'emphasis' || enc === 'state') {
+    out.encoding = enc;
+  }
+  return out;
 }

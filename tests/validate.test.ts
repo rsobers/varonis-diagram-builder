@@ -5,7 +5,7 @@ import { namedIcon } from '../src/icons';
 
 function docWith<T extends ItemDraft>(items: T[], encoding?: DiagramDoc['encoding']): DiagramDoc {
   const doc: DiagramDoc = {
-    version: 1,
+    version: 2,
     width: 800, height: 600,
     items: withIds(items) as unknown as Item[],
   };

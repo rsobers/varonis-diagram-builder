@@ -1,7 +1,9 @@
 import type { DiagramDoc, Item, Encoding, Element, Boundary } from './model';
 import type { EditorAction } from './editorState';
-import { layout } from './layout';
+import { layout, containmentDepth } from './layout';
 import { TOKENS } from './tokens';
+
+const MAX_BOUNDARY_DEPTH = 2;
 
 /**
  * Runtime-checked style-guide rules. Renders the violations that would
@@ -110,6 +112,20 @@ export function validate(doc: DiagramDoc): Violation[] {
     }
   }
 
+  // §3.4 v2.3 — Max two levels of boundary nesting.
+  for (const b of boundaries) {
+    const depth = containmentDepth(b.id, doc);
+    if (depth > MAX_BOUNDARY_DEPTH) {
+      violations.push({
+        id: `deep-nesting:${b.id}`,
+        severity: 'error',
+        ruleRef: '§3.4',
+        message: `Boundary "${b.label}" is nested ${depth} levels deep. Cap is ${MAX_BOUNDARY_DEPTH} — flatten or split the diagram.`,
+        itemIds: [b.id],
+      });
+    }
+  }
+
   // §3.4 / §6.3.7 — Tinted boundary only under State encoding.
   for (const b of boundaries) {
     if (b.tint && enc !== 'state') {
@@ -177,6 +193,63 @@ export function validate(doc: DiagramDoc): Violation[] {
       message: `${density.length} elements (cap is ${TOKENS.canvas.maxElements}). Split the diagram or abstract a cluster into a Grouped element.`,
       itemIds: density.map((i) => i.id),
     });
+  }
+
+  // §8.2 — Vendor mark on a colored fill.
+  for (const el of elements) {
+    if (!el.markId) continue;
+    const color = el.color ?? 'white';
+    if (color !== 'white' && color !== 'gray') {
+      violations.push({
+        id: `mark-on-color:${el.id}`,
+        severity: 'error',
+        ruleRef: '§8.2',
+        message: `"${el.label}" carries a vendor mark on a ${color} fill. Marks only sit on white or gray.`,
+        itemIds: [el.id],
+        fix: {
+          label: 'Change fill to white',
+          action: { kind: 'update', id: el.id, patch: { color: 'white' } },
+        },
+      });
+    }
+  }
+
+  // §8.4 — Varonis mark appears at most once per diagram.
+  const varonisCount = doc.items.filter(
+    (i) => (i.kind === 'element' || i.kind === 'boundary') && i.markId === 'varonis',
+  ).length;
+  if (varonisCount > 1) {
+    violations.push({
+      id: 'varonis-mark-repeated',
+      severity: 'warn',
+      ruleRef: '§8.4',
+      message: `The Varonis mark appears ${varonisCount} times. §8.4 caps it at 1 per diagram — use the blue Ownership fill instead.`,
+      itemIds: doc.items
+        .filter((i) => (i.kind === 'element' || i.kind === 'boundary') && i.markId === 'varonis')
+        .map((i) => i.id),
+    });
+  }
+
+  // §7.2 / §8.1 — Mixed marks and icons in a peer group.
+  const groups2 = elementsByBoundary(doc);
+  for (const [container, els] of groups2) {
+    if (els.length < 2) continue;
+    const withMark = els.filter((e) => !!e.markId);
+    const withIcon = els.filter((e) => !!e.icon);
+    const withoutAny = els.filter((e) => !e.markId && !e.icon);
+    // Trigger if the group has any mix of marks vs icons vs neither.
+    const distinctCategories = [withMark.length > 0, withIcon.length > 0, withoutAny.length > 0].filter(Boolean).length;
+    if (distinctCategories > 1) {
+      violations.push({
+        id: `mixed-marks-icons:${container ?? 'root'}`,
+        severity: 'warn',
+        ruleRef: '§8.1',
+        message: container
+          ? `Elements inside "${container}" mix vendor marks and icons — peer groups should be all-or-nothing (§7.2, §8.1).`
+          : `Root-level elements mix vendor marks and icons — peer groups should be all-or-nothing (§7.2, §8.1).`,
+        itemIds: els.map((e) => e.id),
+      });
+    }
   }
 
   // §7.2 — Mixed icons within a peer group (elements sharing a boundary,

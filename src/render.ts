@@ -3,6 +3,7 @@ import {
   LABEL_STROKE, BOUNDARY_STROKE, OPTIONAL_TEXT, MONO_FAMILY, UI_FAMILY,
 } from './tokens';
 import { namedIcon, type IconRef } from './icons';
+import { logoUrl } from './logos';
 
 // Actors default to the "person" glyph when none is set. Resolved at
 // import so the fallback still bakes a self-contained path into exports.
@@ -12,7 +13,7 @@ import type {
   InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
-import { layout, type BBox } from './layout';
+import { layout, containmentDepth, type BBox } from './layout';
 import { routeConnector } from './routing';
 
 /**
@@ -55,9 +56,12 @@ export function render(doc: DiagramDoc, opts: RenderOptions = {}): RenderResult 
   // when it doesn't so fixture rendering has no new dependency at runtime.
   const hasConnector = doc.items.some((it) => it.kind === 'connector');
   const bboxes = hasConnector ? layout(doc) : new Map<string, BBox>();
-  const ctx: Ctx = { interactive: opts.interactive === true, bboxes, items: doc.items };
+  const ctx: Ctx = { interactive: opts.interactive === true, bboxes, items: doc.items, doc };
 
-  for (const item of doc.items) {
+  // Boundaries must emit outer-first so nested ones layer on top with their
+  // derived fill. Everything else keeps document order.
+  const orderedItems = orderForRender(doc);
+  for (const item of orderedItems) {
     renderItem(item, layers, warnings, ctx);
   }
 
@@ -103,7 +107,7 @@ type Layers = {
   nodes: string[]; labels: string[];
 };
 
-type Ctx = { interactive: boolean; bboxes: Map<string, BBox>; items: readonly Item[] };
+type Ctx = { interactive: boolean; bboxes: Map<string, BBox>; items: readonly Item[]; doc: DiagramDoc };
 
 function renderItem(item: Item, layers: Layers, warnings: string[], ctx: Ctx): void {
   switch (item.kind) {
@@ -142,8 +146,36 @@ function iconSvg(ref: IconRef | undefined, x: number, y: number, scale = 0.667, 
   return `<g transform="translate(${num(x)},${num(y)}) scale(${num(scale)})"><path d="${ref.path}" fill="${fill}"/></g>`;
 }
 
+/**
+ * Render a vendor mark at (x, y) sized to width×height. Uses <image> with a
+ * bundled asset URL (data URL for small files). Marks preserve their own
+ * colors per §8.2 ("Never recolor"). Returns empty string when the id is
+ * unresolved (unknown or unregistered vendor).
+ */
+function markSvg(markId: string | undefined, x: number, y: number, size = 16): string {
+  if (!markId) return '';
+  const url = logoUrl(markId);
+  if (!url) return '';
+  return `<image href="${url}" x="${num(x)}" y="${num(y)}" width="${num(size)}" height="${num(size)}" preserveAspectRatio="xMidYMid meet"/>`;
+}
+
 function wrapId(ctx: Ctx, id: string, content: string): string {
   return ctx.interactive ? `<g data-item-id="${esc(id)}">${content}</g>` : content;
+}
+
+/**
+ * Boundaries emit outer-first so nested siblings paint on top of their
+ * parent's derived fill. Non-boundary items keep their original order.
+ */
+function orderForRender(doc: DiagramDoc): Item[] {
+  const boundaries: Boundary[] = [];
+  const rest: Item[] = [];
+  for (const it of doc.items) {
+    if (it.kind === 'boundary') boundaries.push(it);
+    else rest.push(it);
+  }
+  boundaries.sort((a, b) => containmentDepth(a.id, doc) - containmentDepth(b.id, doc));
+  return [...boundaries, ...rest];
 }
 
 function dedupe(arr: string[]): string[] {
@@ -158,6 +190,9 @@ function dedupe(arr: string[]): string[] {
 // ---- containers ---------------------------------------------------------
 
 function renderBoundary(b: Boundary, L: Layers, ctx: Ctx): void {
+  // §3.4 v2.3: fill is derived from nesting depth, never chosen.
+  // Depth 0 → none; depth ≥ 1 → #f8f9fa. Tint overrides regardless.
+  const depth = containmentDepth(b.id, ctx.doc);
   let fill: string;
   let stroke: string;
   let back: string;
@@ -166,7 +201,7 @@ function renderBoundary(b: Boundary, L: Layers, ctx: Ctx): void {
     fill = p.fill;
     stroke = p.stroke;
     back = p.fill;
-  } else if (b.filled) {
+  } else if (depth >= 1) {
     fill = '#f8f9fa';
     stroke = BOUNDARY_STROKE;
     back = '#f8f9fa';
@@ -200,6 +235,18 @@ function renderBoundary(b: Boundary, L: Layers, ctx: Ctx): void {
     `<rect x="${num(bx)}" y="${num(b.y + 8)}" width="${num(tw)}" height="18" fill="${back}"/>` +
     `<text x="${num(tx)}" y="${num(b.y + 21)}"${anchor} font-size="12" fill="${SUB}">${esc(b.label)}</text>`
   );
+
+  // §8.3 — Vendor mark badge in the top-right corner opposite the label.
+  // Push to blabels so it sits above the boundary rect but under nodes.
+  if (b.markId) {
+    const size = 24;
+    // If the label is right-aligned, put the badge top-left instead so they
+    // don't collide.
+    const bx2 = b.labelSide === 'right' ? b.x + 10 : b.x + b.w - size - 10;
+    const by2 = b.y + 10;
+    const badge = markSvg(b.markId, bx2, by2, size);
+    if (badge) L.blabels.push(wrapId(ctx, b.id, badge));
+  }
 }
 
 function renderZoneDivider(z: ZoneDivider, L: Layers, ctx: Ctx): void {
@@ -224,11 +271,19 @@ function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): voi
     `<rect x="${num(e.x)}" y="${num(e.y)}" width="${num(w)}" height="${num(h)}" fill="${f}" stroke="${s}"/>`,
   ];
 
+  // §8.2 — a mark replaces the icon; presence of markId is authoritative.
+  const hasMark = !!e.markId;
+  const hasIcon = !hasMark && !!e.icon;
+  const hasGlyph = hasMark || hasIcon;
+  const MARK_SM_SIZE = 16;
+  const MARK_MD_SIZE = 20;
+
   if (size === 'sm') {
-    if (e.icon) parts.push(iconSvg(e.icon, e.x + 10, e.y + 9));
-    const tx = e.icon ? e.x + 31 : e.x + w / 2;
-    const anchor = e.icon ? '' : ' text-anchor="middle"';
-    const avail = w - (e.icon ? 46 : 30);
+    if (hasMark) parts.push(markSvg(e.markId, e.x + 10, e.y + 9, MARK_SM_SIZE));
+    else if (hasIcon) parts.push(iconSvg(e.icon, e.x + 10, e.y + 9));
+    const tx = hasGlyph ? e.x + 31 : e.x + w / 2;
+    const anchor = hasGlyph ? '' : ' text-anchor="middle"';
+    const avail = w - (hasGlyph ? 46 : 30);
     if (textWidth(e.label, 12) > avail) {
       warnings.push(`"${e.label}" is too long for a small element — use medium`);
     }
@@ -241,15 +296,16 @@ function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): voi
     const lines = wrapped.lines;
     const n = lines.length + (e.sub ? 1 : 0);
 
-    if (e.icon && lines.length > 1 && h < 92) {
-      warnings.push(`"${e.label}" needs a large element (icon + two lines)`);
+    if (hasGlyph && lines.length > 1 && h < 92) {
+      warnings.push(`"${e.label}" needs a large element (icon/mark + two lines)`);
     }
 
     let ty: number;
-    if (e.icon) {
+    if (hasGlyph) {
       const block = 16 + 6 + n * 16;
       const top = e.y + (h - block) / 2;
-      parts.push(iconSvg(e.icon, e.x + w / 2 - 8, top));
+      if (hasMark) parts.push(markSvg(e.markId, e.x + w / 2 - MARK_MD_SIZE / 2, top - 2, MARK_MD_SIZE));
+      else if (hasIcon) parts.push(iconSvg(e.icon, e.x + w / 2 - 8, top));
       ty = top + 16 + 6 + 12;
     } else {
       ty = e.y + h / 2 + 4 - (n - 1) * 8;

@@ -47,7 +47,7 @@ test('dropping into a boundary registers within it', async ({ page }) => {
   const cb = await canvas.boundingBox();
   if (!cb) throw new Error('canvas not laid out');
 
-  await page.locator('.palette-btn[data-add="boundary:plain"]').click();
+  await page.locator('.palette-btn[data-add="boundary"]').click();
   await page.mouse.click(cb.x + 300, cb.y + 300);
   await shot(page, 'boundary-placed');
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { exportSvg, suggestedFilename } from '../src/export';
 import type { DiagramDoc } from '../src/model';
 
-const EMPTY: DiagramDoc = { version: 1, width: 1200, height: 800, items: [] };
+const EMPTY: DiagramDoc = { version: 2, width: 1200, height: 800, items: [] };
 
 describe('suggestedFilename', () => {
   it('falls back to "diagram" when title is missing', () => {
@@ -38,7 +38,7 @@ describe('exportSvg', () => {
 
   it('does not carry interactive data-item-id wrappers', async () => {
     const doc: DiagramDoc = {
-      version: 1, width: 1200, height: 800,
+      version: 2, width: 1200, height: 800,
       items: [{ id: 'x', kind: 'element', x: 0, y: 0, label: 'X' }],
     };
     const blob = exportSvg(doc);

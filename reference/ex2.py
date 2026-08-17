@@ -3,9 +3,9 @@ from v2 import Diagram
 d = Diagram(1160, 930, ("Example 2 — Email security scanning pipeline",
                         "Color encoding: State. Amber marks where untrusted content is handled."))
 
-d.boundary(400, 386, 300, 128, "Messaging cloud (MNET)", filled=True)
+d.boundary(400, 386, 300, 128, "Messaging cloud (MNET)")
 d.boundary(400, 580, 300, 258, "Phishing sandbox (SNET)", tint="amber")
-d.boundary(50, 600, 250, 148, "Threat intelligence (SREP)", filled=True)
+d.boundary(50, 600, 250, 148, "Threat intelligence (SREP)")
 
 # mail path — every box shares centre line x=545
 d.element(455, 82, "Customer Exchange Online", size="lg", ic="mail")

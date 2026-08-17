@@ -7,7 +7,7 @@ import { namedIcon } from '../icons';
  * → boundary labels → nodes → labels).
  */
 export const example1: DiagramDoc = {
-  version: 1,
+  version: 2,
   width: 1290,
   height: 900,
   title: [

@@ -231,7 +231,8 @@ export function validateGeneration(raw: unknown, encoding?: Encoding): Validated
           w: clampNum(it['w'], 320, 60, CANVAS_W),
           h: clampNum(it['h'], 200, 40, CANVAS_H),
         };
-        if (it['filled'] === true) boundary.filled = true;
+        // v2: 'filled' is no longer a field — boundary fill is derived from
+        // nesting depth at render time. Silently drop any legacy value.
         if (typeof tint === 'string' && isColorName(tint) && enc === 'state') {
           boundary.tint = tint;
         }
@@ -376,7 +377,7 @@ export function validateGeneration(raw: unknown, encoding?: Encoding): Validated
   }
 
   const doc: DiagramDoc = {
-    version: 1,
+    version: 2,
     width: CANVAS_W,
     height: CANVAS_H,
     items,

@@ -59,7 +59,7 @@ describe('layout', () => {
 
   it('resolves connector bboxes from endpoint bboxes', () => {
     const doc = {
-      version: 1 as const,
+      version: 2 as const,
       width: 500, height: 500,
       items: withIds([
         { kind: 'element' as const, x: 0, y: 0, label: 'A' },
@@ -78,7 +78,7 @@ describe('layout', () => {
 
   it('drops connectors whose endpoints are missing', () => {
     const doc = {
-      version: 1 as const,
+      version: 2 as const,
       width: 500, height: 500,
       items: withIds([
         { kind: 'element' as const, x: 0, y: 0, label: 'A' },
@@ -91,7 +91,7 @@ describe('layout', () => {
 
   it('handles withIds-generated fixtures without collision', () => {
     const doc = {
-      version: 1 as const,
+      version: 2 as const,
       width: 100, height: 100,
       items: withIds([
         { kind: 'element' as const, x: 0, y: 0, label: 'a' },
