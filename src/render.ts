@@ -39,6 +39,12 @@ export type RenderOptions = {
    * the rasterized output is transparent per §9.
    */
   background?: 'white' | 'none';
+  /**
+   * Override the SVG root's viewBox / width / height. Used by the exporter
+   * to crop the diagram to content plus a padding margin so no element sits
+   * against the edge. Falls back to (0, 0, doc.width, doc.height).
+   */
+  viewBox?: { x: number; y: number; w: number; h: number };
 };
 
 export type RenderResult = { svg: string; warnings: string[] };
@@ -81,12 +87,16 @@ export function render(doc: DiagramDoc, opts: RenderOptions = {}): RenderResult 
       `<text x="40" y="62" font-size="11.5" fill="${SUB}">${esc(doc.title[1])}</text>`
     : '';
 
+  const vb = opts.viewBox ?? { x: 0, y: 0, w: doc.width, h: doc.height };
+  // Default (0, 0) origin omits explicit x/y attrs so fixture snapshots
+  // stay byte-identical with earlier renders.
+  const bgXY = vb.x === 0 && vb.y === 0 ? '' : ` x="${num(vb.x)}" y="${num(vb.y)}"`;
   const bg = (opts.background ?? 'white') === 'white'
-    ? `<rect width="${num(doc.width)}" height="${num(doc.height)}" fill="#ffffff"/>`
+    ? `<rect${bgXY} width="${num(vb.w)}" height="${num(vb.h)}" fill="#ffffff"/>`
     : '';
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${num(doc.width)}" height="${num(doc.height)}" ` +
-      `viewBox="0 0 ${num(doc.width)} ${num(doc.height)}" font-family="${UI_FAMILY}">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${num(vb.w)}" height="${num(vb.h)}" ` +
+      `viewBox="${num(vb.x)} ${num(vb.y)} ${num(vb.w)} ${num(vb.h)}" font-family="${UI_FAMILY}">` +
     defs +
     bg +
     head +

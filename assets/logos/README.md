@@ -13,9 +13,10 @@ Each file in this directory is a vendor brand mark, sourced from that vendor's o
 
 | Vendor | File | Source | Retrieved |
 |---|---|---|---|
+| Varonis | `varonis.webp` | https://www.varonis.com/company/press-kit | 2026-08-17 |
 | Okta | `okta.webp` | https://www.okta.com/press-room/media-assets-guidelines/ | 2026-08-17 |
 
-> **Note on Okta**: The source URL above is the vendor's press/media page but was not machine-verified at commit time — a person should confirm it matches Okta's current official brand asset location before this ships to customers.
+> **Note on sourcing**: Source URLs above are the vendors' press/media pages but were not machine-verified at commit time — a person should confirm each matches the vendor's current official brand asset location before this ships to customers.
 
 ## Pending Brand Team acquisition
 
@@ -40,4 +41,3 @@ The following are on the seed list but not yet in the registry. Add each by (1) 
 - Zscaler
 - CrowdStrike
 - Palo Alto Networks
-- Varonis (own mark)

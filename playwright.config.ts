@@ -18,6 +18,12 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
+    env: {
+      // Bakes a stub token into the client bundle so tests can exercise
+      // the logo.dev flow without a real key. Real requests are intercepted
+      // by page.route in the relevant specs.
+      VITE_LOGODEV_TOKEN: 'test_token',
+    },
   },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },

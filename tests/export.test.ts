@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { exportSvg, suggestedFilename } from '../src/export';
+import { exportSvg, suggestedFilename, contentViewBox } from '../src/export';
 import type { DiagramDoc } from '../src/model';
 
 const EMPTY: DiagramDoc = { version: 2, width: 1200, height: 800, items: [] };
@@ -18,6 +18,35 @@ describe('suggestedFilename', () => {
   it('handles all-symbol titles cleanly', () => {
     const doc: DiagramDoc = { ...EMPTY, title: ['!!!', 'sub'] };
     expect(suggestedFilename(doc, 'png')).toBe('diagram.png');
+  });
+});
+
+describe('contentViewBox', () => {
+  it('falls back to doc dimensions when the diagram is empty', () => {
+    expect(contentViewBox(EMPTY)).toEqual({ x: 0, y: 0, w: 1200, h: 800 });
+  });
+
+  it('crops to the union of item bboxes plus 40px padding on all sides', () => {
+    const doc: DiagramDoc = {
+      version: 2, width: 1200, height: 800,
+      items: [
+        { id: 'a', kind: 'element', x: 200, y: 300, label: 'A' },   // sm: 150x34
+        { id: 'b', kind: 'element', x: 500, y: 400, label: 'B' },   // sm: 150x34
+      ],
+    };
+    const vb = contentViewBox(doc);
+    // Union: (200..650) x (300..434). +40 padding each side.
+    expect(vb).toEqual({ x: 160, y: 260, w: 530, h: 214 });
+  });
+
+  it('clamps to non-negative coordinates', () => {
+    const doc: DiagramDoc = {
+      version: 2, width: 1200, height: 800,
+      items: [{ id: 'a', kind: 'element', x: 20, y: 20, label: 'A' }],
+    };
+    const vb = contentViewBox(doc);
+    expect(vb.x).toBe(0);
+    expect(vb.y).toBe(0);
   });
 });
 

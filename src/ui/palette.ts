@@ -3,7 +3,7 @@ import type { ItemDraft } from '../model';
 import { PALETTE, type ColorName } from '../tokens';
 import { allowedElementColors } from '../validate';
 import { ICONS, namedIcon } from '../icons';
-import { LOGOS, logoUrl } from '../logos';
+import { LOGOS, logoUrl, fetchLogoFromDomain, onLogosChanged } from '../logos';
 
 // 1x1 transparent PNG used to hide the browser's default drag ghost so we
 // can render our own real-size preview inside the canvas.
@@ -164,6 +164,7 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
   let currentFill: ColorName = 'white';
   let markSearch = '';
   let markPlacementStyle: 'inline' | 'badge' = 'inline';
+  let addMarkStatus = '';
 
   function render(state: EditorState): void {
     const allowed = allowedElementColors(state.doc.encoding);
@@ -210,8 +211,20 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
     // new placements are inline (mark in the icon slot alongside a text
     // label) or a badge (fixed 90×90 square, mark centred, no visible label).
     html.push('<h3>Vendor marks</h3>');
+    // Fetch-by-domain input — grabs a mark from logo.dev, caches in the
+    // runtime registry for the session. Anything meant to ship still goes
+    // into assets/logos/ with a source URL.
+    html.push(
+      `<div class="palette-add-mark">` +
+        `<input type="text" class="palette-add-mark-input" placeholder="Add by domain, e.g. aws.amazon.com" autocomplete="off" spellcheck="false">` +
+        `<button type="button" class="palette-add-mark-btn">Add</button>` +
+      `</div>`
+    );
+    if (addMarkStatus) {
+      html.push(`<p class="palette-hint ${addMarkStatus.startsWith('Error') ? 'palette-error' : 'muted'}">${addMarkStatus}</p>`);
+    }
     if (LOGOS.length === 0) {
-      html.push('<p class="palette-hint muted">Registry is empty. See <code>assets/logos/README.md</code> for sourcing.</p>');
+      html.push('<p class="palette-hint muted">Registry is empty. See <code>assets/logos/README.md</code> for sourcing, or add a mark by domain above.</p>');
     } else {
       html.push(
         `<div class="mark-style-toggle" role="group" aria-label="Mark placement style">` +
@@ -306,11 +319,43 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
     if (t.classList.contains('palette-mark-search')) {
       markSearch = (t as HTMLInputElement).value;
       render(editor.getState());
-      // Re-focus and restore cursor position after the innerHTML reset.
       const s = container.querySelector<HTMLInputElement>('.palette-mark-search');
       s?.focus();
     }
   });
+
+  async function submitAddMark(): Promise<void> {
+    const input = container.querySelector<HTMLInputElement>('.palette-add-mark-input');
+    const domain = input?.value.trim();
+    if (!domain) return;
+    addMarkStatus = `Fetching ${domain}…`;
+    render(editor.getState());
+    try {
+      const entry = await fetchLogoFromDomain(domain);
+      addMarkStatus = `Added ${entry.name}.`;
+    } catch (err) {
+      addMarkStatus = `Error: ${(err as Error).message}`;
+    }
+    render(editor.getState());
+  }
+
+  container.addEventListener('keydown', (ev) => {
+    const t = ev.target as HTMLElement;
+    if (ev.key === 'Enter' && t.classList.contains('palette-add-mark-input')) {
+      ev.preventDefault();
+      void submitAddMark();
+    }
+  });
+  container.addEventListener('click', (ev) => {
+    const t = ev.target as HTMLElement;
+    if (t.classList.contains('palette-add-mark-btn')) {
+      ev.preventDefault();
+      void submitAddMark();
+    }
+  });
+
+  // Repaint when the runtime registry changes (fetched marks appear).
+  const offRegistry = onLogosChanged(() => render(editor.getState()));
 
   container.addEventListener('dragstart', (ev) => {
     const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('[data-add]');
@@ -327,5 +372,6 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
   });
 
   render(editor.getState());
-  return editor.subscribe(render);
+  const unsubscribe = editor.subscribe(render);
+  return () => { unsubscribe(); offRegistry(); };
 }

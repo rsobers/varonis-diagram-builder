@@ -55,10 +55,13 @@ test('Export PNG downloads a valid transparent PNG at 2×', async ({ page }) => 
   const bytes = readFileSync(path);
   // PNG signature: 89 50 4E 47 0D 0A 1A 0A
   expect(bytes.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
-  // Width from IHDR (bytes 16–19 big-endian). Doc width is 1200 → 2× = 2400.
+  // Content-aware crop: exporter fits the viewBox to (content bbox + 40px
+  // padding on each side) and rasterizes at 2×. So the PNG is much smaller
+  // than 2× of the canvas — it's 2× of (element_bbox + 2·40).
   const width = bytes.readUInt32BE(16);
   const height = bytes.readUInt32BE(20);
-  expect(width).toBe(2400);
-  expect(height).toBe(1600);
+  // md element = 180×64; +40 padding each side → 260×144; ×2 = 520×288.
+  expect(width).toBe(520);
+  expect(height).toBe(288);
   await page.screenshot({ path: join(DIR, 'export-png-done.png') });
 });

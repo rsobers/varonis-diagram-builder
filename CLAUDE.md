@@ -79,7 +79,7 @@ M0 is deliberately UI-free. The prototype's interaction bugs came from interacti
 
 ## Constraints
 
-- **Vendor brand marks live in `assets/logos/`**, sourced from each vendor's official brand page and recorded in the registry with their source URL and retrieval date. Never trace, redraw, screenshot, or scrape a mark, and never fetch one from an arbitrary URL at runtime. Icons remain Material Symbols only — marks and icons are separate systems that share one slot.
+- **Vendor brand marks live in `assets/logos/`**, sourced from each vendor's official brand page and recorded in the registry with their source URL and retrieval date. Never trace, redraw, screenshot, or scrape a mark, and never fetch one from an arbitrary URL at runtime. **logo.dev is permitted as a curated brand-asset provider** (`https://img.logo.dev/{domain}?token=…`) because they license marks directly and normalize them — this is not scraping. Marks fetched from logo.dev are cached in-memory for the session; anything meant to ship should be committed to `assets/logos/` with its source URL. Icons remain Material Symbols only — marks and icons are separate systems that share one slot.
 - The image-to-diagram prompt must keep its instruction not to reproduce logos, wordmarks, or artwork from the uploaded image. It rebuilds structure, it does not trace.
 - Accessibility floor: keyboard-navigable, visible focus, reduced motion respected, exported diagrams carry alt text.
 

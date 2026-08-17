@@ -1,5 +1,13 @@
 [
   {
+    "id": "varonis",
+    "name": "Varonis",
+    "file": "varonis.webp",
+    "aliases": ["varonis", "varonis systems"],
+    "source": "https://www.varonis.com/company/press-kit",
+    "retrieved": "2026-08-17"
+  },
+  {
     "id": "okta",
     "name": "Okta",
     "file": "okta.webp",
