@@ -11,3 +11,4 @@ e2e/screenshots
 .env
 .env.local
 .env.*.local
+__pycache__
