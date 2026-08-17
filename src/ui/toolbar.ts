@@ -27,6 +27,8 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
       <input type="checkbox" class="tb-snap"> Snap to grid
     </label>
     <span class="toolbar-grow"></span>
+    <button type="button" class="tb-btn tb-export-svg" title="Download as SVG">Export SVG</button>
+    <button type="button" class="tb-btn tb-export-png" title="Download as 2× transparent PNG">Export PNG</button>
     <button type="button" class="tb-btn primary tb-generate">Generate from image</button>
     <button type="button" class="tb-btn tb-new">New</button>
   `;

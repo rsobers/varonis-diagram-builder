@@ -32,6 +32,12 @@ export type RenderOptions = {
    * Off by default so exported/committed SVGs stay unmarked.
    */
   interactive?: boolean;
+  /**
+   * Whether to emit the full-canvas white background rect. Default 'white'
+   * matches the editor and the reference; 'none' is used by PNG export so
+   * the rasterized output is transparent per §9.
+   */
+  background?: 'white' | 'none';
 };
 
 export type RenderResult = { svg: string; warnings: string[] };
@@ -71,11 +77,14 @@ export function render(doc: DiagramDoc, opts: RenderOptions = {}): RenderResult 
       `<text x="40" y="62" font-size="11.5" fill="${SUB}">${esc(doc.title[1])}</text>`
     : '';
 
+  const bg = (opts.background ?? 'white') === 'white'
+    ? `<rect width="${num(doc.width)}" height="${num(doc.height)}" fill="#ffffff"/>`
+    : '';
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${num(doc.width)}" height="${num(doc.height)}" ` +
       `viewBox="0 0 ${num(doc.width)} ${num(doc.height)}" font-family="${UI_FAMILY}">` +
     defs +
-    `<rect width="${num(doc.width)}" height="${num(doc.height)}" fill="#ffffff"/>` +
+    bg +
     head +
     layers.boundaries.join('') +
     layers.edges.join('') +

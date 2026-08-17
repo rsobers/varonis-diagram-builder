@@ -7,6 +7,7 @@ import { createToolbar } from './toolbar';
 import { createToast } from './toast';
 import { createViolationsPanel } from './violations';
 import { createGenerateDialog } from './generateDialog';
+import { exportSvg, exportPng, downloadBlob, suggestedFilename } from '../export';
 
 const EMPTY_DOC: DiagramDoc = {
   version: 1,
@@ -36,4 +37,20 @@ export function mountApp(root: HTMLElement): void {
 
   const generate = createGenerateDialog(root, editor);
   root.querySelector<HTMLButtonElement>('.tb-generate')?.addEventListener('click', () => generate.open());
+
+  root.querySelector<HTMLButtonElement>('.tb-export-svg')?.addEventListener('click', () => {
+    const doc = editor.getState().doc;
+    downloadBlob(exportSvg(doc), suggestedFilename(doc, 'svg'));
+    toast('SVG downloaded.');
+  });
+  root.querySelector<HTMLButtonElement>('.tb-export-png')?.addEventListener('click', async () => {
+    const doc = editor.getState().doc;
+    try {
+      const blob = await exportPng(doc);
+      downloadBlob(blob, suggestedFilename(doc, 'png'));
+      toast('PNG downloaded at 2×.');
+    } catch (err) {
+      toast(`Export failed: ${(err as Error).message}`);
+    }
+  });
 }
