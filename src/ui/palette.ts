@@ -163,6 +163,7 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
   container.classList.add('palette');
   let currentFill: ColorName = 'white';
   let markSearch = '';
+  let markPlacementStyle: 'inline' | 'badge' = 'inline';
 
   function render(state: EditorState): void {
     const allowed = allowedElementColors(state.doc.encoding);
@@ -205,12 +206,19 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
       html.push('</div>');
     }
 
-    // §8 — Vendor marks. Searchable. Each entry places a Medium element
-    // with the mark set (no icon).
+    // §8 — Vendor marks. Searchable. Section-level toggle picks whether
+    // new placements are inline (mark in the icon slot alongside a text
+    // label) or a badge (fixed 90×90 square, mark centred, no visible label).
     html.push('<h3>Vendor marks</h3>');
     if (LOGOS.length === 0) {
       html.push('<p class="palette-hint muted">Registry is empty. See <code>assets/logos/README.md</code> for sourcing.</p>');
     } else {
+      html.push(
+        `<div class="mark-style-toggle" role="group" aria-label="Mark placement style">` +
+          `<button type="button" class="mark-style-btn${markPlacementStyle === 'inline' ? ' active' : ''}" data-mark-style="inline">Inline</button>` +
+          `<button type="button" class="mark-style-btn${markPlacementStyle === 'badge' ? ' active' : ''}" data-mark-style="badge">Badge</button>` +
+        `</div>`
+      );
       html.push('<input type="search" class="palette-mark-search" placeholder="Search marks…">');
       html.push('<div class="palette-list palette-marks-list">');
       const q = markSearch.toLowerCase();
@@ -250,14 +258,27 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
       render(editor.getState());
       return;
     }
+    const styleBtn = t.closest<HTMLButtonElement>('[data-mark-style]');
+    if (styleBtn) {
+      const v = styleBtn.dataset.markStyle;
+      if (v === 'inline' || v === 'badge') {
+        markPlacementStyle = v;
+        render(editor.getState());
+      }
+      return;
+    }
+
     const markBtn = t.closest<HTMLButtonElement>('[data-mark]');
     if (markBtn) {
       const id = markBtn.dataset.mark!;
       const state = editor.getState();
       const label = LOGOS.find((l) => l.id === id)?.name ?? id;
+      const asBadge = markPlacementStyle === 'badge';
       const intent: PlacingIntent = {
-        label: `Mark: ${label}`,
-        factory: (x, y) => ({ kind: 'element', x, y, size: 'md', color: 'white', label, markId: id }),
+        label: `Mark: ${label} (${markPlacementStyle})`,
+        factory: (x, y) => asBadge
+          ? { kind: 'element', x, y, size: 'md', color: 'white', label, markId: id, markStyle: 'badge' }
+          : { kind: 'element', x, y, size: 'md', color: 'white', label, markId: id },
       };
       const same = state.placing?.label === intent.label;
       editor.dispatch({ kind: 'setPlacing', intent: same ? null : intent });

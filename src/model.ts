@@ -63,6 +63,15 @@ export type Element = WithId & {
    * fills (§8.2).
    */
   markId?: string;
+  /**
+   * How the mark is presented:
+   *  - 'inline' (default): mark sits in the icon slot alongside the label
+   *  - 'badge': element renders as a fixed 90×90 square with the mark
+   *    centred and the text label suppressed (used for identifying a
+   *    named platform, region, or account — AWS, Azure, etc.)
+   * Only meaningful when `markId` is set.
+   */
+  markStyle?: 'inline' | 'badge';
   sub?: string;
 };
 

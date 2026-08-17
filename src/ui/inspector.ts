@@ -97,6 +97,11 @@ function renderElement(form: HTMLFormElement, item: Element, state: EditorState,
   // picking one clears the other. Marks are only valid on white/gray fills.
   iconGrid(form, item.icon, (icon) => update(ed, item.id, { icon }));
   markPicker(form, item.markId, item.color ?? 'white', (id) => update(ed, item.id, { markId: id }));
+  if (item.markId) {
+    // Style toggle only makes sense while a mark is set.
+    select(form, 'Mark style', item.markStyle ?? 'inline', ['inline', 'badge'],
+      (v) => update(ed, item.id, { markStyle: v as 'inline' | 'badge' }));
+  }
   numberPair(form, 'x', 'y', item.x, item.y,
     (x) => update(ed, item.id, { x }),
     (y) => update(ed, item.id, { y }));

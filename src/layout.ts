@@ -97,6 +97,12 @@ function bboxZoneDivider(z: ZoneDivider): BBox {
 }
 
 function bboxElement(e: Element): BBox {
+  // §8 v2.3 — a vendor-mark badge is a fixed 90×90 square, independent of
+  // the sm/md/lg preset. Layout must reflect this so hit-testing, selection
+  // rings, and collision checks agree with the renderer.
+  if (e.markStyle === 'badge' && e.markId) {
+    return { x: e.x, y: e.y, w: 90, h: 90 };
+  }
   const size = e.size ?? 'sm';
   const [w, h] = SIZES[size];
   return { x: e.x, y: e.y, w, h };

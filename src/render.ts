@@ -264,6 +264,20 @@ function renderZoneDivider(z: ZoneDivider, L: Layers, ctx: Ctx): void {
 // ---- elements -----------------------------------------------------------
 
 function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): void {
+  // §8 v2.3 — badge form: fixed 90×90 square with the mark centred, text
+  // label suppressed. The label survives in the model for alt-text.
+  if (e.markStyle === 'badge' && e.markId) {
+    const BADGE = 90;
+    const MARK = 60;
+    const { fill: f, stroke: s } = PALETTE[e.color ?? 'white'];
+    const parts: string[] = [
+      `<rect x="${num(e.x)}" y="${num(e.y)}" width="${num(BADGE)}" height="${num(BADGE)}" fill="${f}" stroke="${s}"/>`,
+      markSvg(e.markId, e.x + (BADGE - MARK) / 2, e.y + (BADGE - MARK) / 2, MARK),
+    ];
+    L.nodes.push(wrapId(ctx, e.id, parts.join('')));
+    return;
+  }
+
   const size = e.size ?? 'sm';
   const [w, h] = SIZES[size];
   const { fill: f, stroke: s } = PALETTE[e.color ?? 'white'];
