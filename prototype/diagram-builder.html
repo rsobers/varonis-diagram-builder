@@ -1,0 +1,762 @@
+<div id="app">
+<style>
+  #app { --ink:#1f2933; --sub:#5a6570; --line:#d3d9e0; --panel:#fbfcfd; --accent:#1c6fd0;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif; color:var(--ink);
+    display:flex; flex-direction:column; height:760px; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff; }
+  #app *, #app *::before, #app *::after { box-sizing:border-box; }
+  .bar { display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--line); background:var(--panel); flex-wrap:wrap; }
+  .bar .grow { flex:1; }
+  .btn { font:inherit; font-size:12.5px; padding:6px 11px; border:1px solid var(--line); background:#fff; border-radius:6px; cursor:pointer; color:var(--ink); }
+  .btn:hover { background:#f2f5f8; }
+  .btn.on { background:#e8f1fc; border-color:#a3c2ea; color:#12508f; font-weight:600; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover { background:#1760b6; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .btn:focus-visible, .swatch:focus-visible, .pal-item:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .main { flex:1; display:flex; min-height:0; }
+  .side { width:212px; border-right:1px solid var(--line); background:var(--panel); overflow-y:auto; padding:10px; flex-shrink:0; }
+  .side.right { border-right:none; border-left:1px solid var(--line); width:250px; }
+  .grp { font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--sub); font-weight:700; margin:14px 0 7px; }
+  .grp:first-child { margin-top:2px; }
+  .pal-item { display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:7px 9px; margin-bottom:5px;
+    border:1px solid var(--line); border-radius:6px; background:#fff; cursor:grab; font:inherit; font-size:12px; }
+  .pal-item:hover { border-color:#a3c2ea; background:#f7fbff; }
+  .pal-item:active { cursor:grabbing; }
+  .pal-item svg { flex-shrink:0; }
+  .swatches { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:6px; }
+  .swatch { width:26px; height:22px; border-radius:5px; cursor:pointer; border:1px solid #b9c2cc; padding:0; }
+  .swatch.on { box-shadow:0 0 0 2px var(--accent); border-color:var(--accent); }
+  .canvas-wrap { flex:1; overflow:auto; background:#fff; position:relative; min-width:0; }
+  #canvas { display:block; width:1200px; height:800px; }
+  .note { font-size:11px; line-height:1.45; color:var(--sub); margin:6px 0 0; }
+  .fld { margin-bottom:10px; }
+  .fld label { display:block; font-size:11px; color:var(--sub); margin-bottom:3px; font-weight:600; }
+  .fld input[type=text], .fld textarea, .fld select { width:100%; font:inherit; font-size:12.5px; padding:5px 7px; border:1px solid var(--line); border-radius:5px; background:#fff; color:var(--ink); }
+  .fld textarea { resize:vertical; min-height:52px; }
+  .row2 { display:flex; gap:6px; }
+  .chk { display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:7px; }
+  .icons { display:grid; grid-template-columns:repeat(6,1fr); gap:3px; }
+  .icons button { padding:4px; border:1px solid var(--line); background:#fff; border-radius:4px; cursor:pointer; line-height:0; }
+  .icons button.on { border-color:var(--accent); background:#e8f1fc; }
+  .empty { font-size:12px; color:var(--sub); line-height:1.5; }
+  .toast { position:absolute; left:50%; transform:translateX(-50%); bottom:16px; background:#1f2933; color:#fff;
+    font-size:12.5px; padding:8px 14px; border-radius:6px; opacity:0; transition:opacity .2s; pointer-events:none; max-width:80%; }
+  .toast.show { opacity:1; }
+  dialog { border:1px solid var(--line); border-radius:10px; padding:0; width:440px; max-width:92vw; color:var(--ink); }
+  dialog::backdrop { background:rgba(20,28,38,.42); }
+  .dlg-h { padding:14px 16px 0; font-size:15px; font-weight:600; }
+  .dlg-b { padding:12px 16px; }
+  .dlg-f { padding:0 16px 14px; display:flex; gap:8px; justify-content:flex-end; }
+  .drop { border:1.5px dashed #a9b2bd; border-radius:8px; padding:22px; text-align:center; font-size:12.5px; color:var(--sub); cursor:pointer; background:#fbfcfd; }
+  .drop.hot { border-color:var(--accent); background:#f2f8ff; }
+  .prev { max-width:100%; max-height:190px; border-radius:6px; display:block; margin:0 auto; }
+  .spin { display:inline-block; width:13px; height:13px; border:2px solid #c9d3de; border-top-color:var(--accent); border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion:reduce) { .spin { animation-duration:2s; } }
+  kbd { font:11px ui-monospace,Menlo,Consolas,monospace; background:#eef1f4; border:1px solid #d3d9e0; border-bottom-width:2px; border-radius:4px; padding:1px 4px; }
+</style>
+
+<div class="bar">
+  <button class="btn on" id="mSelect">Select</button>
+  <button class="btn" id="mConnect">Connect</button>
+  <span style="width:1px;height:20px;background:var(--line);margin:0 3px"></span>
+  <button class="btn primary" id="btnAI">Generate from image</button>
+  <span class="grow"></span>
+  <button class="btn" id="btnNew">New</button>
+  <button class="btn" id="btnSVG">Export SVG</button>
+  <button class="btn" id="btnPNG">Export PNG</button>
+</div>
+
+<div class="main">
+  <div class="side" id="palette"></div>
+  <div class="canvas-wrap" id="wrap">
+    <svg id="canvas" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="toast" id="toast"></div>
+  </div>
+  <div class="side right" id="inspector"></div>
+</div>
+
+<dialog id="aiDlg">
+  <div class="dlg-h">Generate from image</div>
+  <div class="dlg-b">
+    <div class="drop" id="drop">Drop a screenshot here, or click to choose a file<br><span style="font-size:11px">PNG or JPG — a whiteboard photo, slide, or existing diagram</span></div>
+    <input type="file" id="file" accept="image/png,image/jpeg" hidden>
+    <div id="prevWrap" style="margin-top:10px"></div>
+    <div class="fld" style="margin-top:10px">
+      <label for="hint">Notes for the redraw (optional)</label>
+      <input type="text" id="hint" placeholder="e.g. highlight the control plane in blue">
+    </div>
+    <p class="note" id="aiNote">Elements are rebuilt from scratch in toolkit styles — nothing from the source image is traced or copied in.</p>
+  </div>
+  <div class="dlg-f">
+    <button class="btn" id="aiCancel">Cancel</button>
+    <button class="btn primary" id="aiGo" disabled>Generate</button>
+  </div>
+</dialog>
+</div>
+
+<script>
+(function () {
+  const app = document.getElementById('app');
+  const $ = (id) => document.getElementById(id);
+  const W = 1200, H = 800, GRID = 10;
+
+  /* ---------- toolkit tokens ---------- */
+  const PALETTE = {
+    white:  { fill:'#ffffff', stroke:'#d3d9e0', name:'White' },
+    gray:   { fill:'#f4f6f8', stroke:'#d3d9e0', name:'Gray' },
+    blue:   { fill:'#e8f1fc', stroke:'#a3c2ea', name:'Blue' },
+    green:  { fill:'#eef8e4', stroke:'#b9dd9a', name:'Green' },
+    yellow: { fill:'#fdf6e0', stroke:'#e8d38a', name:'Yellow' },
+    red:    { fill:'#fdeaea', stroke:'#eda9a9', name:'Red' }
+  };
+  const SIZES = { sm:{w:150,h:34}, md:{w:180,h:64}, lg:{w:180,h:92} };
+  const LINE = '#3f4a56', SOFT = '#9aa4b0', SUBTXT = '#5a6570';
+
+  /* ---------- Material Symbols (24px paths) ---------- */
+  const ICONS = {
+    shield:'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z',
+    layers:'M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z',
+    database:'M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z',
+    server:'M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z',
+    cloud:'M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z',
+    lock:'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z',
+    key:'M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z',
+    mail:'M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z',
+    code:'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z',
+    robot:'M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zM7.5 11.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5zM16 17H8v-2h8v2zm-1-4c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z',
+    monitor:'M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z',
+    folder:'M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z',
+    globe:'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z',
+    eye:'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+    warning:'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z',
+    tune:'M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z',
+    person:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z',
+    people:'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'
+  };
+  const ICON_KEYS = Object.keys(ICONS);
+
+  /* ---------- state ---------- */
+  let S = { nodes: [], edges: [], seq: 1 };
+  let mode = 'select', sel = null, newColor = 'white', pending = null, drag = null, imgData = null;
+
+  const uid = (p) => p + (S.seq++);
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const snap = (v) => Math.round(v / GRID) * GRID;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const byId = (id) => S.nodes.find(n => n.id === id);
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  /* ---------- geometry ---------- */
+  function nodeH(n) {
+    if (n.kind === 'group') return 34 + n.children.length * 38 + 6;
+    if (n.kind === 'actor') return 60;
+    if (n.kind === 'container') return n.h;
+    return SIZES[n.size].h;
+  }
+  function nodeW(n) {
+    if (n.kind === 'group') return 190;
+    if (n.kind === 'actor') return 120;
+    if (n.kind === 'container') return n.w;
+    return SIZES[n.size].w;
+  }
+  const rectOf = (n) => ({ x:n.x, y:n.y, w:nodeW(n), h:nodeH(n), cx:n.x + nodeW(n)/2, cy:n.y + nodeH(n)/2 });
+
+  function edgePoint(r, tx, ty) {
+    const dx = tx - r.cx, dy = ty - r.cy;
+    if (!dx && !dy) return { x:r.cx, y:r.cy };
+    const sx = dx ? (r.w/2) / Math.abs(dx) : Infinity;
+    const sy = dy ? (r.h/2) / Math.abs(dy) : Infinity;
+    const s = Math.min(sx, sy);
+    return { x: r.cx + dx*s, y: r.cy + dy*s };
+  }
+
+  function edgePath(e) {
+    const a = byId(e.from), b = byId(e.to);
+    if (!a || !b) return null;
+    const ra = rectOf(a), rb = rectOf(b);
+    if (e.elbow) {
+      const horiz = Math.abs(rb.cx - ra.cx) > Math.abs(rb.cy - ra.cy);
+      if (horiz) {
+        const midX = (ra.cx + rb.cx) / 2;
+        const p0 = { x: rb.cx > ra.cx ? ra.x + ra.w : ra.x, y: ra.cy };
+        const p3 = { x: rb.cx > ra.cx ? rb.x : rb.x + rb.w, y: rb.cy };
+        return { d:`M${p0.x},${p0.y} L${midX},${p0.y} L${midX},${p3.y} L${p3.x},${p3.y}`, mid:{ x:midX, y:(p0.y+p3.y)/2 } };
+      }
+      const midY = (ra.cy + rb.cy) / 2;
+      const p0 = { x: ra.cx, y: rb.cy > ra.cy ? ra.y + ra.h : ra.y };
+      const p3 = { x: rb.cx, y: rb.cy > ra.cy ? rb.y : rb.y + rb.h };
+      return { d:`M${p0.x},${p0.y} L${p0.x},${midY} L${p3.x},${midY} L${p3.x},${p3.y}`, mid:{ x:(p0.x+p3.x)/2, y:midY } };
+    }
+    const p0 = edgePoint(ra, rb.cx, rb.cy), p1 = edgePoint(rb, ra.cx, ra.cy);
+    return { d:`M${p0.x},${p0.y} L${p1.x},${p1.y}`, mid:{ x:(p0.x+p1.x)/2, y:(p0.y+p1.y)/2 } };
+  }
+
+  function wrap(text, maxChars) {
+    const out = [];
+    String(text || '').split('\n').forEach(para => {
+      const words = para.split(/\s+/).filter(Boolean);
+      if (!words.length) { out.push(''); return; }
+      let cur = words[0];
+      for (let i = 1; i < words.length; i++) {
+        if ((cur + ' ' + words[i]).length <= maxChars) cur += ' ' + words[i];
+        else { out.push(cur); cur = words[i]; }
+      }
+      out.push(cur);
+    });
+    return out.slice(0, 3);
+  }
+
+  /* ---------- render ---------- */
+  function icon(key, x, y, scale, fill) {
+    if (!key || !ICONS[key]) return '';
+    return `<g transform="translate(${x},${y}) scale(${scale})"><path d="${ICONS[key]}" fill="${fill || '#263238'}"/></g>`;
+  }
+
+  function renderNode(n, exporting) {
+    const w = nodeW(n), h = nodeH(n), c = PALETTE[n.color] || PALETTE.white;
+    let s = `<g data-id="${n.id}" class="node">`;
+
+    if (n.kind === 'container') {
+      s += `<rect x="${n.x}" y="${n.y}" width="${w}" height="${h}" fill="${n.solid ? '#f8f9fa' : 'none'}"
+             stroke="#a9b2bd" stroke-width="1.2" ${n.solid ? '' : 'stroke-dasharray="6 4"'}/>`;
+      if (n.label) s += `<text x="${n.x+15}" y="${n.y+21}" font-size="12" fill="${SUBTXT}">${esc(n.label)}</text>`;
+      if (!exporting) s += `<rect data-handle="${n.id}" x="${n.x+w-11}" y="${n.y+h-11}" width="11" height="11" fill="#fff" stroke="#8c98a6" style="cursor:nwse-resize"/>`;
+      return s + '</g>';
+    }
+
+    if (n.kind === 'actor') {
+      s += `<rect x="${n.x}" y="${n.y}" width="${w}" height="${h}" fill="transparent"/>`;
+      s += icon(n.icon || 'person', n.x + w/2 - 16, n.y + 2, 1.33);
+      wrap(n.label, 18).forEach((ln, i) => {
+        s += `<text x="${n.x+w/2}" y="${n.y+52+i*14}" text-anchor="middle" font-size="12" fill="#1f2933">${esc(ln)}</text>`;
+      });
+      return s + '</g>';
+    }
+
+    if (n.kind === 'group') {
+      s += `<rect x="${n.x}" y="${n.y}" width="${w}" height="${h}" fill="${c.fill}" stroke="${c.stroke}"/>`;
+      s += `<text x="${n.x+w/2}" y="${n.y+22}" text-anchor="middle" font-size="12" fill="#1f2933">${esc(n.label)}</text>`;
+      n.children.forEach((ch, i) => {
+        const cy = n.y + 34 + i * 38;
+        s += `<rect x="${n.x+10}" y="${cy}" width="${w-20}" height="30" fill="#ffffff" stroke="#d3d9e0"/>`;
+        const hasIcon = !!ch.icon;
+        if (hasIcon) s += icon(ch.icon, n.x + 18, cy + 7, 0.667);
+        s += `<text x="${hasIcon ? n.x+44 : n.x+w/2}" y="${cy+19}" ${hasIcon ? '' : 'text-anchor="middle"'} font-size="11.5" fill="#1f2933">${esc(ch.label)}</text>`;
+      });
+      return s + '</g>';
+    }
+
+    // basic element
+    s += `<rect x="${n.x}" y="${n.y}" width="${w}" height="${h}" fill="${c.fill}" stroke="${c.stroke}"/>`;
+    const lines = wrap(n.label, n.size === 'sm' ? 20 : 22);
+    const subL = n.sublabel ? esc(n.sublabel) : '';
+    if (n.size === 'sm') {
+      if (n.icon) s += icon(n.icon, n.x + 9, n.y + 9, 0.667);
+      const tx = n.icon ? n.x + 34 : n.x + w/2;
+      s += `<text x="${tx}" y="${n.y+h/2+4}" ${n.icon ? '' : 'text-anchor="middle"'} font-size="12" fill="#1f2933">${esc(lines[0]||'')}</text>`;
+    } else {
+      const hasIcon = !!n.icon;
+      const total = lines.length + (subL ? 1 : 0);
+      let ty;
+      if (hasIcon) {
+        const block = 16 + 6 + total * 16;
+        const top = n.y + (h - block) / 2;
+        s += icon(n.icon, n.x + w / 2 - 8, top, 0.667);
+        ty = top + 16 + 6 + 12;
+      } else {
+        ty = n.y + h / 2 + 4 - (total - 1) * 8;
+      }
+      lines.forEach(ln => {
+        s += `<text x="${n.x+w/2}" y="${ty}" text-anchor="middle" font-size="12.5" fill="#1f2933">${esc(ln)}</text>`;
+        ty += 16;
+      });
+      if (subL) s += `<text x="${n.x+w/2}" y="${ty}" text-anchor="middle" font-size="11.5" fill="#1f2933">${subL}</text>`;
+    }
+    return s + '</g>';
+  }
+
+  function renderEdgeLabel(e, mid) {
+    const label = (e.label || '').toUpperCase();
+    if (!label && !e.num) return '';
+    const opt = (e.optional || '').toUpperCase();
+    const CW = 5.6, GAP = 6;
+    const lines = label.split('\n').filter(Boolean);
+    if (!lines.length) lines.push('');
+    const lineW = lines.map((l, i) =>
+      l.length * CW + (i === lines.length - 1 && opt ? GAP + opt.length * CW : 0));
+    const badge = e.num ? 20 : 0;
+    const w = Math.max(46, Math.max.apply(null, lineW) + 20 + badge);
+    const h = lines.length > 1 ? 32 : 18;
+    const x = mid.x - w/2, y = mid.y - h/2;
+    let s = `<g data-id="${e.id}" class="elabel">`;
+    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h/2}" fill="#ffffff" stroke="#cdd4dc"/>`;
+    if (e.num) {
+      s += `<circle cx="${x+13}" cy="${mid.y}" r="7.5" fill="#ffffff" stroke="#cdd4dc"/>`;
+      s += `<text x="${x+13}" y="${mid.y+3}" text-anchor="middle" font-size="8" font-weight="700" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">${esc(e.num)}</text>`;
+    }
+    const cx = x + badge + (w - badge) / 2;
+    const startY = lines.length > 1 ? mid.y - 4 : mid.y + 3;
+    const FONT = `font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace"`;
+    lines.forEach((ln, i) => {
+      const sx = cx - lineW[i] / 2;
+      const ty = startY + i * 12;
+      if (ln) s += `<text x="${sx}" y="${ty}" ${FONT} font-weight="700" fill="#263238">${esc(ln)}</text>`;
+      if (i === lines.length - 1 && opt) {
+        s += `<text x="${sx + ln.length * CW + GAP}" y="${ty}" ${FONT} font-weight="400" fill="#7a8794">${esc(opt)}</text>`;
+      }
+    });
+    return s + '</g>';
+  }
+
+  function build(exporting) {
+    let defs = `<defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L6.2,3 L0,6 Z" fill="${LINE}"/></marker>
+      <marker id="ars" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L6.2,3 L0,6 Z" fill="${SOFT}"/></marker>
+      <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+        <path d="M20 0 L0 0 0 20" fill="none" stroke="#eef1f4" stroke-width="1"/></pattern>
+    </defs>`;
+    let s = defs + `<rect width="${W}" height="${H}" fill="#ffffff"/>`;
+    if (!exporting) s += `<rect width="${W}" height="${H}" fill="url(#grid)"/>`;
+
+    S.nodes.filter(n => n.kind === 'container').forEach(n => { s += renderNode(n, exporting); });
+
+    const labels = [];
+    S.edges.forEach(e => {
+      const p = edgePath(e);
+      if (!p) return;
+      s += `<g data-id="${e.id}"><path d="${p.d}" fill="none" stroke="${e.dashed ? SOFT : LINE}" stroke-width="1.3"
+            ${e.dashed ? 'stroke-dasharray="5 4"' : ''} marker-end="url(#${e.dashed ? 'ars' : 'ar'})"/>
+            <path d="${p.d}" fill="none" stroke="transparent" stroke-width="12"/></g>`;
+      labels.push(renderEdgeLabel(e, p.mid));
+    });
+
+    S.nodes.filter(n => n.kind !== 'container').forEach(n => { s += renderNode(n, exporting); });
+    s += labels.join('');
+
+    if (!exporting && sel) {
+      const o = S.nodes.find(n => n.id === sel);
+      if (o) {
+        const r = rectOf(o);
+        s += `<rect x="${r.x-5}" y="${r.y-5}" width="${r.w+10}" height="${r.h+10}" rx="8" fill="none"
+               stroke="#1c6fd0" stroke-width="1.5" stroke-dasharray="4 3" pointer-events="none"/>`;
+      }
+    }
+    if (!exporting && pending) {
+      const o = byId(pending);
+      if (o) { const r = rectOf(o);
+        s += `<rect x="${r.x-5}" y="${r.y-5}" width="${r.w+10}" height="${r.h+10}" rx="8" fill="none" stroke="#1c6fd0" stroke-width="2" pointer-events="none"/>`; }
+    }
+    return s;
+  }
+
+  function render() { $('canvas').innerHTML = build(false); renderInspector(); save(); }
+
+  /* ---------- palette ---------- */
+  function chip(kind) {
+    const c = PALETTE[newColor];
+    if (kind === 'container') return `<svg width="30" height="20"><rect x="1" y="2" width="28" height="16" rx="4" fill="none" stroke="#a9b2bd" stroke-dasharray="4 3"/></svg>`;
+    if (kind === 'actor') return `<svg width="30" height="20" viewBox="0 0 30 20"><g transform="translate(9,-1) scale(0.5)"><path d="${ICONS.person}" fill="#263238"/></g></svg>`;
+    if (kind === 'group') return `<svg width="30" height="20"><rect x="2" y="1" width="26" height="18" fill="${c.fill}" stroke="${c.stroke}"/><rect x="5" y="7" width="20" height="4" rx="1" fill="#fff" stroke="#d3d9e0"/><rect x="5" y="13" width="20" height="4" rx="1" fill="#fff" stroke="#d3d9e0"/></svg>`;
+    const hh = kind === 'sm' ? 9 : kind === 'md' ? 15 : 18;
+    return `<svg width="30" height="20"><rect x="2" y="${(20-hh)/2}" width="26" height="${hh}" fill="${c.fill}" stroke="${c.stroke}"/></svg>`;
+  }
+
+  function renderPalette() {
+    const p = $('palette');
+    let h = '<div class="grp">Fill for new elements</div><div class="swatches">';
+    Object.keys(PALETTE).forEach(k => {
+      h += `<button class="swatch ${k===newColor?'on':''}" data-color="${k}" title="${PALETTE[k].name}"
+             style="background:${PALETTE[k].fill};border-color:${PALETTE[k].stroke}"></button>`;
+    });
+    h += '</div><p class="note">Stay grayscale by default. Blue is the accent — use it to call out one or two things.</p>';
+
+    h += '<div class="grp">Elements</div>';
+    [['sm','Small'],['md','Medium'],['lg','Large']].forEach(([k, n]) => {
+      h += `<button class="pal-item" draggable="true" data-add="el:${k}:0">${chip(k)}${n}</button>`;
+      h += `<button class="pal-item" draggable="true" data-add="el:${k}:1">${chip(k)}${n} + icon</button>`;
+    });
+
+    h += '<div class="grp">Grouped</div>';
+    h += `<button class="pal-item" draggable="true" data-add="group:0">${chip('group')}Grouped list</button>`;
+    h += `<button class="pal-item" draggable="true" data-add="group:1">${chip('group')}Grouped + icons</button>`;
+
+    h += '<div class="grp">Boundaries</div>';
+    h += `<button class="pal-item" draggable="true" data-add="container:0">${chip('container')}Dashed boundary</button>`;
+    h += `<button class="pal-item" draggable="true" data-add="container:1">${chip('container')}Filled region</button>`;
+
+    h += '<div class="grp">Actors</div>';
+    h += `<button class="pal-item" draggable="true" data-add="actor:person">${chip('actor')}Single user</button>`;
+    h += `<button class="pal-item" draggable="true" data-add="actor:people">${chip('actor')}User group</button>`;
+
+    h += '<div class="grp">Connectors</div><p class="note">Switch to <b>Connect</b>, click a source element, then a target. Select any connector to add a label, a number badge, or an elbow route.</p>';
+    p.innerHTML = h;
+  }
+
+  /* ---------- adding ---------- */
+  function addFromSpec(spec, x, y) {
+    const [kind, a, b] = spec.split(':');
+    let n;
+    if (kind === 'el') n = { id:uid('n'), kind:'el', size:a, color:newColor, label:'Element name', sublabel:'', icon: b === '1' ? 'shield' : null, x, y };
+    else if (kind === 'group') n = { id:uid('n'), kind:'group', color:newColor, label:'Element name', x, y,
+      children:[1,2,3].map(() => ({ label:'Element name', icon: a === '1' ? 'database' : null })) };
+    else if (kind === 'container') n = { id:uid('n'), kind:'container', label:'Boundary name', solid: a === '1', x, y, w:340, h:220 };
+    else if (kind === 'actor') n = { id:uid('n'), kind:'actor', label:'Users', icon:a, x, y };
+    if (!n) return;
+    n.x = clamp(snap(n.x - nodeW(n)/2), 0, W - nodeW(n));
+    n.y = clamp(snap(n.y - nodeH(n)/2), 0, H - nodeH(n));
+    S.nodes.push(n); sel = n.id; render();
+  }
+
+  /* ---------- inspector ---------- */
+  function renderInspector() {
+    const box = $('inspector');
+    const node = S.nodes.find(n => n.id === sel);
+    const edge = S.edges.find(e => e.id === sel);
+    if (!node && !edge) {
+      box.innerHTML = `<div class="grp">Inspector</div><p class="empty">
+        Drag an element onto the canvas, or click one to edit it.<br><br>
+        <kbd>Delete</kbd> removes the selection. <kbd>Esc</kbd> clears it. Elements snap to a 10px grid.</p>`;
+      return;
+    }
+    let h = '';
+    if (node) {
+      h += `<div class="grp">${node.kind === 'container' ? 'Boundary' : node.kind === 'actor' ? 'Actor' : node.kind === 'group' ? 'Grouped element' : 'Element'}</div>`;
+      h += `<div class="fld"><label for="fLabel">Label</label><textarea id="fLabel" data-k="label">${esc(node.label)}</textarea></div>`;
+      if (node.kind === 'el') {
+        h += `<div class="fld"><label for="fSub">Second line</label><input id="fSub" type="text" data-k="sublabel" value="${esc(node.sublabel)}"></div>`;
+        h += `<div class="fld"><label for="fSize">Size</label><select id="fSize" data-k="size">
+          ${['sm','md','lg'].map(s => `<option value="${s}" ${node.size===s?'selected':''}>${s==='sm'?'Small':s==='md'?'Medium':'Large'}</option>`).join('')}</select></div>`;
+      }
+      if (node.kind === 'container') {
+        h += `<label class="chk"><input type="checkbox" data-k="solid" ${node.solid?'checked':''}> Filled region</label>`;
+        h += `<div class="fld"><label>Size</label><div class="row2">
+          <input type="text" data-k="w" value="${node.w}"><input type="text" data-k="h" value="${node.h}"></div></div>`;
+      }
+      if (node.kind === 'el' || node.kind === 'group') {
+        h += `<div class="fld"><label>Fill</label><div class="swatches">`;
+        Object.keys(PALETTE).forEach(k => {
+          h += `<button class="swatch ${node.color===k?'on':''}" data-setcolor="${k}" title="${PALETTE[k].name}"
+                 style="background:${PALETTE[k].fill};border-color:${PALETTE[k].stroke}"></button>`;
+        });
+        h += `</div></div>`;
+      }
+      if (node.kind !== 'container') {
+        h += `<div class="fld"><label>Icon</label><div class="icons">
+          <button data-seticon="" class="${!node.icon?'on':''}" title="No icon"><svg width="16" height="16"><path d="M3 3 L13 13 M13 3 L3 13" stroke="#8c98a6" fill="none"/></svg></button>`;
+        ICON_KEYS.forEach(k => {
+          h += `<button data-seticon="${k}" class="${node.icon===k?'on':''}" title="${k}">
+                 <svg width="16" height="16" viewBox="0 0 24 24"><path d="${ICONS[k]}" fill="#263238"/></svg></button>`;
+        });
+        h += `</div></div>`;
+      }
+      if (node.kind === 'group') {
+        h += `<div class="grp">Rows</div>`;
+        node.children.forEach((c, i) => {
+          h += `<div class="row2" style="margin-bottom:5px"><input type="text" data-child="${i}" value="${esc(c.label)}">
+                <button class="btn" data-delchild="${i}" title="Remove row">−</button></div>`;
+        });
+        h += `<button class="btn" id="addChild" style="width:100%">Add row</button>`;
+      }
+      h += `<button class="btn" id="delSel" style="width:100%;margin-top:12px">Delete element</button>`;
+    } else {
+      h += `<div class="grp">Connector</div>`;
+      h += `<div class="fld"><label for="eLabel">Label (set in caps)</label><textarea id="eLabel" data-ek="label">${esc(edge.label)}</textarea></div>`;
+      h += `<div class="fld"><label for="eOpt">Optional text</label><input id="eOpt" type="text" data-ek="optional" value="${esc(edge.optional||'')}"></div>`;
+      h += `<div class="fld"><label for="eNum">Number badge</label><input id="eNum" type="text" data-ek="num" value="${esc(edge.num||'')}"></div>`;
+      h += `<label class="chk"><input type="checkbox" data-ek="dashed" ${edge.dashed?'checked':''}> Dashed (special use case)</label>`;
+      h += `<label class="chk"><input type="checkbox" data-ek="elbow" ${edge.elbow?'checked':''}> Elbow route</label>`;
+      h += `<button class="btn" id="flipEdge" style="width:100%;margin-bottom:6px">Reverse direction</button>`;
+      h += `<button class="btn" id="delSel" style="width:100%">Delete connector</button>`;
+    }
+    box.innerHTML = h;
+  }
+
+  /* ---------- events: palette ---------- */
+  $('palette').addEventListener('click', (ev) => {
+    const sw = ev.target.closest('[data-color]');
+    if (sw) { newColor = sw.dataset.color; renderPalette(); return; }
+    const item = ev.target.closest('[data-add]');
+    if (item) addFromSpec(item.dataset.add, W/2, 120 + (S.nodes.length % 6) * 60);
+  });
+  $('palette').addEventListener('dragstart', (ev) => {
+    const item = ev.target.closest('[data-add]');
+    if (item) { ev.dataTransfer.setData('text/plain', item.dataset.add); ev.dataTransfer.effectAllowed = 'copy'; }
+  });
+
+  function svgPoint(ev) {
+    const r = $('canvas').getBoundingClientRect();
+    return { x: (ev.clientX - r.left) * (W / r.width), y: (ev.clientY - r.top) * (H / r.height) };
+  }
+  const wrapEl = $('wrap');
+  wrapEl.addEventListener('dragover', (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; });
+  wrapEl.addEventListener('drop', (ev) => {
+    ev.preventDefault();
+    const spec = ev.dataTransfer.getData('text/plain');
+    if (spec) { const p = svgPoint(ev); addFromSpec(spec, p.x, p.y); }
+  });
+
+  /* ---------- events: canvas ---------- */
+  $('canvas').addEventListener('pointerdown', (ev) => {
+    const handle = ev.target.closest('[data-handle]');
+    if (handle) {
+      const n = byId(handle.dataset.handle);
+      drag = { id:n.id, resize:true, ox:0, oy:0 }; sel = n.id; render(); ev.preventDefault(); return;
+    }
+    const g = ev.target.closest('[data-id]');
+    if (!g) { sel = null; pending = null; render(); return; }
+    const id = g.dataset.id;
+    const node = byId(id);
+
+    if (mode === 'connect' && node) {
+      if (!pending) { pending = id; render(); toast('Now click the target element'); return; }
+      if (pending === id) { pending = null; render(); return; }
+      S.edges.push({ id:uid('e'), from:pending, to:id, label:'', optional:'', num:'', dashed:false, elbow:false });
+      pending = null; sel = S.edges[S.edges.length-1].id; render(); return;
+    }
+    sel = id; 
+    if (node) { const p = svgPoint(ev); drag = { id, ox: p.x - node.x, oy: p.y - node.y }; }
+    render(); ev.preventDefault();
+  });
+
+  window.addEventListener('pointermove', (ev) => {
+    if (!drag) return;
+    const n = byId(drag.id); if (!n) return;
+    const p = svgPoint(ev);
+    if (drag.resize) {
+      n.w = clamp(snap(p.x - n.x), 120, W - n.x);
+      n.h = clamp(snap(p.y - n.y), 80, H - n.y);
+    } else {
+      n.x = clamp(snap(p.x - drag.ox), 0, W - nodeW(n));
+      n.y = clamp(snap(p.y - drag.oy), 0, H - nodeH(n));
+    }
+    render();
+  });
+  window.addEventListener('pointerup', () => { drag = null; });
+
+  /* ---------- events: inspector ---------- */
+  $('inspector').addEventListener('input', (ev) => {
+    const t = ev.target, node = S.nodes.find(n => n.id === sel), edge = S.edges.find(e => e.id === sel);
+    if (t.dataset.k && node) {
+      const k = t.dataset.k;
+      if (k === 'solid') node.solid = t.checked;
+      else if (k === 'w' || k === 'h') { const v = parseInt(t.value, 10); if (!isNaN(v)) node[k] = clamp(v, 80, 1200); }
+      else node[k] = t.value;
+    } else if (t.dataset.child !== undefined && node) {
+      node.children[+t.dataset.child].label = t.value;
+    } else if (t.dataset.ek && edge) {
+      const k = t.dataset.ek;
+      edge[k] = (k === 'dashed' || k === 'elbow') ? t.checked : t.value;
+    } else return;
+    $('canvas').innerHTML = build(false); save();
+  });
+
+  $('inspector').addEventListener('click', (ev) => {
+    const node = S.nodes.find(n => n.id === sel), edge = S.edges.find(e => e.id === sel);
+    const sc = ev.target.closest('[data-setcolor]');
+    if (sc && node) { node.color = sc.dataset.setcolor; render(); return; }
+    const si = ev.target.closest('[data-seticon]');
+    if (si && node) { node.icon = si.dataset.seticon || null; render(); return; }
+    const dc = ev.target.closest('[data-delchild]');
+    if (dc && node) { node.children.splice(+dc.dataset.delchild, 1); render(); return; }
+    if (ev.target.id === 'addChild' && node) { node.children.push({ label:'Element name', icon:null }); render(); return; }
+    if (ev.target.id === 'flipEdge' && edge) { const f = edge.from; edge.from = edge.to; edge.to = f; render(); return; }
+    if (ev.target.id === 'delSel') { removeSel(); }
+  });
+
+  function removeSel() {
+    if (!sel) return;
+    S.nodes = S.nodes.filter(n => n.id !== sel);
+    S.edges = S.edges.filter(e => e.id !== sel && e.from !== sel && e.to !== sel);
+    sel = null; render();
+  }
+  document.addEventListener('keydown', (ev) => {
+    if (!app.contains(ev.target) && ev.target !== document.body) return;
+    if (ev.key === 'Escape') { sel = null; pending = null; render(); return; }
+    if ((ev.key === 'Delete' || ev.key === 'Backspace') && sel) {
+      const tag = (ev.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      ev.preventDefault(); removeSel();
+    }
+  });
+  app.tabIndex = -1;
+
+  /* ---------- modes / toolbar ---------- */
+  function setMode(m) {
+    mode = m; pending = null;
+    $('mSelect').classList.toggle('on', m === 'select');
+    $('mConnect').classList.toggle('on', m === 'connect');
+    render();
+  }
+  $('mSelect').onclick = () => setMode('select');
+  $('mConnect').onclick = () => { setMode('connect'); toast('Click a source element, then a target'); };
+  $('btnNew').onclick = () => { if (confirm('Clear the canvas?')) { S = { nodes:[], edges:[], seq:1 }; sel = null; render(); } };
+
+  function exportSVG() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
+      font-family="'Segoe UI', system-ui, -apple-system, sans-serif">${build(true)}</svg>`;
+  }
+  function download(blob, name) {
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  $('btnSVG').onclick = () => { download(new Blob([exportSVG()], { type:'image/svg+xml' }), 'diagram.svg'); toast('SVG downloaded'); };
+  $('btnPNG').onclick = () => {
+    const svg = exportSVG();
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = W * 2; c.height = H * 2;
+      const ctx = c.getContext('2d');
+      ctx.scale(2, 2); ctx.drawImage(img, 0, 0);
+      c.toBlob(b => { download(b, 'diagram.png'); toast('PNG downloaded at 2x'); });
+    };
+    img.onerror = () => toast('Could not rasterize — use Export SVG instead');
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  };
+
+  /* ---------- persistence ---------- */
+  let saveT;
+  function save() {
+    clearTimeout(saveT);
+    saveT = setTimeout(async () => {
+      try { await window.storage.set('diagram:current', JSON.stringify(S)); } catch (e) {}
+    }, 600);
+  }
+  async function load() {
+    try {
+      const r = await window.storage.get('diagram:current');
+      if (r && r.value) {
+        const p = JSON.parse(r.value);
+        if (p && Array.isArray(p.nodes)) { S = p; S.seq = S.seq || 1; }
+      }
+    } catch (e) {}
+  }
+
+  /* ---------- AI: image to diagram ---------- */
+  const dlg = $('aiDlg');
+  $('btnAI').onclick = () => dlg.showModal();
+  $('aiCancel').onclick = () => dlg.close();
+  $('drop').onclick = () => $('file').click();
+  ['dragenter','dragover'].forEach(t => $('drop').addEventListener(t, e => { e.preventDefault(); $('drop').classList.add('hot'); }));
+  ['dragleave','drop'].forEach(t => $('drop').addEventListener(t, e => { e.preventDefault(); $('drop').classList.remove('hot'); }));
+  $('drop').addEventListener('drop', e => { if (e.dataTransfer.files[0]) takeFile(e.dataTransfer.files[0]); });
+  $('file').addEventListener('change', e => { if (e.target.files[0]) takeFile(e.target.files[0]); });
+
+  function takeFile(f) {
+    if (!/^image\/(png|jpeg)$/.test(f.type)) { $('aiNote').textContent = 'Use a PNG or JPG image.'; return; }
+    const r = new FileReader();
+    r.onload = () => {
+      imgData = { media: f.type, data: String(r.result).split(',')[1] };
+      $('prevWrap').innerHTML = `<img class="prev" src="${r.result}" alt="Source image preview">`;
+      $('aiGo').disabled = false;
+      $('aiNote').textContent = 'Elements are rebuilt from scratch in toolkit styles — nothing from the source image is traced or copied in.';
+    };
+    r.readAsDataURL(f);
+  }
+
+  const AI_PROMPT = (hint) => `Read this architecture diagram image and re-express its structure as JSON so it can be redrawn in a house diagram style. Return ONLY JSON, no prose, no markdown fences.
+
+Schema:
+{"containers":[{"l":"label","x":0,"y":0,"w":0,"h":0}],
+ "nodes":[{"id":"n1","l":"label","x":0,"y":0,"size":"sm|md|lg","c":"white|gray|blue","i":"iconKey|null","actor":false}],
+ "edges":[{"f":"n1","t":"n2","l":"LABEL","d":false,"e":false}]}
+
+Rules:
+- Canvas is 1200 x 800. x,y are the TOP-LEFT of each box. Widths: sm/md/lg = 150/180/180. Heights = 34/64/92. Leave at least 60px of vertical gap between connected boxes so edge labels fit.
+- Containers are trust or environment boundaries drawn behind nodes; give them enough padding to enclose their children.
+- Set "actor":true for human roles (users, admins). Actors render as an icon with a label beneath.
+- Colors: default to "white" or "gray". Use "blue" for at most two focal components. Never use other colors.
+- Edge labels: SHORT, UPPERCASE, under 30 characters. "d":true = dashed, "e":true = elbow route.
+- Icon keys, choose the closest fit or null: ${ICON_KEYS.join(', ')}.
+- Maximum 14 nodes, 4 containers, 18 edges. Merge minor detail rather than exceeding these.
+- Do not reproduce logos, wordmarks, or decorative artwork from the image; use plain labels and the icon keys above.
+${hint ? '- Additional direction: ' + hint : ''}`;
+
+  $('aiGo').onclick = async () => {
+    if (!imgData) return;
+    const go = $('aiGo'); go.disabled = true; go.innerHTML = '<span class="spin"></span>Reading…';
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          model:'claude-sonnet-4-6', max_tokens:1000,
+          messages:[{ role:'user', content:[
+            { type:'image', source:{ type:'base64', media_type:imgData.media, data:imgData.data } },
+            { type:'text', text: AI_PROMPT($('hint').value.trim()) }
+          ]}]
+        })
+      });
+      if (!res.ok) throw new Error('status ' + res.status);
+      const data = await res.json();
+      const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const start = clean.indexOf('{'), end = clean.lastIndexOf('}');
+      const parsed = JSON.parse(clean.slice(start, end + 1));
+      applyAI(parsed);
+      dlg.close();
+      toast('Diagram generated — drag anything that needs nudging');
+    } catch (err) {
+      $('aiNote').textContent = 'That didn\'t come back as a usable diagram. Try again, or use a clearer image.';
+    } finally {
+      go.disabled = false; go.textContent = 'Generate';
+    }
+  };
+
+  function applyAI(p) {
+    const next = { nodes:[], edges:[], seq:1 };
+    const map = {};
+    (p.containers || []).slice(0, 4).forEach(c => {
+      next.nodes.push({ id:'c' + (next.seq++), kind:'container', label:String(c.l || ''), solid:false,
+        x:clamp(snap(+c.x || 0), 0, W-140), y:clamp(snap(+c.y || 0), 0, H-100),
+        w:clamp(+c.w || 320, 140, W), h:clamp(+c.h || 200, 90, H) });
+    });
+    (p.nodes || []).slice(0, 14).forEach(n => {
+      const id = 'n' + (next.seq++);
+      map[n.id] = id;
+      const isActor = !!n.actor;
+      const color = ['white','gray','blue'].includes(n.c) ? n.c : 'white';
+      const icon = ICONS[n.i] ? n.i : null;
+      next.nodes.push(isActor
+        ? { id, kind:'actor', label:String(n.l || 'User'), icon: icon || 'person',
+            x:clamp(snap(+n.x || 0), 0, W-120), y:clamp(snap(+n.y || 0), 0, H-60) }
+        : { id, kind:'el', size:['sm','md','lg'].includes(n.size) ? n.size : 'md', color,
+            label:String(n.l || 'Element'), sublabel:'', icon,
+            x:clamp(snap(+n.x || 0), 0, W-180), y:clamp(snap(+n.y || 0), 0, H-92) });
+    });
+    (p.edges || []).slice(0, 18).forEach(e => {
+      if (!map[e.f] || !map[e.t]) return;
+      next.edges.push({ id:'e' + (next.seq++), from:map[e.f], to:map[e.t],
+        label:String(e.l || '').slice(0, 40), optional:'', num:'', dashed:!!e.d, elbow:!!e.e });
+    });
+    if (!next.nodes.length) throw new Error('empty');
+    S = next; sel = null; render();
+  }
+
+  /* ---------- boot ---------- */
+  function seed() {
+    S = { nodes:[], edges:[], seq:1 };
+    S.nodes.push({ id:'c1', kind:'container', label:'Boundary name', solid:false, x:380, y:110, w:400, h:250 });
+    S.nodes.push({ id:'n1', kind:'el', size:'md', color:'blue', label:'Control plane', sublabel:'', icon:'shield', x:490, y:160 });
+    S.nodes.push({ id:'n2', kind:'el', size:'md', color:'white', label:'Data plane', sublabel:'', icon:'layers', x:490, y:280 });
+    S.nodes.push({ id:'n3', kind:'actor', label:'Users', icon:'people', x:520, y:430 });
+    S.edges.push({ id:'e1', from:'n1', to:'n2', label:'POLICY', optional:'', num:'', dashed:false, elbow:false });
+    S.edges.push({ id:'e2', from:'n3', to:'n2', label:'REQUESTS', optional:'', num:'', dashed:false, elbow:false });
+    S.seq = 10;
+  }
+
+  (async function init() {
+    renderPalette();
+    await load();
+    if (!S.nodes.length) seed();
+    render();
+  })();
+})();
+</script>

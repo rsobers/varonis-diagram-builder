@@ -1,0 +1,622 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Varonis Diagram Style Guide v2.0</title><style>
+:root { --ink:#1f2933; --sub:#5a6570; --line:#e4e8ec; --accent:#1c6fd0; }
+* { box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; color:var(--ink);
+  max-width:860px; margin:0 auto; padding:48px 24px 96px; line-height:1.65; font-size:15.5px; }
+h1 { font-size:30px; letter-spacing:-.4px; margin:0 0 4px; }
+h2 { font-size:21px; margin:52px 0 12px; padding-top:20px; border-top:1px solid var(--line); }
+h3 { font-size:16.5px; margin:30px 0 8px; }
+h4 { font-size:14px; margin:20px 0 6px; color:var(--sub); }
+p, li { color:#28323d; }
+code { font:13px ui-monospace,Menlo,Consolas,monospace; background:#f2f5f8;
+  padding:1.5px 5px; border-radius:4px; }
+pre { background:#f8fafb; border:1px solid var(--line); border-radius:8px;
+  padding:16px; overflow-x:auto; font-size:12.5px; line-height:1.5; }
+pre code { background:none; padding:0; }
+table { border-collapse:collapse; width:100%; margin:16px 0; font-size:14px; }
+th, td { border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top; }
+th { background:#f8fafb; font-weight:600; }
+figure { margin:24px 0 28px; padding:20px; border:1px solid var(--line);
+  border-radius:10px; background:#fff; overflow-x:auto; }
+figure svg { width:100%; height:auto; display:block; }
+figcaption { margin-top:12px; font-size:12.5px; color:var(--sub); text-align:center; }
+blockquote { border-left:3px solid var(--accent); margin:16px 0; padding:2px 0 2px 16px; color:var(--sub); }
+hr { border:none; border-top:1px solid var(--line); margin:40px 0; }
+strong { font-weight:600; }
+em { color:var(--sub); }
+@media print { body { max-width:none; } h2 { page-break-after:avoid; } figure { page-break-inside:avoid; } }
+</style></head><body><h1>Varonis Diagram Style Guide</h1>
+<p><strong>Version 2.2 — August 2026</strong>
+Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and system diagrams only. Charts, graphs, and infographics are a separate system with separate rules — do not apply this guide to data visualization.</p>
+<p>This file is the source of truth for both people and tooling. Humans read sections 1–10. Build tooling reads section 11.</p>
+<h2>1. Principles</h2>
+<p><strong>Diagrams are technical claims, not illustrations.</strong> A Varonis architecture diagram is read by security architects who will use it to decide whether to trust us. Accuracy and legibility beat visual interest every time.</p>
+<p><strong>Grayscale is the default.</strong> A diagram with no color is always acceptable. Color is added when it answers a question the reader is already asking — never to add interest.</p>
+<p><strong>One idea per diagram.</strong> If you need a legend with more than five entries, or the element count is over ~18, you have two diagrams.</p>
+<p><strong>Composition over creation.</strong> Build from the elements defined here. If you need something that doesn't exist, request it from the Brand Team rather than inventing it locally — a one-off shape in one deck becomes a competing standard within a quarter.</p>
+<hr />
+<figure><svg role="img" aria-label="Before and after: rotated labels and decorative colour removed" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 1000 470" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L6.2,3 L0,6 Z" fill="#3f4a56"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#ffffff"/>
+
+  <!-- divider -->
+  <line x1="500" y1="24" x2="500" y2="446" stroke="#e4e8ec" stroke-width="1"/>
+
+  <!-- ============ BEFORE ============ -->
+  <g transform="translate(0,0)">
+    <text x="40" y="42" font-size="13" font-weight="600" fill="#b4232a">Before</text>
+    <text x="40" y="62" font-size="11.5" fill="#5a6570">Rotated labels. Red and green encoding nothing.</text>
+
+    <!-- user -->
+    <rect x="40" y="110" width="120" height="34" rx="6" fill="#ffffff" stroke="#d3d9e0"/>
+    <g transform="translate(50,119) scale(0.583)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g>
+    <text x="74" y="131" font-size="12" fill="#1f2933">User</text>
+
+    <!-- firewall rotated red -->
+    <path d="M160,127 L214,127" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="214" y="95" width="30" height="64" rx="15" fill="#fdeaea" stroke="#eda9a9"/>
+    <text transform="translate(233,127) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">FIREWALL</text>
+
+    <!-- red dashed boundary line -->
+    <line x1="229" y1="165" x2="229" y2="420" stroke="#eda9a9" stroke-width="1" stroke-dasharray="5 4"/>
+
+    <!-- down to https rotated -->
+    <path d="M244,127 L290,127 L290,196" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="275" y="200" width="30" height="70" rx="15" fill="#ffffff" stroke="#cdd4dc"/>
+    <text transform="translate(294,235) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">HTTPS:443</text>
+
+    <!-- waf rotated green -->
+    <path d="M290,270 L290,300" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="275" y="300" width="30" height="60" rx="15" fill="#eef8e4" stroke="#b9dd9a"/>
+    <text transform="translate(294,330) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">WAF</text>
+
+    <path d="M290,360 L290,392" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="230" y="396" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="290" y="417" text-anchor="middle" font-size="12" fill="#1f2933">Web UI</text>
+
+    <!-- okta in blue (third party) -->
+    <path d="M244,120 L360,120 L360,150" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="300" y="154" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="360" y="175" text-anchor="middle" font-size="12" fill="#1f2933">Okta</text>
+
+    <text x="40" y="452" font-size="10.5" fill="#b4232a">3 rotated labels · 3 hues · blue mixes Varonis and third party</text>
+  </g>
+
+  <!-- ============ AFTER ============ -->
+  <g transform="translate(500,0)">
+    <text x="40" y="42" font-size="13" font-weight="600" fill="#2c7a3f">After</text>
+    <text x="40" y="62" font-size="11.5" fill="#5a6570">Horizontal throughout. Blue declared as ownership.</text>
+
+    <!-- boundary -->
+    <rect x="30" y="255" width="430" height="180" rx="8" fill="none" stroke="#a9b2bd" stroke-width="1.2" stroke-dasharray="6 4"/>
+    <text x="45" y="276" font-size="12" fill="#5a6570">Varonis cloud account</text>
+
+    <!-- user -->
+    <rect x="30" y="110" width="120" height="34" rx="6" fill="#ffffff" stroke="#d3d9e0"/>
+    <g transform="translate(40,119) scale(0.583)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g>
+    <text x="64" y="131" font-size="12" fill="#1f2933">User</text>
+
+    <!-- inline control: firewall (horizontal, grayscale) -->
+    <path d="M150,127 L184,127" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="184" y="109" width="96" height="36" rx="18" fill="#ffffff" stroke="#cdd4dc" stroke-width="1.5"/>
+    <g transform="translate(194,119) scale(0.667)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="#263238"/></g>
+    <text x="216" y="131" font-size="12" fill="#1f2933">Firewall</text>
+
+    <!-- to okta, gray third party -->
+    <path d="M280,120 L340,120 L340,150" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="280" y="154" width="120" height="34" rx="6" fill="#f4f6f8" stroke="#d3d9e0"/>
+    <text x="340" y="175" text-anchor="middle" font-size="12" fill="#1f2933">Okta</text>
+
+    <!-- down path with horizontal connector label -->
+    <path d="M232,145 L232,300" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="196" y="200" width="72" height="18" rx="9" fill="#ffffff" stroke="#cdd4dc"/>
+    <text x="232" y="212" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">HTTPS:443</text>
+
+    <!-- inline control: WAF grayscale horizontal -->
+    <rect x="184" y="300" width="96" height="36" rx="18" fill="#ffffff" stroke="#cdd4dc" stroke-width="1.5"/>
+    <g transform="translate(196,310) scale(0.667)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#263238"/></g>
+    <text x="222" y="322" font-size="12" fill="#1f2933">WAF</text>
+
+    <path d="M232,336 L232,372" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="172" y="376" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="232" y="397" text-anchor="middle" font-size="12" fill="#1f2933">Web UI</text>
+
+    <!-- legend -->
+    <rect x="330" y="300" width="120" height="52" rx="6" fill="#ffffff" stroke="#e4e8ec"/>
+    <text x="342" y="317" font-size="9" font-weight="600" fill="#5a6570">OWNERSHIP</text>
+    <rect x="342" y="325" width="14" height="10" rx="2" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="362" y="334" font-size="10" fill="#1f2933">Varonis</text>
+    <rect x="342" y="339" width="14" height="10" rx="2" fill="#f4f6f8" stroke="#d3d9e0"/>
+    <text x="362" y="348" font-size="10" fill="#1f2933">Third party</text>
+
+    <text x="30" y="452" font-size="10.5" fill="#2c7a3f">0 rotated labels · 1 hue · blue means one thing</text>
+  </g>
+</svg>
+<figcaption>Before and after: rotated labels and decorative colour removed</figcaption></figure>
+
+<h2>2. What changed in v2.0</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Change</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Rotated text is banned.</strong> All type is horizontal.</td>
+<td>Vertical labels are slow to read, break on mobile, and are inaccessible to screen readers and alt text.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Inline Control introduced</strong> as a distinct element type.</td>
+<td>Firewalls, WAFs, proxies, and gateways were being drawn as connector labels. They are components, not annotations.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Zone Divider introduced</strong> for linear trust boundaries.</td>
+<td>Boundaries were being drawn as colored dashed connectors, which reads as data flow.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Color rules rewritten</strong> (section 6) around a single declared encoding.</td>
+<td>Red and green were being used decoratively, encoding nothing and failing color-blind readers.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Boundaries and containers are never colored.</strong></td>
+<td>Color belongs to elements. Zones tint the whole reading.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Icons align to cap height</strong>, stroke weight paired to type weight.</td>
+<td>Icons were floating optically high next to labels.</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Square corners confirmed</strong> for elements and boundaries; rounding reserved for pills and Inline Controls.</td>
+<td>Shape now carries meaning. v1 was already square; a rounded interim draft was reverted.</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>v1 padding restated as mandatory</strong>, with the consequence that icon plus two lines needs a Large element.</td>
+<td>Padding was being silently crushed to fit long labels.</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Connectors terminate on edge centre lines.</strong></td>
+<td>Arrows landing near corners read as misses.</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Boundary labels sit above connectors</strong> and may move to the top-right.</td>
+<td>Connectors were cutting through zone labels.</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>Icons are now opt-in, with peer-group consistency required</strong> (section 7.1–7.2).</td>
+<td>Icons were being applied by default, adding weight without information.</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>Connectors spaced evenly and centred on shared edges</strong>; aligned elements share a centre line.</td>
+<td>Arrows were landing near corners and boxes sat a few pixels out of true.</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>40px minimum between unconnected stacked elements</strong>; use the smallest size that fits.</td>
+<td>Unrelated elements were reading as groups, and oversized boxes implied false importance.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Migration:</strong> existing diagrams don't need retroactive rework. Apply v2.0 the next time a diagram is edited. The two changes worth backporting immediately are un-rotating text and removing decorative red/green.</p>
+<h2>3. Element taxonomy</h2>
+<h3>3.0 Shape is semantic</h3>
+<p>Corner treatment is not decoration — it tells the reader what kind of thing they are looking at, and it is the fastest signal in the diagram.</p>
+<table>
+<thead>
+<tr>
+<th>Shape</th>
+<th>Means</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Square corners</td>
+<td>A system: something that exists and holds state</td>
+<td>Element, Grouped Element, Boundary</td>
+</tr>
+<tr>
+<td>Fully rounded (stadium)</td>
+<td>Traffic passes through this, or this annotates a line</td>
+<td>Inline Control, Connector Label</td>
+</tr>
+</tbody>
+</table>
+<p>Never soften an element's corners and never square off a pill. A 6px radius on a box and an 18px radius on a stadium is a weak distinction that readers miss; square against stadium is unmistakable at thumbnail size. Square corners also carry the technical, engineered register these diagrams are meant to have.</p>
+<p>Six element types. Each has one job. The most common failure in v1 was using one type to do another's job.</p>
+<h3>3.1 Element</h3>
+<p>A system, service, data store, or application. <strong>The default building block.</strong></p>
+<ul>
+<li><strong>Square corners</strong>, 1px stroke</li>
+<li>Three sizes: Small <code>150×34</code>, Medium <code>180×64</code>, Large <code>180×92</code></li>
+<li>Label in sentence case, 12.5px. Optional second line at 11.5px</li>
+<li>Optional icon, 24px, top-left inset 8px (medium/large) or inline-left (small)</li>
+<li>Never scale or stretch. Pick the size that fits; wrap the label to a maximum of three lines</li>
+</ul>
+<h3>3.2 Grouped Element</h3>
+<p>A parent system containing a list of named children — modules, data sources, sub-services.</p>
+<ul>
+<li>Same shell as an Element, square corners, 190px wide</li>
+<li>Header label centered; child rows are white, 30px tall, 8px gutter</li>
+<li>Maximum six children. Beyond that, summarize ("+12 more") or split the diagram</li>
+</ul>
+<h3>3.3 Inline Control <em>(new in v2.0)</em></h3>
+<p><strong>A component that traffic passes through.</strong> Firewall, WAF, proxy, load balancer, gateway, API gateway, CASB.</p>
+<ul>
+<li>Stadium shape (fully rounded), <code>min 90 × 36</code>, 1.5px stroke, white fill</li>
+<li>Label in sentence case, 12px, horizontal. Optional 16px icon, left</li>
+<li>Sits <strong>on</strong> the connector path, with the line entering and exiting it</li>
+<li>Grayscale by default. Color only under a declared State encoding (section 6)</li>
+</ul>
+<p>The distinction from a connector label is deliberate and load-bearing: a connector label <em>describes</em> traffic, an Inline Control <em>acts on</em> it. Shape carries that difference — stadium at 36px with sentence-case type is a component, a small 18px pill with mono caps is an annotation.</p>
+<h3>3.4 Boundary</h3>
+<p>A trust zone, network, cloud account, tenant, or ownership perimeter.</p>
+<ul>
+<li>Dashed rectangle, square corners, 1.2px stroke <code>#a9b2bd</code>, dash <code>6 4</code>, <strong>no fill</strong></li>
+<li>Optional filled variant <code>#f8f9fa</code> when boundaries nest and need separation</li>
+<li>Label top-left, inset 15px, 12px, <code>#5a6570</code>, sentence case</li>
+<li><strong>Never colored.</strong> A red boundary makes everything inside it read as dangerous</li>
+<li>Minimum 20px padding between the boundary edge and any element inside it</li>
+<li>Label sits top-left by default. <strong>Move it to the top-right when a connector crosses the top edge near it</strong> — a label with an arrow through it is the second most common defect after rotated text. Where neither side is clear, give the label an opaque backing in the boundary's own fill so connectors pass cleanly behind it</li>
+</ul>
+<h3>3.5 Zone Divider <em>(new in v2.0)</em></h3>
+<p>A linear demarcation that runs across the diagram — the classic "everything left of this line is on-prem" cut.</p>
+<ul>
+<li>Single dashed line, 1px, <code>#a9b2bd</code>, dash <code>6 4</code>, full height or width of the affected region</li>
+<li>Horizontal label chip at the top or left end. <strong>Never rotated</strong></li>
+<li>Grayscale only</li>
+<li>Use a Boundary instead whenever the zone can be enclosed. A divider is for cuts that genuinely have no enclosing rectangle</li>
+</ul>
+<h3>3.6 Actor</h3>
+<p>A human role: user, administrator, analyst, attacker.</p>
+<ul>
+<li>32px person or group icon, centered, no containing box</li>
+<li>Label beneath, sentence case, 12px</li>
+<li>Actors sit outside boundaries unless the diagram is specifically about an insider</li>
+</ul>
+<h2>4. Connectors</h2>
+<ul>
+<li><strong>Primary:</strong> solid, 1.3px, <code>#3f4a56</code>, filled arrowhead at the destination</li>
+<li><strong>Special use case:</strong> dashed, 1.3px, <code>#9aa4b0</code>, dash <code>5 4</code>. Reserved for indirect, asynchronous, optional, or out-of-band relationships. Do not use dashed lines for "less important"</li>
+<li><strong>Routing:</strong> straight where possible; three-segment orthogonal elbow otherwise. No diagonals through elements, no curves</li>
+<li><strong>Termination:</strong> a connector meets the <strong>midpoint</strong> of the edge it lands on and stops at the element boundary. Where several connectors share one edge, space them evenly and centre the group on the midpoint. A straight connector may align to its target's midpoint instead when that avoids an unnecessary elbow. An arrow arriving near a corner reads as a miss, and is the most common polish defect in a finished diagram</li>
+<li><strong>Alignment:</strong> elements joined by a straight connector share a centre line. If two boxes are nearly aligned, align them exactly — a 6px offset reads as a mistake where a 60px offset reads as intent</li>
+<li><strong>Direction:</strong> every connector is directional. If a relationship is genuinely bidirectional, draw two connectors, not a double-headed arrow</li>
+<li><strong>Crossings:</strong> minimize by reordering elements. If unavoidable, cross at 90°</li>
+<li><strong>Color:</strong> connectors are never colored except under a declared State encoding</li>
+</ul>
+<h2>5. Connector labels and text</h2>
+<h3>5.1 Connector label</h3>
+<p>Annotates what travels along a line: a protocol, port, action, or payload.</p>
+<ul>
+<li>Pill, 18px tall, radius 9, white fill, 1px <code>#cdd4dc</code> stroke</li>
+<li>Label in <strong>UPPERCASE MONOSPACE</strong>, 8px, bold</li>
+<li>Optional secondary text in the same size, regular weight, <code>#7a8794</code> — for ports, versions, or qualifiers (<code>AUTHENTICATION  HTTPS:443</code>)</li>
+<li>Optional leading number badge, 7.5px circle, for stepped sequences. Number badges imply order — only use them when order matters</li>
+<li>Centered on the connector, with the line passing behind it</li>
+<li>Text is optically centred in the pill. Where optional text follows the label, the label-plus-optional pair is centred as a single block</li>
+<li>Maximum 30 characters. Wrap to two lines at 32px tall before exceeding that</li>
+</ul>
+<h3>5.2 The horizontal rule</h3>
+<p><strong>No text in a Varonis diagram is ever rotated.</strong> Not connector labels, not boundary labels, not zone dividers, not element labels.</p>
+<p>When a label sits on a vertical run and doesn't fit:</p>
+<ol>
+<li>Wrap it to two lines</li>
+<li>Shorten it — <code>HTTPS:443</code> is better than <code>CONNECTS VIA HTTPS ON PORT 443</code></li>
+<li>Move the label to the horizontal segment of an elbow</li>
+<li>If it's a component rather than an annotation, it's an Inline Control — use that instead</li>
+</ol>
+<h3>5.3 Casing</h3>
+<ul>
+<li>Element and Inline Control labels: sentence case</li>
+<li>Connector labels: uppercase monospace</li>
+<li>Boundary labels: sentence case</li>
+<li>No trailing periods anywhere</li>
+<li>Product names follow the corporate naming standard exactly — never abbreviate Varonis product names in a diagram</li>
+</ul>
+<h3>5.4 Labels must fit their element</h3>
+<p>Text never touches or crosses an element edge. Keep a minimum 15px of clear space on each side.</p>
+<p>Where a label doesn't fit, the fix is a bigger element or a shorter label — never a smaller type size, and never letting the text run to the edge. Small elements hold roughly 105px of label beside an icon; Medium and Large hold roughly 150px and wrap to a maximum of three lines. Tooling should measure and fail the build rather than trusting a character count.</p>
+<h2>6. Color</h2>
+<p>This is the section that gets violated most. Read it twice.</p>
+<h3>6.1 Color is a claim</h3>
+<p>Every colored element asserts that it differs from the grayscale elements in some specific way. If a reader can't state what that way is within two seconds, the color is noise and is actively costing you credibility.</p>
+<h3>6.2 Declare one encoding per diagram</h3>
+<p>Before adding any color, ask <strong>what question the reader brings to this diagram</strong>, then pick the one encoding that answers it. Write it in the caption or legend. Never mix two in one diagram.</p>
+<p>The question comes first and the element count second. A diagram about responsibility wants Ownership; a diagram about a feature wants Emphasis; a diagram about containment or compromise wants State.</p>
+<p><strong>Ownership</strong> — who operates the component.
+- Varonis-operated: blue
+- Customer-operated: white
+- Third-party: gray
+- Use when the diagram's job is to clarify responsibility boundaries.</p>
+<p><strong>Emphasis</strong> — what this diagram is about.
+- The 1–3 components under discussion: blue
+- Everything else: white or gray
+- Use for feature and product diagrams. This is the most common encoding.</p>
+<p><strong>State</strong> — condition, before and after.
+- At risk / exposed / attacker-controlled: red
+- Degraded / needs attention / partial: amber
+- Protected / remediated / verified: green
+- Use <strong>only</strong> for kill-chain, attack-path, and before/after diagrams where state is the entire point.</p>
+<h3>6.3 Hard rules</h3>
+<ol>
+<li><strong>Blue is the only structural accent.</strong> Under Ownership and Emphasis encodings, blue is the sole color used. No exceptions.</li>
+<li><strong>Cap blue at one third of elements under Emphasis.</strong> Past that it stops reading as emphasis and becomes the new baseline. Under Ownership the cap is a smell rather than a limit: if nearly every element shares one owner, Ownership is simply answering a question nobody asked, so change encoding — do not decolor a true diagram to satisfy an arithmetic rule.</li>
+<li><strong>Red, amber, and green encode state, never type.</strong> A firewall is not red because security is dangerous. A WAF is not green because protection is good. Both are grayscale Inline Controls.</li>
+<li><strong>Maximum two hues per diagram</strong>, excluding grayscale. A third hue means the diagram is doing too much — split it.</li>
+<li><strong>Never encode meaning in color alone.</strong> Every colored element must carry the same meaning in its label, icon, or position. Test: desaturate the diagram. If it still reads, it passes. If it doesn't, fix it before shipping.</li>
+<li><strong>Red and green never carry the sole distinction between two elements.</strong> Roughly 8% of men have a red-green color vision deficiency, and a meaningful share of our audience is in that group.</li>
+<li><strong>Boundaries and zone dividers are never colored — with one exception.</strong> Under a State encoding, where the claim is about the zone itself rather than its contents, a boundary may carry a single tint. A detonation zone, an untrusted network, or a compromised segment is a legitimate case. When a zone is tinted, <strong>nothing inside it is colored</strong>: the zone is making the claim, and coloring its contents doubles the same statement.</li>
+<li><strong>Connectors are grayscale</strong> except under a State encoding, where a red path may trace an attack route.</li>
+<li><strong>Legend required</strong> when more than six elements are colored, or whenever State encoding is used.</li>
+<li><strong>Yellow is amber.</strong> It exists only as a State color. It is not an element fill.</li>
+</ol>
+<h3>6.4 Palette</h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Fill</th>
+<th>Stroke</th>
+<th>Permitted use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>white</code></td>
+<td><code>#ffffff</code></td>
+<td><code>#d3d9e0</code></td>
+<td>Default element</td>
+</tr>
+<tr>
+<td><code>gray</code></td>
+<td><code>#f4f6f8</code></td>
+<td><code>#d3d9e0</code></td>
+<td>Default, de-emphasized, or third-party</td>
+</tr>
+<tr>
+<td><code>blue</code></td>
+<td><code>#e8f1fc</code></td>
+<td><code>#a3c2ea</code></td>
+<td>Ownership: Varonis. Emphasis: focal element</td>
+</tr>
+<tr>
+<td><code>red</code></td>
+<td><code>#fdeaea</code></td>
+<td><code>#eda9a9</code></td>
+<td>State only: at risk, exposed, attacker-controlled</td>
+</tr>
+<tr>
+<td><code>amber</code></td>
+<td><code>#fdf6e0</code></td>
+<td><code>#e8d38a</code></td>
+<td>State only: degraded, warning, partial</td>
+</tr>
+<tr>
+<td><code>green</code></td>
+<td><code>#eef8e4</code></td>
+<td><code>#b9dd9a</code></td>
+<td>State only: protected, remediated, verified</td>
+</tr>
+</tbody>
+</table>
+<p>Text is <code>#1f2933</code> on all fills. Secondary text is <code>#5a6570</code>. Connectors are <code>#3f4a56</code> primary, <code>#9aa4b0</code> dashed.</p>
+<h3>6.5 Worked example</h3>
+<p>The v1 example diagram used a red <code>FIREWALL</code>, a green <code>WAF</code>, and blue for both <code>My Varonis</code> (Varonis) and <code>Okta</code> (third party). Three separate failures: red and green encoded type rather than state, blue mixed Ownership and Emphasis in one diagram, and the color pair was the least accessible one available.</p>
+<p>Corrected: firewall and WAF become grayscale Inline Controls. Blue is declared as Ownership and applied to Varonis surfaces only. Okta becomes gray as a third party. The diagram loses two colors and gains a readable claim.</p>
+<h2>7. Icons</h2>
+<h3>7.1 Icons are the exception, not the default</h3>
+<p><strong>Start every element with no icon.</strong> A label already says what the thing is; an icon that repeats the label adds visual weight and no information. The best technical diagrams in the industry are mostly label-only boxes, with icons reserved for the few places an icon says something the words can't.</p>
+<p><strong>Add an icon when:</strong>
+- The diagram mixes several <em>kinds</em> of thing — a data store next to a service next to a browser next to a person — and the icon lets a reader sort them at a glance
+- The element belongs to a well-known category with an unambiguous mark: database, queue, model, browser, key store, mail
+- The icon is doing the identifying work and the label is the specific name (<code>Metadata store</code>, <code>Threat database</code>)</p>
+<p><strong>Leave the icon off when:</strong>
+- Every element in view is the same kind of thing — then icons distinguish nothing and become texture
+- The label already states the category plainly (<code>Ticketing integrations</code>, <code>SIEM &amp; SOAR integrations</code>)
+- The only candidate is a generic mark — a gear for "service", a box for "system". A generic icon is decoration
+- The element is a Grouped Element header whose children carry their own icons</p>
+<h3>7.2 Consistency within a peer group</h3>
+<p><strong>Within a peer group, icons are all or nothing.</strong> Sibling elements inside the same boundary, or a row of elements serving the same role, either all carry icons or none do. A mixed row reads as an oversight rather than a decision. Different peer groups in the same diagram may make different choices.</p>
+<h3>7.3 Specification</h3>
+<ul>
+<li><strong>Source:</strong> Google Material Symbols only. Settings: Weight 200, Grade 200, Optical size 24</li>
+<li><strong>Size:</strong> 24px (0.33in) standard. Up to 0.4in (29px) only to compensate for excessive internal padding, applied consistently across the whole diagram</li>
+<li><strong>Placement:</strong> on Small elements the icon sits inline to the left of the label. On Medium and Large elements it is <strong>centred horizontally above</strong> the label, and the icon-plus-label block is centred vertically in the box as a unit. Never park the icon in a corner while the label is centred — the two read as unrelated</li>
+<li><strong>Alignment:</strong> icons sitting beside text align to the <strong>cap height</strong> of that text, not the line box. This is the single most common source of "something looks off" in a finished diagram</li>
+<li><strong>Render size:</strong> 24px is the source and PowerPoint size. In SVG the icon renders at 16px so it sits correctly inside a 34px Small element; keep it identical across every element in a diagram</li>
+<li><strong>Weight pairing:</strong> icon stroke weight tracks the label weight. Regular labels take Weight 200; bold or emphasized labels take Weight 300</li>
+<li><strong>Color:</strong> icons are <code>#263238</code> and inherit no fill color from their element</li>
+<li><strong>One icon per element.</strong> Icons clarify type; they are not decoration</li>
+</ul>
+<h2>8. Third-party logos</h2>
+<ul>
+<li>Use official SVG brand marks at 24px (0.33in), matching icon sizing</li>
+<li>Third-party marks identify vendors and platforms — AWS, Azure, Okta, Microsoft</li>
+<li><strong>The Varonis mark appears at most once per diagram</strong>, and only when the diagram contains both Varonis and non-Varonis components at the same level. Varonis components are identified by the blue Ownership fill, not by repeating the logo</li>
+<li>Never recolor, rotate, outline, or place a third-party mark on a colored fill</li>
+<li>Marks not in the kit come from the Brand Team. Do not trace, redraw, or pull them from a search result</li>
+</ul>
+<h2>9. Layout, spacing, and export</h2>
+<p><strong>Padding</strong> is inherited unchanged from the v1 toolkit and is mandatory, not advisory.</p>
+<table>
+<thead>
+<tr>
+<th>Where</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Element, left and right of label</td>
+<td>15px</td>
+</tr>
+<tr>
+<td>Element with icon: left edge to icon</td>
+<td>10px</td>
+</tr>
+<tr>
+<td>Element with icon: icon to label</td>
+<td>5px</td>
+</tr>
+<tr>
+<td>Element with icon: label to right edge</td>
+<td>15px</td>
+</tr>
+<tr>
+<td>Grouped element, left and right</td>
+<td>10px</td>
+</tr>
+<tr>
+<td>Grouped element, top to header</td>
+<td>15px</td>
+</tr>
+<tr>
+<td>Grouped element, header to first row</td>
+<td>15px</td>
+</tr>
+<tr>
+<td>Grouped element, between rows</td>
+<td>5px</td>
+</tr>
+<tr>
+<td>Grouped element, last row to bottom</td>
+<td>10px</td>
+</tr>
+<tr>
+<td>Boundary edge to any element inside</td>
+<td>20px</td>
+</tr>
+</tbody>
+</table>
+<p>PowerPoint conversion: 15px = 0.21in, 10px = 0.14in, 5px = 0.07in.</p>
+<p>A consequence worth stating: a Medium element cannot hold an icon plus a two-line label and still keep its padding. <strong>Icon plus two lines requires a Large element.</strong> Tooling should fail the build rather than quietly crushing the padding.</p>
+<p><strong>Grid:</strong> all elements snap to a 10px grid. Alignment is not eyeballed.</p>
+<p><strong>Spacing:</strong> minimum 60px between connected elements so labels have room. Minimum 40px between stacked elements that are <em>not</em> connected to each other — tighter than that and unrelated elements read as a group. Minimum 20px between a boundary edge and its contents.</p>
+<p><strong>Sizing:</strong> use the smallest size that fits the label with its padding. An oversized element implies importance it may not have, and a column of elements at different sizes for no reason reads as noise.</p>
+<p><strong>Flow direction:</strong> left-to-right for process and data flow; top-to-bottom for hierarchy and control planes. Pick one per diagram and hold it.</p>
+<p><strong>Density:</strong> hard cap of 18 elements. At that point either split by audience or abstract a cluster into one Grouped Element.</p>
+<p><strong>Export:</strong> PNG for slides and web at 2x with transparent background. SVG for anything that will be edited, translated, or re-rendered. Never export JPG.</p>
+<p><strong>Accessibility floor:</strong> every diagram ships with alt text stating the flow in one or two sentences. Text contrast meets WCAG AA at final display size. The diagram must survive desaturation (rule 6.3.5).</p>
+<h2>10. Worked examples</h2>
+<p>Both examples from the v1 toolkit, redrawn to v2.0. They are the reference for what finished work looks like.</p>
+<h3>Example 1 — Varonis SaaS platform architecture</h3>
+<figure><svg role="img" aria-label="Example 1 — Varonis SaaS platform architecture" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 1290 900" font-family="'Segoe UI', system-ui, -apple-system, sans-serif"><defs><marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="#3f4a56"/></marker><marker id="ard" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="#9aa4b0"/></marker></defs><rect width="1290" height="900" fill="#ffffff"/><text x="40" y="42" font-size="15" font-weight="600" fill="#1f2933">Example 1 — Varonis SaaS platform architecture</text><text x="40" y="62" font-size="11.5" fill="#5a6570">Color encoding: Ownership. Firewall perimeter is a Zone Divider; WAF is an Inline Control.</text><line x1="392" y1="106" x2="392" y2="838" stroke="#a9b2bd" stroke-width="1" stroke-dasharray="6 4"/><rect x="331.6" y="84" width="120.8" height="18" rx="9" fill="#ffffff" stroke="#a9b2bd"/><text x="392" y="96" text-anchor="middle" font-size="8" font-weight="700" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#5a6570">CUSTOMER PERIMETER</text><rect x="420" y="372" width="530" height="456" fill="none" stroke="#a9b2bd" stroke-width="1.2" stroke-dasharray="6 4"/><rect x="966" y="405" width="250" height="205" fill="none" stroke="#a9b2bd" stroke-width="1.2" stroke-dasharray="6 4"/><path d="M168,128 L700,128" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M620,128 L620,190 L700,190" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M150,178 L150,300 L540,300 L540,316" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M540,352 L540,402" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M540,436 L540,486" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M515,578 L515,680" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M575,578 L575,640 L685,640 L685,680" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M630,552 L855,552 L855,680" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M450,496 L250,496" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M250,522 L450,522" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M450,548 L390,548 L390,672 L240,672" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M450,572 L345,572 L345,782 L240,782" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M630,512 L880,512 L880,472 L990,472" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M1080,504 L1080,520" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><rect x="767.6" y="380" width="173.4" height="18" fill="#ffffff"/><text x="935" y="393" text-anchor="end" font-size="12" fill="#5a6570">Varonis cloud account (AWS)</text><rect x="975" y="413" width="43.56" height="18" fill="#ffffff"/><text x="981" y="426" font-size="12" fill="#5a6570">Azure</text><g transform="translate(134,112) scale(1.333)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g><text x="150" y="162" text-anchor="middle" font-size="12" fill="#1f2933">User</text><rect x="700" y="111" width="150" height="34" fill="#e8f1fc" stroke="#a3c2ea"/><g transform="translate(710,120) scale(0.667)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#263238"/></g><text x="731" y="132.0" font-size="12" fill="#1f2933">My Varonis</text><rect x="700" y="173" width="150" height="34" fill="#f4f6f8" stroke="#d3d9e0"/><g transform="translate(710,182) scale(0.667)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="#263238"/></g><text x="731" y="194.0" font-size="12" fill="#1f2933">Okta</text><rect x="495" y="316" width="90" height="36" rx="18" fill="#ffffff" stroke="#cdd4dc" stroke-width="1.5"/><g transform="translate(507,326) scale(0.667)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#263238"/></g><text x="533" y="338.0" font-size="12" fill="#1f2933">WAF</text><rect x="465" y="402" width="150" height="34" fill="#e8f1fc" stroke="#a3c2ea"/><g transform="translate(475,411) scale(0.667)"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" fill="#263238"/></g><text x="496" y="423.0" font-size="12" fill="#1f2933">Web UI</text><rect x="450" y="486" width="180" height="92" fill="#e8f1fc" stroke="#a3c2ea"/><g transform="translate(532.0,505.0) scale(0.667)"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z" fill="#263238"/></g><text x="540.0" y="539.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Varonis SaaS backend</text><text x="540.0" y="555.0" text-anchor="middle" font-size="11.5" fill="#1f2933">(DatAdvantage Cloud)</text><rect x="440" y="680" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(450,689) scale(0.667)"><path d="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z" fill="#263238"/></g><text x="471" y="701.0" font-size="12" fill="#1f2933">Metadata store</text><rect x="610" y="680" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(620,689) scale(0.667)"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#263238"/></g><text x="641" y="701.0" font-size="12" fill="#1f2933">Secret store</text><rect x="780" y="680" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(790,689) scale(0.667)"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" fill="#263238"/></g><text x="811" y="701.0" font-size="12" fill="#1f2933">Log analytics</text><rect x="60" y="428" width="190" height="156" fill="#ffffff" stroke="#d3d9e0"/><text x="155.0" y="454" text-anchor="middle" font-size="12" fill="#1f2933">Monitored data sources</text><rect x="70" y="474" width="170" height="30" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(78,481) scale(0.667)"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="#263238"/></g><text x="101" y="493" font-size="11.5" fill="#1f2933">SaaS applications</text><rect x="70" y="509" width="170" height="30" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(78,516) scale(0.667)"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#263238"/></g><text x="101" y="528" font-size="11.5" fill="#1f2933">IaaS platforms</text><rect x="70" y="544" width="170" height="30" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(78,551) scale(0.667)"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#263238"/></g><text x="101" y="563" font-size="11.5" fill="#1f2933">Identity providers</text><rect x="60" y="640" width="180" height="64" fill="#ffffff" stroke="#d3d9e0"/><text x="150.0" y="676.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Ticketing integrations</text><rect x="60" y="750" width="180" height="64" fill="#ffffff" stroke="#d3d9e0"/><text x="150.0" y="778.0" text-anchor="middle" font-size="12.5" fill="#1f2933">SIEM &amp; SOAR</text><text x="150.0" y="794.0" text-anchor="middle" font-size="12.5" fill="#1f2933">integrations</text><rect x="990" y="440" width="180" height="64" fill="#e8f1fc" stroke="#a3c2ea"/><g transform="translate(1072.0,453.0) scale(0.667)"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zM7.5 11.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5zM16 17H8v-2h8v2zm-1-4c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z" fill="#263238"/></g><text x="1080.0" y="487.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Varonis AI services</text><rect x="990" y="520" width="180" height="64" fill="#f4f6f8" stroke="#d3d9e0"/><g transform="translate(1072.0,533.0) scale(0.667)"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="#263238"/></g><text x="1080.0" y="567.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Azure OpenAI Service</text><rect x="382.5" y="119.0" width="145.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="428.5" y="131" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">AUTHENTICATION</text><text x="494.0" y="131" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" fill="#7a8794">HTTPS:443</text><rect x="266.5" y="291.0" width="67.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="300.0" y="303" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">HTTPS:443</text><rect x="714.0" y="543.0" width="92.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="760.0" y="555" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">LOGS &amp; METRICS</text><rect x="297.5" y="487.0" width="105.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="338.5" y="499" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">COLLECT DATA</text><text x="384.0" y="499" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" fill="#7a8794">API</text><rect x="311.5" y="513.0" width="77.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="350.0" y="525" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">REMEDIATION</text><rect x="260.0" y="663.0" width="110.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="288.5" y="675" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">TICKETS</text><text x="336.5" y="675" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" fill="#7a8794">HTTPS:443</text><rect x="251.5" y="773.0" width="97.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="300.0" y="785" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">EVENTS &amp; ALERTS</text><rect x="724.0" y="503.0" width="92.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="770.0" y="515" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">GEN AI PROMPTS</text><rect x="1060" y="700" width="150" height="74" rx="6" fill="#ffffff" stroke="#e4e8ec"/><text x="1072" y="717" font-size="9" font-weight="700" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#5a6570">OWNERSHIP</text><rect x="1072" y="725" width="14" height="10" rx="2" fill="#e8f1fc" stroke="#a3c2ea"/><text x="1092" y="734" font-size="10" fill="#1f2933">Varonis</text><rect x="1072" y="741" width="14" height="10" rx="2" fill="#ffffff" stroke="#d3d9e0"/><text x="1092" y="750" font-size="10" fill="#1f2933">Customer</text><rect x="1072" y="757" width="14" height="10" rx="2" fill="#f4f6f8" stroke="#d3d9e0"/><text x="1092" y="766" font-size="10" fill="#1f2933">Third party</text><text x="40" y="872" font-size="11" fill="#5a6570">14 elements · 1 hue · 0 rotated labels</text></svg><figcaption>Example 1 — Varonis SaaS platform architecture</figcaption></figure>
+
+<p>Demonstrates <strong>Ownership</strong> encoding and both new element types.</p>
+<ul>
+<li>The firewall perimeter spans the whole diagram and multiple flows cross it, so it is a <strong>Zone Divider</strong> with a horizontal label chip — not a rotated pill.</li>
+<li>The WAF sits on one specific path with traffic entering and leaving it, so it is an <strong>Inline Control</strong>, grayscale.</li>
+<li>Blue means Varonis-operated, and only that. Okta moves to gray as a third party, which it was not in v1.</li>
+<li>Azure is a <strong>Boundary</strong>, not a colored box. That resolves the awkward case of a Varonis-operated service running inside a third-party platform: the boundary is uncolored, so the element inside it can be blue without contradiction.</li>
+<li>14 elements, one hue, four of fourteen elements blue (29%, inside the one-third cap).</li>
+</ul>
+<h3>Example 2 — Email security scanning pipeline</h3>
+<figure><svg role="img" aria-label="Example 2 — Email security scanning pipeline" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 1160 930" font-family="'Segoe UI', system-ui, -apple-system, sans-serif"><defs><marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="#3f4a56"/></marker><marker id="ard" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="#9aa4b0"/></marker></defs><rect width="1160" height="930" fill="#ffffff"/><text x="40" y="42" font-size="15" font-weight="600" fill="#1f2933">Example 2 — Email security scanning pipeline</text><text x="40" y="62" font-size="11.5" fill="#5a6570">Color encoding: State. Amber marks where untrusted content is handled.</text><rect x="400" y="386" width="300" height="128" fill="#f8f9fa" stroke="#a9b2bd" stroke-width="1.2" stroke-dasharray="6 4"/><rect x="400" y="580" width="300" height="258" fill="#fdf6e0" stroke="#e8d38a" stroke-width="1.2" stroke-dasharray="6 4"/><rect x="50" y="600" width="250" height="148" fill="#f8f9fa" stroke="#a9b2bd" stroke-width="1.2" stroke-dasharray="6 4"/><path d="M500,174 L500,250" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M590,250 L590,174" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M744,296 L635,296" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M500,342 L500,440" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M590,440 L590,342" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M545,474 L545,634" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M160,518 L160,650" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M250,662 L380,662 L380,457 L470,457" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M250,702 L350,702 L350,771 L470,771" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M220,426 L220,296 L455,296" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M620,457 L830,457" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M620,651 L1030,651 L1030,457 L980,457" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><path d="M905,474 L905,560" fill="none" stroke="#3f4a56" stroke-width="1.3" marker-end="url(#ar)"/><rect x="409" y="394" width="152.76" height="18" fill="#f8f9fa"/><text x="415" y="407" font-size="12" fill="#5a6570">Messaging cloud (MNET)</text><rect x="409" y="588" width="151.44" height="18" fill="#fdf6e0"/><text x="415" y="601" font-size="12" fill="#5a6570">Phishing sandbox (SNET)</text><rect x="59" y="608" width="156.96" height="18" fill="#f8f9fa"/><text x="65" y="621" font-size="12" fill="#5a6570">Threat intelligence (SREP)</text><rect x="455" y="82" width="180" height="92" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(537.0,101.0) scale(0.667)"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#263238"/></g><text x="545.0" y="135.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Customer Exchange</text><text x="545.0" y="151.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Online</text><rect x="455" y="250" width="180" height="92" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(537.0,269.0) scale(0.667)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#263238"/></g><text x="545.0" y="303.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Email security</text><text x="545.0" y="319.0" text-anchor="middle" font-size="11.5" fill="#1f2933">(CMS)</text><g transform="translate(744,280) scale(1.333)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g><text x="760" y="330" text-anchor="middle" font-size="12" fill="#1f2933">User</text><rect x="470" y="440" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(480,449) scale(0.667)"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zM7.5 11.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5zM16 17H8v-2h8v2zm-1-4c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z" fill="#263238"/></g><text x="501" y="461.0" font-size="12" fill="#1f2933">ML models</text><rect x="470" y="634" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(480,643) scale(0.667)"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" fill="#263238"/></g><text x="501" y="655.0" font-size="12" fill="#1f2933">Virtual browsers</text><rect x="470" y="694" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(480,703) scale(0.667)"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zM7.5 11.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5zM16 17H8v-2h8v2zm-1-4c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z" fill="#263238"/></g><text x="501" y="715.0" font-size="12" fill="#1f2933">ML models</text><rect x="470" y="754" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(480,763) scale(0.667)"><path d="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z" fill="#263238"/></g><text x="501" y="775.0" font-size="12" fill="#1f2933">Threat database</text><rect x="70" y="650" width="180" height="64" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(152.0,655.0) scale(0.667)"><path d="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z" fill="#263238"/></g><text x="160.0" y="689.0" text-anchor="middle" font-size="12.5" fill="#1f2933">Threat database</text><text x="160.0" y="705.0" text-anchor="middle" font-size="11.5" fill="#1f2933">(read-only)</text><rect x="70" y="426" width="180" height="92" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(152.0,445.0) scale(0.667)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" fill="#263238"/></g><text x="160.0" y="479.0" text-anchor="middle" font-size="12.5" fill="#1f2933">On-demand threat</text><text x="160.0" y="495.0" text-anchor="middle" font-size="12.5" fill="#1f2933">intelligence</text><rect x="830" y="440" width="150" height="34" fill="#ffffff" stroke="#d3d9e0"/><g transform="translate(840,449) scale(0.667)"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" fill="#263238"/></g><text x="861" y="461.0" font-size="12" fill="#1f2933">Proxies</text><rect x="830" y="560" width="150" height="34" fill="#fdf6e0" stroke="#e8d38a"/><g transform="translate(840,569) scale(0.667)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" fill="#263238"/></g><text x="861" y="581.0" font-size="12" fill="#1f2933">Internet</text><rect x="456.5" y="196.0" width="87.0" height="32" rx="16.0" fill="#ffffff" stroke="#cdd4dc"/><text x="500.0" y="208" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">NEW EMAIL</text><text x="500.0" y="220" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">NOTIFICATIONS</text><rect x="554.0" y="203.0" width="72.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="590.0" y="215" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">PULL EMAIL</text><rect x="464.0" y="355.0" width="72.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="500.0" y="367" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">PULL EMAIL</text><rect x="546.5" y="355.0" width="87.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="590.0" y="367" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">PULL VERDICTS</text><rect x="486.5" y="538.0" width="117.0" height="32" rx="16.0" fill="#ffffff" stroke="#cdd4dc"/><text x="545.0" y="550" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">LINKS &amp; ATTACHMENTS</text><text x="545.0" y="562" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">FOR SCAN</text><rect x="119.0" y="575.0" width="82.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="160.0" y="587" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">PULL UPDATES</text><rect x="339.0" y="551.0" width="82.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="380.0" y="563" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">PULL THREATS</text><rect x="309.0" y="727.0" width="82.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="350.0" y="739" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">PULL THREATS</text><rect x="286.5" y="287.0" width="87.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="330.0" y="299" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">LINK FOR SCAN</text><rect x="714.0" y="448.0" width="82.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="755.0" y="460" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">RESOLVE URLS</text><rect x="764.0" y="642.0" width="72.0" height="18" rx="9.0" fill="#ffffff" stroke="#cdd4dc"/><text x="800.0" y="654" font-size="8" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700" fill="#263238">FETCH URLS</text><rect x="70" y="790" width="176.0" height="42" rx="6" fill="#ffffff" stroke="#e4e8ec"/><text x="82" y="807" font-size="9" font-weight="700" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#5a6570">STATE</text><rect x="82" y="815" width="14" height="10" rx="2" fill="#fdf6e0" stroke="#e8d38a"/><text x="102" y="824" font-size="10" fill="#1f2933">Handles untrusted content</text><text x="40" y="900" font-size="11" fill="#5a6570">9 elements · 1 hue · 0 rotated labels</text></svg><figcaption>Example 2 — Email security scanning pipeline</figcaption></figure>
+
+<p>Demonstrates <strong>State</strong> encoding and the tinted-zone exception.</p>
+<p>Ownership was the wrong instinct here — nearly every component is Varonis-operated, so coloring by owner would have turned most of the diagram blue and told the reader nothing. Emphasis was wrong too: no single component is the subject.</p>
+<p>The question a security architect actually brings to this diagram is <em>where does untrusted content go, and what stops it escaping.</em> That is a State question, so amber marks the phishing sandbox zone and the internet — the two places untrusted content lives. Everything inside the tinted zone stays white, because the zone is already making the claim. One hue, one question answered, and the containment argument is legible in about a second.</p>
+<p>This diagram had nine rotated labels in v1 and has none now.</p>
+<p><strong>The general rule this establishes:</strong> choose the encoding that answers the reader's question. Element-count caps are a check on that choice, not a substitute for making it.</p>
+<h2>11. Tokens</h2>
+<p>Machine-readable spec for build tooling. These values are authoritative; the prose above describes them, it does not override them.</p>
+<pre><code class="language-json">{
+  &quot;version&quot;: &quot;2.2.0&quot;,
+  &quot;canvas&quot;: { &quot;grid&quot;: 10, &quot;minElementGap&quot;: 60, &quot;minUnconnectedGap&quot;: 40, &quot;boundaryPadding&quot;: 20, &quot;maxElements&quot;: 18 },
+  &quot;palette&quot;: {
+    &quot;white&quot;:  { &quot;fill&quot;: &quot;#ffffff&quot;, &quot;stroke&quot;: &quot;#d3d9e0&quot;, &quot;role&quot;: &quot;default&quot; },
+    &quot;gray&quot;:   { &quot;fill&quot;: &quot;#f4f6f8&quot;, &quot;stroke&quot;: &quot;#d3d9e0&quot;, &quot;role&quot;: &quot;default&quot; },
+    &quot;blue&quot;:   { &quot;fill&quot;: &quot;#e8f1fc&quot;, &quot;stroke&quot;: &quot;#a3c2ea&quot;, &quot;role&quot;: &quot;accent&quot; },
+    &quot;red&quot;:    { &quot;fill&quot;: &quot;#fdeaea&quot;, &quot;stroke&quot;: &quot;#eda9a9&quot;, &quot;role&quot;: &quot;state&quot; },
+    &quot;amber&quot;:  { &quot;fill&quot;: &quot;#fdf6e0&quot;, &quot;stroke&quot;: &quot;#e8d38a&quot;, &quot;role&quot;: &quot;state&quot; },
+    &quot;green&quot;:  { &quot;fill&quot;: &quot;#eef8e4&quot;, &quot;stroke&quot;: &quot;#b9dd9a&quot;, &quot;role&quot;: &quot;state&quot; }
+  },
+  &quot;ink&quot;: {
+    &quot;primary&quot;: &quot;#1f2933&quot;, &quot;secondary&quot;: &quot;#5a6570&quot;, &quot;icon&quot;: &quot;#263238&quot;,
+    &quot;connector&quot;: &quot;#3f4a56&quot;, &quot;connectorDashed&quot;: &quot;#9aa4b0&quot;,
+    &quot;labelStroke&quot;: &quot;#cdd4dc&quot;, &quot;boundaryStroke&quot;: &quot;#a9b2bd&quot;, &quot;optionalText&quot;: &quot;#7a8794&quot;
+  },
+  &quot;elements&quot;: {
+    &quot;element&quot;:       { &quot;radius&quot;: 0, &quot;stroke&quot;: 1, &quot;sizes&quot;: { &quot;sm&quot;: [150,34], &quot;md&quot;: [180,64], &quot;lg&quot;: [180,92] },
+                       &quot;padding&quot;: { &quot;side&quot;: 15, &quot;iconLeft&quot;: 10, &quot;iconToLabel&quot;: 5 },
+                       &quot;iconPlacement&quot;: { &quot;sm&quot;: &quot;inline-left&quot;, &quot;md&quot;: &quot;centred-above&quot;, &quot;lg&quot;: &quot;centred-above&quot; },
+                       &quot;iconDefault&quot;: &quot;none&quot;, &quot;iconPeerGroupConsistency&quot;: true,
+                       &quot;iconPlusTwoLinesRequires&quot;: &quot;lg&quot; },
+    &quot;grouped&quot;:       { &quot;radius&quot;: 0, &quot;stroke&quot;: 1, &quot;width&quot;: 190, &quot;maxChildren&quot;: 6,
+                       &quot;padding&quot;: { &quot;side&quot;: 10, &quot;top&quot;: 15, &quot;headerToRow&quot;: 15, &quot;rowGap&quot;: 5, &quot;bottom&quot;: 10 },
+                       &quot;rowHeight&quot;: 30 },
+    &quot;inlineControl&quot;: { &quot;shape&quot;: &quot;stadium&quot;, &quot;minWidth&quot;: 90, &quot;height&quot;: 36, &quot;stroke&quot;: 1.5, &quot;fill&quot;: &quot;#ffffff&quot;, &quot;iconSize&quot;: 16 },
+    &quot;boundary&quot;:      { &quot;radius&quot;: 0, &quot;stroke&quot;: 1.2, &quot;dash&quot;: &quot;6 4&quot;, &quot;strokeColor&quot;: &quot;#a9b2bd&quot;, &quot;fill&quot;: &quot;none&quot;, &quot;fillVariant&quot;: &quot;#f8f9fa&quot;,
+                       &quot;innerPadding&quot;: 20, &quot;labelSide&quot;: [&quot;left&quot;,&quot;right&quot;], &quot;labelAboveConnectors&quot;: true,
+                       &quot;colorable&quot;: &quot;stateEncodingZoneClaimOnly&quot; },
+    &quot;zoneDivider&quot;:   { &quot;stroke&quot;: 1, &quot;dash&quot;: &quot;6 4&quot;, &quot;strokeColor&quot;: &quot;#a9b2bd&quot;, &quot;colorable&quot;: false, &quot;labelPosition&quot;: &quot;start&quot; },
+    &quot;actor&quot;:         { &quot;iconSize&quot;: 32, &quot;box&quot;: false, &quot;labelBelow&quot;: true }
+  },
+  &quot;connectors&quot;: {
+    &quot;primary&quot;: { &quot;stroke&quot;: 1.3, &quot;color&quot;: &quot;#3f4a56&quot;, &quot;arrow&quot;: true },
+    &quot;dashed&quot;:  { &quot;stroke&quot;: 1.3, &quot;color&quot;: &quot;#9aa4b0&quot;, &quot;dash&quot;: &quot;5 4&quot;, &quot;arrow&quot;: true },
+    &quot;routing&quot;: [&quot;straight&quot;, &quot;orthogonal-elbow&quot;],
+    &quot;termination&quot;: &quot;edge-midpoint&quot;,
+    &quot;sharedEdgeConnectors&quot;: &quot;evenly-spaced-centred-on-midpoint&quot;,
+    &quot;colorable&quot;: &quot;stateEncodingOnly&quot;
+  },
+  &quot;connectorLabel&quot;: {
+    &quot;height&quot;: 18, &quot;heightTwoLine&quot;: 32, &quot;radius&quot;: 9,
+    &quot;font&quot;: { &quot;family&quot;: &quot;monospace&quot;, &quot;size&quot;: 8, &quot;weight&quot;: 700, &quot;transform&quot;: &quot;uppercase&quot; },
+    &quot;optionalText&quot;: { &quot;weight&quot;: 400, &quot;color&quot;: &quot;#7a8794&quot; },
+    &quot;numberBadge&quot;: { &quot;radius&quot;: 7.5, &quot;implies&quot;: &quot;sequence&quot; },
+    &quot;maxChars&quot;: 30
+  },
+  &quot;typography&quot;: {
+    &quot;elementLabel&quot;:   { &quot;size&quot;: 12.5, &quot;case&quot;: &quot;sentence&quot;, &quot;maxLines&quot;: 3 },
+    &quot;elementSubLabel&quot;:{ &quot;size&quot;: 11.5, &quot;case&quot;: &quot;sentence&quot; },
+    &quot;smallLabel&quot;:     { &quot;size&quot;: 12,   &quot;case&quot;: &quot;sentence&quot; },
+    &quot;boundaryLabel&quot;:  { &quot;size&quot;: 12,   &quot;case&quot;: &quot;sentence&quot;, &quot;color&quot;: &quot;#5a6570&quot;, &quot;inset&quot;: 15 },
+    &quot;rotation&quot;: &quot;forbidden&quot;
+  },
+  &quot;icons&quot;: {
+    &quot;library&quot;: &quot;material-symbols&quot;,
+    &quot;renderSizeSvg&quot;: 16,
+    &quot;settings&quot;: { &quot;weight&quot;: 200, &quot;grade&quot;: 200, &quot;opticalSize&quot;: 24 },
+    &quot;size&quot;: 24, &quot;maxSize&quot;: 29, &quot;align&quot;: &quot;cap-height&quot;, &quot;color&quot;: &quot;#263238&quot;, &quot;perElement&quot;: 1
+  },
+  &quot;colorRules&quot;: {
+    &quot;encodings&quot;: [&quot;ownership&quot;, &quot;emphasis&quot;, &quot;state&quot;],
+    &quot;encodingsPerDiagram&quot;: 1,
+    &quot;maxHues&quot;: 2,
+    &quot;blueMaxShareOfElements&quot;: 0.33,
+    &quot;blueCapAppliesTo&quot;: &quot;emphasis&quot;,
+    &quot;zoneTintAllowedUnder&quot;: &quot;state&quot;,
+    &quot;tintedZoneContentsUncoloured&quot;: true,
+    &quot;stateColorsEncodeType&quot;: false,
+    &quot;colorAloneCarriesMeaning&quot;: false,
+    &quot;legendRequiredAbove&quot;: 6,
+    &quot;legendRequiredForState&quot;: true
+  },
+  &quot;export&quot;: { &quot;png&quot;: { &quot;scale&quot;: 2, &quot;background&quot;: &quot;transparent&quot; }, &quot;svg&quot;: true, &quot;jpg&quot;: false }
+}
+</code></pre>
+<hr />
+<p><em>Questions, new element requests, and third-party logo sourcing: contact the Brand Team.</em></p></body></html>
