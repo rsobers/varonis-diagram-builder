@@ -119,8 +119,19 @@ function bboxGrouped(g: Grouped): BBox {
 }
 
 function bboxInlineControl(c: InlineControl): BBox {
-  const w = Math.max(90, c.label.length * 7.0 + (c.icon ? 34 : 24));
-  return { x: c.x, y: c.y, w, h: 36 };
+  return { x: c.x, y: c.y, w: inlineControlWidth(c.label, !!c.icon), h: 36 };
+}
+
+/**
+ * Stadium pill width. Uses width-aware textWidth so labels like
+ * "Metadata & Logs" (wide caps + ampersand) don't overflow the way a
+ * naive char-count estimate lets them. Padding budget matches the
+ * renderer: icon slot on the left + label + horizontal breathing room.
+ */
+export function inlineControlWidth(label: string, hasIcon: boolean): number {
+  const iconPad = hasIcon ? 34 : 12;  // 12(left) + 16(icon) + 6(gap) OR 12(left)
+  const rightPad = 14;
+  return Math.max(90, iconPad + textWidth(label, 12) + rightPad);
 }
 
 function bboxActor(a: Actor): BBox {
