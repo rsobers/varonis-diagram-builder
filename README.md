@@ -8,6 +8,14 @@ so a non-designer cannot produce an off-brand diagram.
 It replaces a PowerPoint template that people were copying, stretching, and
 recoloring.
 
+## Example output
+
+Two canonical diagrams rendered by the same code path the editor uses.
+
+![Example 1 — Varonis SaaS platform architecture](docs/example-1-v2.svg)
+
+![Example 2 — Email security scanning pipeline](docs/example-2-v2.svg)
+
 ## Getting started
 
 ```sh
@@ -98,20 +106,6 @@ validation rules, and the two golden-file renderer snapshots. E2e specs
 exercise the browser flows (place, drag, connect, encoding change,
 inline-edit, marquee, drag ghost, icon picker, copy/paste/duplicate,
 zone-divider resize, arrow modes).
-
-## Milestones
-
-- **M0 — Renderer.** Pure `render.ts`, tokens, snapshot tests. ✅
-- **M1 — Editor.** Full editing surface: palette, canvas, inspector,
-  connect mode, encoding, validation, drag-and-drop, inline edit, copy/paste,
-  parallel connectors, arrow modes. Matches or beats `prototype/diagram-builder.html`. ✅
-- **M2 — Output.** SVG + 2x PNG export, local persistence.
-- **M3 — Generate from image.** Serverless proxy, upload, structured
-  JSON parsing.
-- **M4 — Ship.** Deploy, decide on auth and shared storage.
-
-See `CLAUDE.md` for the authoritative milestone spec and the parity checklist
-that defines "done" for M1.
 
 ## Not doing (out of scope)
 
