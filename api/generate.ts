@@ -124,6 +124,13 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
+/**
+ * Default export for Vercel serverless. Vercel auto-mounts each file in
+ * `api/` at the matching URL and invokes the default export with Node's
+ * (req, res). Named `handleGenerate` is kept for the Vite dev middleware.
+ */
+export default handleGenerate;
+
 async function readJsonBody(req: IncomingMessage): Promise<Body> {
   const chunks: Buffer[] = [];
   let bytes = 0;
