@@ -17,10 +17,17 @@ describe('bbox', () => {
     );
   });
 
-  it('gives an Actor a 32px icon-centred box', () => {
-    expect(bbox({ id: 'a', kind: 'actor', cx: 100, y: 50, label: 'User' })).toEqual(
-      { x: 84, y: 50, w: 32, h: 32 }
-    );
+  it('gives an Actor a bbox that includes icon + label', () => {
+    // Short label fits the 32-icon width; bbox stays icon-centred at min.
+    const shortActor = bbox({ id: 'a', kind: 'actor', cx: 100, y: 50, label: 'A' });
+    expect(shortActor.h).toBe(54); // icon 32 + gap + label baseline area
+    expect(shortActor.w).toBe(32); // icon width dominates
+
+    // Longer label widens the bbox horizontally so hit-testing covers it.
+    const wideActor = bbox({ id: 'a', kind: 'actor', cx: 100, y: 50, label: 'Very long user name' });
+    expect(wideActor.w).toBeGreaterThan(32);
+    // Centred on cx=100.
+    expect(wideActor.x + wideActor.w / 2).toBe(100);
   });
 
   it('sizes a Boundary directly from its w/h', () => {

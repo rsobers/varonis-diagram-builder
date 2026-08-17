@@ -91,9 +91,19 @@ function bboxBoundary(b: Boundary): BBox {
 }
 
 function bboxZoneDivider(z: ZoneDivider): BBox {
-  const chipW = z.label.length * 5.6 + 20;
+  const chipW = zoneDividerChipWidth(z.label);
   const x = z.x - chipW / 2;
   return { x, y: z.y1, w: chipW, h: z.y2 - z.y1 };
+}
+
+/**
+ * ZoneDivider chip width. Label is uppercase monospace at 8px, so a
+ * per-char constant is accurate (each glyph is the same width). Kept
+ * generous (14px of side padding total) so short labels still read as
+ * chips rather than crowded text.
+ */
+export function zoneDividerChipWidth(label: string): number {
+  return label.length * 5.6 + 20;
 }
 
 /** Vendor-mark badge dimensions per size preset. Kept square. */
@@ -126,9 +136,16 @@ function bboxGrouped(g: Grouped): BBox {
  * width grows.
  */
 export function groupedWidth(g: Grouped): number {
-  const HEADER_PAD = 20;     // 10px on each side of the centred header
-  const ROW_PAD_ICON = 51;   // row inset 10 + icon slot 31 + trailing 10
-  const ROW_PAD_PLAIN = 30;  // row inset 10 + 5px padding either side of centred text
+  // Padding budgets follow §9 element padding (15px between label and edge)
+  // so rows don't feel cramped against their borders.
+  //
+  //   header: 15 padding + text + 15 padding                        = text + 30
+  //   row plain: 10 row-inset + 15 pad + text + 15 pad + 10 inset   = text + 50
+  //   row icon:  10 inset + 8 icon-inset + 16 icon + 7 gap
+  //              + text + 15 pad + 10 inset                          = text + 66
+  const HEADER_PAD = 30;
+  const ROW_PAD_ICON = 66;
+  const ROW_PAD_PLAIN = 50;
   const headerNeed = textWidth(g.label, 12) + HEADER_PAD;
   let widest = headerNeed;
   for (const c of g.children) {
@@ -155,9 +172,13 @@ export function inlineControlWidth(label: string, hasIcon: boolean): number {
 }
 
 function bboxActor(a: Actor): BBox {
-  // Icon is 32×32 centred on cx; label sits 12–24px below. Treat the click
-  // target as the icon square; label is a follow-along.
-  return { x: a.cx - 16, y: a.y, w: 32, h: 32 };
+  // Icon is 32×32 centred on cx; label sits below at y+50 (baseline).
+  // Include the label in the bbox so selection ring / hit-testing /
+  // marquee match the visible actor. Otherwise clicking on the label
+  // misses and a long name overflows a rect that thinks it's 32 wide.
+  const labelW = Math.max(32, textWidth(a.label, 12) + 8);
+  const halfW = labelW / 2;
+  return { x: a.cx - halfW, y: a.y, w: labelW, h: 54 };
 }
 
 function bboxEdge(e: Edge): BBox {

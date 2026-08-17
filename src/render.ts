@@ -13,7 +13,7 @@ import type {
   InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
-import { layout, containmentDepth, inlineControlWidth, groupedWidth, type BBox } from './layout';
+import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, type BBox } from './layout';
 import { routeConnector } from './routing';
 
 /**
@@ -260,7 +260,7 @@ function renderBoundary(b: Boundary, L: Layers, ctx: Ctx): void {
 }
 
 function renderZoneDivider(z: ZoneDivider, L: Layers, ctx: Ctx): void {
-  const w = z.label.length * 5.6 + 20;
+  const w = zoneDividerChipWidth(z.label);
   const line =
     `<line x1="${num(z.x)}" y1="${num(z.y1 + 22)}" x2="${num(z.x)}" y2="${num(z.y2)}" stroke="${BOUNDARY_STROKE}" ` +
     `stroke-width="1" stroke-dasharray="6 4"/>`;

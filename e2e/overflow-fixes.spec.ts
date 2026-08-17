@@ -36,6 +36,26 @@ test('inline control pill fits a long label like "Metadata & Logs" without clipp
   await page.screenshot({ path: join(DIR, 'inline-control-fits.png') });
 });
 
+test('grouped row has spec §9 padding (15px on each side of centred label)', async ({ page }) => {
+  page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  const canvas = page.locator('.canvas-svg');
+  const cb = await canvas.boundingBox();
+  if (!cb) throw new Error('canvas not laid out');
+
+  await page.locator('.palette-btn[data-add="grouped"]').click();
+  await page.mouse.click(cb.x + 300, cb.y + 200);
+
+  // Give a row a moderately long label that fits without expansion.
+  const rowInput = page.locator('.inspector .grouped-row input[type="text"]').first();
+  await rowInput.fill('High precision classification engine');
+  await rowInput.press('Enter');
+
+  await page.mouse.click(cb.x + 20, cb.y + 20);
+  await page.screenshot({ path: join(DIR, 'grouped-row-padded.png') });
+});
+
 test('grouped expands horizontally to fit a long row label (no truncation)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
