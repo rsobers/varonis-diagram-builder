@@ -157,6 +157,19 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
 export default handleGenerate;
 
 async function readJsonBody(req: IncomingMessage): Promise<Body> {
+  // Vercel's @vercel/node runtime pre-parses JSON bodies and hangs them
+  // off req.body; by the time our handler runs the request stream has
+  // already been consumed. Prefer the parsed value when present, and only
+  // fall back to reading the raw stream in environments (like our Vite
+  // dev middleware) that don't pre-parse.
+  const preParsed = (req as unknown as { body?: unknown }).body;
+  if (preParsed && typeof preParsed === 'object') {
+    return preParsed as Body;
+  }
+  if (typeof preParsed === 'string') {
+    return JSON.parse(preParsed) as Body;
+  }
+
   const chunks: Buffer[] = [];
   let bytes = 0;
   const MAX = 20 * 1024 * 1024; // 20 MB safety ceiling — client already caps upload at 10 MB post-preprocess.
@@ -167,5 +180,6 @@ async function readJsonBody(req: IncomingMessage): Promise<Body> {
     chunks.push(buf);
   }
   const raw = Buffer.concat(chunks).toString('utf8');
+  if (!raw) throw new Error('Empty request body');
   return JSON.parse(raw) as Body;
 }
