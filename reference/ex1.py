@@ -59,5 +59,5 @@ d.edge([(1080, 504), (1080, 520)])
 
 d.legend(1060, 700, "Ownership", [("blue", "Varonis"), ("white", "Customer"), ("gray", "Third party")])
 d.caption(40, 872, "14 elements · 1 hue · 0 rotated labels")
-d.save('example-1-v2.svg')
+d.save('../docs/example-1-v2.svg')
 print('ok')

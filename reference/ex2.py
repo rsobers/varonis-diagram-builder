@@ -55,5 +55,5 @@ d.edge([(905, 474), (905, 560)])
 
 d.legend(70, 790, "State", [("amber", "Handles untrusted content")])
 d.caption(40, 900, "9 elements · 1 hue · 0 rotated labels")
-d.save('example-2-v2.svg')
+d.save('../docs/example-2-v2.svg')
 print('ok')
