@@ -1,9 +1,11 @@
 import type { Editor } from '../editorState';
 import {
-  preprocessImage, callGenerateApi, validateGeneration,
+  preprocessImage, callGenerateApi, validateGeneration, GenerateUnauthorizedError,
   MAX_UPLOAD_BYTES, type PreprocessResult, type ValidatedGeneration,
 } from '../ai';
 import { render } from '../render';
+
+const PASSWORD_STORAGE_KEY = 'vdb.generate.password';
 
 /**
  * Image-to-diagram flow. Never touches the current canvas until the user
@@ -53,10 +55,12 @@ export function createGenerateDialog(container: HTMLElement, editor: Editor): {
 
   async function generate(): Promise<void> {
     if (!processed) return;
-    // Capture the hint BEFORE re-rendering the dialog — render_() rebuilds
-    // innerHTML and destroys the textarea.
+    // Capture the hint AND password BEFORE re-rendering the dialog —
+    // render_() rebuilds innerHTML and destroys those inputs.
     const dialogHint = dlg.querySelector<HTMLTextAreaElement>('.gd-hint');
     const hint = dialogHint?.value.trim();
+    const passwordInput = dlg.querySelector<HTMLInputElement>('.gd-password');
+    const password = passwordInput?.value ?? '';
 
     loading = true;
     error = null;
@@ -67,13 +71,24 @@ export function createGenerateDialog(container: HTMLElement, editor: Editor): {
       const req: Parameters<typeof callGenerateApi>[0] = { image: processed };
       if (state.doc.encoding) req.encoding = state.doc.encoding;
       if (hint) req.hint = hint;
+      if (password) req.password = password;
       const raw = await callGenerateApi(req);
       result = validateGeneration(raw.raw, state.doc.encoding);
       if (result.doc.items.length === 0) {
         error = 'The model returned no usable items. Try a different image or add a hint.';
+      } else {
+        // Persist the working password for the session so the user isn't
+        // reprompted on every generation.
+        if (password) localStorage.setItem(PASSWORD_STORAGE_KEY, password);
       }
     } catch (err) {
-      error = (err as Error).message;
+      if (err instanceof GenerateUnauthorizedError) {
+        // Clear a stale saved password so the field re-appears empty.
+        localStorage.removeItem(PASSWORD_STORAGE_KEY);
+        error = err.message;
+      } else {
+        error = (err as Error).message;
+      }
     } finally {
       loading = false;
       render_();
@@ -198,8 +213,17 @@ export function createGenerateDialog(container: HTMLElement, editor: Editor): {
         <span>Notes for the redraw (optional)</span>
         <textarea class="gd-hint" rows="2" placeholder="e.g. highlight the control plane in blue"></textarea>
       </label>
+      <label class="field gd-password-field">
+        <span>Access password</span>
+        <input type="password" class="gd-password" autocomplete="off" value="${esc(savedPassword())}">
+      </label>
       <p class="muted gd-notice">Elements are rebuilt from scratch in toolkit styles. Logos, wordmarks, and artwork in the source are not reproduced.</p>
     `;
+  }
+
+  function savedPassword(): string {
+    try { return localStorage.getItem(PASSWORD_STORAGE_KEY) ?? ''; }
+    catch { return ''; }
   }
 
   function renderFoot(): string {

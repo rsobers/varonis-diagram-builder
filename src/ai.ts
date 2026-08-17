@@ -97,11 +97,25 @@ export type GenerateRequest = {
   image: PreprocessResult;
   encoding?: Encoding;
   hint?: string;
+  /** Access password when the server has GENERATE_PASSWORD configured. */
+  password?: string;
 };
 
 export type GenerateResponse = {
   raw: unknown;    // parsed JSON as returned
 };
+
+/**
+ * Thrown when the server rejects the request with 401 (no / wrong access
+ * password). Distinct type so the dialog can react specifically —
+ * clear localStorage and reprompt.
+ */
+export class GenerateUnauthorizedError extends Error {
+  constructor(message = 'Wrong access password.') {
+    super(message);
+    this.name = 'GenerateUnauthorizedError';
+  }
+}
 
 export async function callGenerateApi(req: GenerateRequest): Promise<GenerateResponse> {
   const res = await fetch('/api/generate', {
@@ -111,8 +125,13 @@ export async function callGenerateApi(req: GenerateRequest): Promise<GenerateRes
       image: { media: req.image.media, data: req.image.base64 },
       encoding: req.encoding ?? null,
       hint: req.hint ?? '',
+      password: req.password ?? '',
     }),
   });
+  if (res.status === 401) {
+    const body = await res.json().catch(() => ({}));
+    throw new GenerateUnauthorizedError(body?.error ?? 'Wrong access password.');
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`Generate API failed (${res.status}): ${text.slice(0, 200)}`);

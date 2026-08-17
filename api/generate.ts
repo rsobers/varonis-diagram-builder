@@ -18,7 +18,20 @@ type Body = {
   image?: { media?: string; data?: string };
   encoding?: Encoding | null;
   hint?: string;
+  password?: string;
 };
+
+/**
+ * Constant-time string compare. Only meaningful for same-length strings;
+ * different lengths short-circuit (which leaks length only, not content).
+ * Good enough for a static gate that protects API cost, not credentials.
+ */
+function passwordsMatch(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 export async function handleGenerate(req: IncomingMessage, res: ServerResponse): Promise<void> {
   if (req.method !== 'POST') {
@@ -30,6 +43,18 @@ export async function handleGenerate(req: IncomingMessage, res: ServerResponse):
   } catch (err) {
     return sendJson(res, 400, { error: `Invalid JSON body: ${(err as Error).message}` });
   }
+  // Access gate. When GENERATE_PASSWORD is set on the server, the client
+  // must send a matching `password` in the body. Empty / unset env var
+  // disables the gate — dev-friendly, and mirrors the ANTHROPIC_API_KEY
+  // "not configured" behaviour that other paths already handle.
+  const gate = process.env['GENERATE_PASSWORD'];
+  if (gate) {
+    const supplied = typeof body.password === 'string' ? body.password : '';
+    if (!passwordsMatch(supplied, gate)) {
+      return sendJson(res, 401, { error: 'Password required to use image-to-diagram on this deployment.' });
+    }
+  }
+
   const image = body.image;
   if (!image?.data || !image.media) {
     return sendJson(res, 400, { error: 'Missing image.data / image.media' });
