@@ -1,5 +1,5 @@
 import { SIZES } from './tokens';
-import { textWidth } from './textMetrics';
+import { textWidth, wrap } from './textMetrics';
 import { routeConnector } from './routing';
 import type {
   DiagramDoc, Item, Boundary, ZoneDivider, Element, Grouped,
@@ -110,16 +110,52 @@ export function zoneDividerChipWidth(label: string): number {
 const BADGE_SIZE: Record<'sm' | 'md' | 'lg', number> = { sm: 64, md: 90, lg: 120 };
 
 function bboxElement(e: Element): BBox {
-  // §8 v2.3 — badge form is a square whose side matches the sm/md/lg
-  // choice. Layout mirrors this so hit-testing, selection rings, and
-  // collision checks agree with the renderer.
   if (e.markStyle === 'badge' && e.markId) {
     const s = BADGE_SIZE[e.size ?? 'md'];
     return { x: e.x, y: e.y, w: s, h: s };
   }
   const size = e.size ?? 'sm';
-  const [w, h] = SIZES[size];
-  return { x: e.x, y: e.y, w, h };
+  const [, h] = SIZES[size];
+  return { x: e.x, y: e.y, w: elementWidth(e), h };
+}
+
+/**
+ * Element rect width. §3.1 pins defaults (sm 150, md/lg 180), but a label
+ * that doesn't fit within those widths would overflow the rect — same
+ * class of problem as grouped rows. Consistent fix: keep the default as
+ * a floor and expand horizontally when needed. Height stays fixed per §3.1
+ * (icon-plus-two-lines still triggers a "needs a large element" warning
+ * in the renderer).
+ *
+ * Doesn't apply in badge mode (that has its own square sizing table).
+ */
+export function elementWidth(e: Element): number {
+  if (e.markStyle === 'badge' && e.markId) return BADGE_SIZE[e.size ?? 'md'];
+  const size = e.size ?? 'sm';
+  const [defaultW] = SIZES[size];
+
+  if (size === 'sm') {
+    // Single line; expand to fit the whole label plus §9 padding.
+    // With icon: 10 inset + 16 icon + 5 gap + text + 15 pad = text + 46
+    // Plain:     15 pad + text + 15 pad                       = text + 30
+    const need = textWidth(e.label, 12) + (e.icon ? 46 : 30);
+    return Math.max(defaultW, Math.ceil(need));
+  }
+
+  // md / lg: wrap at the default budget first; if any wrapped line still
+  // exceeds it, or the sub-label does, widen the box to fit the widest.
+  const budget = defaultW - 30;
+  const lines = wrap(e.label, budget, 12.5).lines;
+  let widest = 0;
+  for (const ln of lines) {
+    const w = textWidth(ln, 12.5);
+    if (w > widest) widest = w;
+  }
+  if (e.sub) {
+    const subW = textWidth(e.sub, 11.5);
+    if (subW > widest) widest = subW;
+  }
+  return Math.max(defaultW, Math.ceil(widest + 30));
 }
 
 function bboxGrouped(g: Grouped): BBox {

@@ -13,7 +13,7 @@ import type {
   InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
-import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, type BBox } from './layout';
+import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, elementWidth, type BBox } from './layout';
 import { routeConnector } from './routing';
 
 /**
@@ -290,7 +290,11 @@ function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): voi
   }
 
   const size = e.size ?? 'sm';
-  const [w, h] = SIZES[size];
+  const [, h] = SIZES[size];
+  // Width expands past the sm/md/lg default when the label doesn't fit,
+  // matching the pattern used for grouped and inline controls. Height is
+  // still fixed per §3.1.
+  const w = elementWidth(e);
   const { fill: f, stroke: s } = PALETTE[e.color ?? 'white'];
   const parts: string[] = [
     `<rect x="${num(e.x)}" y="${num(e.y)}" width="${num(w)}" height="${num(h)}" fill="${f}" stroke="${s}"/>`,
@@ -308,10 +312,6 @@ function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): voi
     else if (hasIcon) parts.push(iconSvg(e.icon, e.x + 10, e.y + 9));
     const tx = hasGlyph ? e.x + 31 : e.x + w / 2;
     const anchor = hasGlyph ? '' : ' text-anchor="middle"';
-    const avail = w - (hasGlyph ? 46 : 30);
-    if (textWidth(e.label, 12) > avail) {
-      warnings.push(`"${e.label}" is too long for a small element — use medium`);
-    }
     parts.push(
       `<text x="${num(tx)}" y="${num(e.y + h / 2 + 4)}"${anchor} font-size="12" fill="${INK}">${esc(e.label)}</text>`
     );

@@ -56,6 +56,38 @@ test('grouped row has spec §9 padding (15px on each side of centred label)', as
   await page.screenshot({ path: join(DIR, 'grouped-row-padded.png') });
 });
 
+test('small element expands horizontally to fit a long label (no clipping)', async ({ page }) => {
+  page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  const canvas = page.locator('.canvas-svg');
+  const cb = await canvas.boundingBox();
+  if (!cb) throw new Error('canvas not laid out');
+
+  await page.locator('.palette-btn[data-add="element:sm+icon"]').click();
+  await page.mouse.click(cb.x + 400, cb.y + 200);
+
+  const rect = page.locator('.canvas-svg [data-item-id] rect').first();
+  expect(Number(await rect.getAttribute('width'))).toBe(150); // sm default
+
+  const item = page.locator('.canvas-svg [data-item-id]').first();
+  const box = await item.boundingBox();
+  if (!box) throw new Error('placed item missing bbox');
+  await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
+  const input = page.locator('.inline-edit');
+  await input.fill('High-precision data classification');
+  await input.press('Enter');
+
+  const w = Number(await rect.getAttribute('width'));
+  expect(w).toBeGreaterThan(150);
+
+  const rendered = await page.locator('.canvas-svg [data-item-id] text').first().textContent();
+  expect(rendered).toBe('High-precision data classification');
+
+  await page.mouse.click(cb.x + 20, cb.y + 20);
+  await page.screenshot({ path: join(DIR, 'small-element-expanded.png') });
+});
+
 test('grouped expands horizontally to fit a long row label (no truncation)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
