@@ -264,11 +264,12 @@ function renderZoneDivider(z: ZoneDivider, L: Layers, ctx: Ctx): void {
 // ---- elements -----------------------------------------------------------
 
 function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): void {
-  // §8 v2.3 — badge form: fixed 90×90 square with the mark centred, text
-  // label suppressed. The label survives in the model for alt-text.
+  // §8 v2.3 — badge form: square whose side matches sm/md/lg, mark centred
+  // at ~66% of the box side, text label suppressed. The label survives in
+  // the model for alt-text.
   if (e.markStyle === 'badge' && e.markId) {
-    const BADGE = 90;
-    const MARK = 60;
+    const BADGE = { sm: 64, md: 90, lg: 120 }[e.size ?? 'md'];
+    const MARK = Math.round(BADGE * 0.66);
     const { fill: f, stroke: s } = PALETTE[e.color ?? 'white'];
     const parts: string[] = [
       `<rect x="${num(e.x)}" y="${num(e.y)}" width="${num(BADGE)}" height="${num(BADGE)}" fill="${f}" stroke="${s}"/>`,

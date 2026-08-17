@@ -96,12 +96,16 @@ function bboxZoneDivider(z: ZoneDivider): BBox {
   return { x, y: z.y1, w: chipW, h: z.y2 - z.y1 };
 }
 
+/** Vendor-mark badge dimensions per size preset. Kept square. */
+const BADGE_SIZE: Record<'sm' | 'md' | 'lg', number> = { sm: 64, md: 90, lg: 120 };
+
 function bboxElement(e: Element): BBox {
-  // §8 v2.3 — a vendor-mark badge is a fixed 90×90 square, independent of
-  // the sm/md/lg preset. Layout must reflect this so hit-testing, selection
-  // rings, and collision checks agree with the renderer.
+  // §8 v2.3 — badge form is a square whose side matches the sm/md/lg
+  // choice. Layout mirrors this so hit-testing, selection rings, and
+  // collision checks agree with the renderer.
   if (e.markStyle === 'badge' && e.markId) {
-    return { x: e.x, y: e.y, w: 90, h: 90 };
+    const s = BADGE_SIZE[e.size ?? 'md'];
+    return { x: e.x, y: e.y, w: s, h: s };
   }
   const size = e.size ?? 'sm';
   const [w, h] = SIZES[size];
