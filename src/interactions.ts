@@ -55,19 +55,24 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
     if (e.button !== 0) return;
     const state = editor.getState();
 
-    // Resize handle for boundaries takes priority — it's an overlay atop
-    // its owner's group.
+    // Resize handles take priority — overlays atop their owner's group.
     const handleEl = (e.target instanceof Element) ? e.target.closest('[data-resize]') : null;
     const handleId = handleEl?.getAttribute('data-resize');
-    if (handleId) {
+    const handleMode = handleEl?.getAttribute('data-resize-mode') as 'br' | 'y1' | 'y2' | null;
+    if (handleId && handleMode) {
       const item = itemById(handleId);
-      if (item?.kind === 'boundary') {
+      if (item?.kind === 'boundary' && handleMode === 'br') {
         resize = {
-          pointerId: e.pointerId,
-          id: handleId,
+          pointerId: e.pointerId, id: handleId, mode: 'br',
+          startSVG: toSVG(e), startW: item.w, startH: item.h,
+        };
+        svg.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      } else if (item?.kind === 'zoneDivider' && (handleMode === 'y1' || handleMode === 'y2')) {
+        resize = {
+          pointerId: e.pointerId, id: handleId, mode: handleMode,
           startSVG: toSVG(e),
-          startW: item.w,
-          startH: item.h,
+          startY: handleMode === 'y1' ? item.y1 : item.y2,
         };
         svg.setPointerCapture(e.pointerId);
         e.preventDefault();
@@ -188,15 +193,31 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
     if (resize && e.pointerId === resize.pointerId) {
       const state = editor.getState();
       const now = toSVG(e);
-      let w = resize.startW + (now.x - resize.startSVG.x);
-      let h = resize.startH + (now.y - resize.startSVG.y);
-      if (state.snap) {
-        w = snapTo(w, state.gridSize);
-        h = snapTo(h, state.gridSize);
+      if (resize.mode === 'br') {
+        let w = resize.startW + (now.x - resize.startSVG.x);
+        let h = resize.startH + (now.y - resize.startSVG.y);
+        if (state.snap) {
+          w = snapTo(w, state.gridSize);
+          h = snapTo(h, state.gridSize);
+        }
+        w = Math.max(60, w);
+        h = Math.max(40, h);
+        editor.dispatch({ kind: 'update', id: resize.id, patch: { w, h } });
+      } else {
+        // Zone divider — drag one endpoint along Y; enforce a min separation
+        // from the other endpoint so the line never collapses.
+        const item = itemById(resize.id);
+        if (item?.kind !== 'zoneDivider') return;
+        let yNew = resize.startY + (now.y - resize.startSVG.y);
+        if (state.snap) yNew = snapTo(yNew, state.gridSize);
+        if (resize.mode === 'y1') {
+          yNew = Math.min(yNew, item.y2 - 40);
+          editor.dispatch({ kind: 'update', id: resize.id, patch: { y1: yNew } });
+        } else {
+          yNew = Math.max(yNew, item.y1 + 40);
+          editor.dispatch({ kind: 'update', id: resize.id, patch: { y2: yNew } });
+        }
       }
-      w = Math.max(60, w);
-      h = Math.max(40, h);
-      editor.dispatch({ kind: 'update', id: resize.id, patch: { w, h } });
       return;
     }
     if (!drag || e.pointerId !== drag.pointerId) return;
@@ -361,13 +382,11 @@ type DragState = {
   moved: boolean;
 };
 
-type ResizeState = {
-  pointerId: number;
-  id: string;
-  startSVG: { x: number; y: number };
-  startW: number;
-  startH: number;
-};
+type ResizeState =
+  | { pointerId: number; id: string; mode: 'br';
+      startSVG: { x: number; y: number }; startW: number; startH: number }
+  | { pointerId: number; id: string; mode: 'y1' | 'y2';
+      startSVG: { x: number; y: number }; startY: number };
 
 type MarqueeState = {
   pointerId: number;

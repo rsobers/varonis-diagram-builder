@@ -182,23 +182,17 @@ export function createCanvas(container: HTMLElement, editor: Editor, toast?: Toa
         }
       }
 
-      // Resize handle for a selected Boundary.
+      // Resize handles for the single selected item, per kind.
       if (state.selection.size === 1) {
         const selId = [...state.selection][0]!;
         const selItem = doc.items.find((i) => i.id === selId);
         const b = bboxes.get(selId);
         if (selItem?.kind === 'boundary' && b) {
-          const handle = document.createElementNS(SVG_NS, 'rect');
-          handle.setAttribute('x', String(b.x + b.w - 6));
-          handle.setAttribute('y', String(b.y + b.h - 6));
-          handle.setAttribute('width', '12');
-          handle.setAttribute('height', '12');
-          handle.setAttribute('fill', '#ffffff');
-          handle.setAttribute('stroke', '#4c86d3');
-          handle.setAttribute('stroke-width', '1.5');
-          handle.setAttribute('data-resize', selId);
-          handle.setAttribute('style', 'cursor: nwse-resize');
-          svg.appendChild(handle);
+          svg.appendChild(makeHandle(b.x + b.w - 6, b.y + b.h - 6, selId, 'br', 'nwse-resize'));
+        } else if (selItem?.kind === 'zoneDivider') {
+          // Two handles — drag the top (y1) or bottom (y2) endpoint along Y.
+          svg.appendChild(makeHandle(selItem.x - 6, selItem.y1 - 6, selId, 'y1', 'ns-resize'));
+          svg.appendChild(makeHandle(selItem.x - 6, selItem.y2 - 6, selId, 'y2', 'ns-resize'));
         }
       }
     }
@@ -218,6 +212,23 @@ export function createCanvas(container: HTMLElement, editor: Editor, toast?: Toa
     container.removeEventListener('drop', onDrop);
     window.removeEventListener('dragend', onDragEnd);
   };
+}
+
+function makeHandle(
+  x: number, y: number, id: string, mode: 'br' | 'y1' | 'y2', cursor: string,
+): SVGRectElement {
+  const el = document.createElementNS(SVG_NS, 'rect');
+  el.setAttribute('x', String(x));
+  el.setAttribute('y', String(y));
+  el.setAttribute('width', '12');
+  el.setAttribute('height', '12');
+  el.setAttribute('fill', '#ffffff');
+  el.setAttribute('stroke', '#4c86d3');
+  el.setAttribute('stroke-width', '1.5');
+  el.setAttribute('data-resize', id);
+  el.setAttribute('data-resize-mode', mode);
+  el.setAttribute('style', `cursor: ${cursor}`);
+  return el;
 }
 
 function makeRing(
