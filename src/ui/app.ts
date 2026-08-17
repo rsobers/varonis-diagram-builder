@@ -6,6 +6,7 @@ import { createInspector } from './inspector';
 import { createToolbar } from './toolbar';
 import { createToast } from './toast';
 import { createViolationsPanel } from './violations';
+import { createGenerateDialog } from './generateDialog';
 
 const EMPTY_DOC: DiagramDoc = {
   version: 1,
@@ -32,4 +33,7 @@ export function mountApp(root: HTMLElement): void {
   createCanvas(root.querySelector<HTMLElement>('#canvas-slot')!, editor, toast);
   createInspector(root.querySelector<HTMLElement>('#inspector-slot')!, editor);
   createViolationsPanel(root.querySelector<HTMLElement>('#violations-slot')!, editor);
+
+  const generate = createGenerateDialog(root, editor);
+  root.querySelector<HTMLButtonElement>('.tb-generate')?.addEventListener('click', () => generate.open());
 }
