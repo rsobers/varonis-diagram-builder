@@ -3,6 +3,7 @@ import { snapTo } from './editorState';
 import type { Item } from './model';
 import { buildCopy, buildPaste } from './copyPaste';
 import { layout, type BBox } from './layout';
+import { snapInlineControlToNearestConnector } from './attach';
 
 export type InteractionOptions = {
   /** Called with brief user-facing messages ("Now click the target"). */
@@ -86,7 +87,9 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
       const x = state.snap ? snapTo(p.x, state.gridSize) : p.x;
       const y = state.snap ? snapTo(p.y, state.gridSize) : p.y;
       const draft = state.placing.factory(x, y);
-      editor.dispatch({ kind: 'add', id: editor.newId(), item: draft });
+      const newItemId = editor.newId();
+      editor.dispatch({ kind: 'add', id: newItemId, item: draft });
+      maybeSnapToConnector(newItemId);
       e.preventDefault();
       return;
     }
@@ -290,7 +293,20 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
 
     if (moved && (lastDelta.x !== 0 || lastDelta.y !== 0)) {
       editor.dispatch({ kind: 'move', ids, dx: lastDelta.x, dy: lastDelta.y });
+      // After a drag, if the moved item is a lone inline control, magnet it
+      // onto the nearest connector line if within threshold.
+      if (ids.length === 1) maybeSnapToConnector(ids[0]!);
     }
+  }
+
+  function maybeSnapToConnector(id: string): void {
+    const item = itemById(id);
+    if (item?.kind !== 'inlineControl') return;
+    const snapped = snapInlineControlToNearestConnector(item, editor.getState().doc);
+    if (!snapped) return;
+    // Preserve grid snap by rounding to nearest grid only along the axis
+    // parallel to the connector; the perpendicular axis is authoritative.
+    editor.dispatch({ kind: 'update', id, patch: { x: snapped.x, y: snapped.y } });
   }
 
   function isInField(): boolean {
