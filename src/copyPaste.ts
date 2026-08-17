@@ -66,6 +66,7 @@ function translate(item: Exclude<Item, Connector>, dx: number, dy: number): Item
     case 'inlineControl':
     case 'legend':
     case 'caption':
+    case 'title':
       return { ...item, x: item.x + dx, y: item.y + dy };
     case 'zoneDivider':
       return { ...item, x: item.x + dx, y1: item.y1 + dy, y2: item.y2 + dy };

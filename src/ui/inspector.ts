@@ -1,5 +1,5 @@
 import type { Editor, EditorState } from '../editorState';
-import type { Item, Element, Grouped, InlineControl, Boundary, ZoneDivider, Actor, Connector, Legend, Caption } from '../model';
+import type { Item, Element, Grouped, InlineControl, Boundary, ZoneDivider, Actor, Connector, Legend, Caption, Title } from '../model';
 import { ICON_KIT, ICON_NAMES, namedIcon, type IconRef } from '../icons';
 import { LOGOS, logoUrl, findLogo } from '../logos';
 import { PALETTE, type ColorName } from '../tokens';
@@ -76,6 +76,7 @@ function renderKind(form: HTMLFormElement, item: Item, state: EditorState, edito
     case 'connector':      return renderConnector(form, item, ed);
     case 'legend':         return renderLegend(form, item, ed);
     case 'caption':        return renderCaption(form, item, ed);
+    case 'title':          return renderTitle(form, item, ed);
     case 'edge':
     case 'connectorLabel':
       muted(form, `'${item.kind}' items are edited via connect mode; select the connector instead.`);
@@ -294,6 +295,13 @@ function renderLegend(form: HTMLFormElement, item: Legend, ed: Editor): void {
 }
 
 function renderCaption(form: HTMLFormElement, item: Caption, ed: Editor): void {
+  text(form, 'Text', item.text, (v) => update(ed, item.id, { text: v }));
+  numberPair(form, 'x', 'y', item.x, item.y,
+    (x) => update(ed, item.id, { x }),
+    (y) => update(ed, item.id, { y }));
+}
+
+function renderTitle(form: HTMLFormElement, item: Title, ed: Editor): void {
   text(form, 'Text', item.text, (v) => update(ed, item.id, { text: v }));
   numberPair(form, 'x', 'y', item.x, item.y,
     (x) => update(ed, item.id, { x }),
@@ -577,6 +585,7 @@ function kindLabel(item: Item): string {
     case 'connector':      return 'Connector';
     case 'legend':         return 'Legend';
     case 'caption':        return 'Caption';
+    case 'title':          return 'Title';
     case 'edge':           return 'Edge';
     case 'connectorLabel': return 'Connector label';
   }

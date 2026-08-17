@@ -454,6 +454,7 @@ function anchorOf(item: Item): { x: number; y: number } {
     case 'inlineControl':
     case 'legend':
     case 'caption':
+    case 'title':
       return { x: item.x, y: item.y };
   }
 }

@@ -10,7 +10,7 @@ import { logoUrl } from './logos';
 const DEFAULT_ACTOR_ICON: IconRef = namedIcon('person');
 import type {
   DiagramDoc, Item, Boundary, ZoneDivider, Element, Grouped,
-  InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption,
+  InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption, Title,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
 import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, elementWidth, type BBox } from './layout';
@@ -132,6 +132,7 @@ function renderItem(item: Item, layers: Layers, warnings: string[], ctx: Ctx): v
     case 'connector':       renderConnector(item, layers, ctx); return;
     case 'legend':          renderLegend(item, layers, ctx); return;
     case 'caption':         renderCaption(item, layers, ctx); return;
+    case 'title':           renderTitle(item, layers, ctx); return;
   }
 }
 
@@ -554,5 +555,11 @@ function renderLegend(lg: Legend, L: Layers, ctx: Ctx): void {
 function renderCaption(c: Caption, L: Layers, ctx: Ctx): void {
   L.labels.push(wrapId(ctx, c.id,
     `<text x="${num(c.x)}" y="${num(c.y)}" font-size="11" fill="${SUB}">${esc(c.text)}</text>`
+  ));
+}
+
+function renderTitle(t: Title, L: Layers, ctx: Ctx): void {
+  L.labels.push(wrapId(ctx, t.id,
+    `<text x="${num(t.x)}" y="${num(t.y)}" font-size="18" font-weight="600" fill="${INK}">${esc(t.text)}</text>`
   ));
 }

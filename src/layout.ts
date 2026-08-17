@@ -3,7 +3,7 @@ import { textWidth, wrap } from './textMetrics';
 import { routeConnector } from './routing';
 import type {
   DiagramDoc, Item, Boundary, ZoneDivider, Element, Grouped,
-  InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption,
+  InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption, Title,
 } from './model';
 
 /**
@@ -55,6 +55,7 @@ export function clampToCanvas<T extends Exclude<Item, Connector>>(
     case 'inlineControl':
     case 'legend':
     case 'caption':
+    case 'title':
       return { ...item, x: item.x + dx, y: item.y + dy };
     case 'zoneDivider':
       return { ...item, x: item.x + dx, y1: item.y1 + dy, y2: item.y2 + dy };
@@ -83,6 +84,7 @@ export function bbox(item: Exclude<Item, Connector>): BBox {
     case 'connectorLabel': return bboxConnectorLabel(item);
     case 'legend':         return bboxLegend(item);
     case 'caption':        return bboxCaption(item);
+    case 'title':          return bboxTitle(item);
   }
 }
 
@@ -254,6 +256,11 @@ function bboxLegend(lg: Legend): BBox {
 function bboxCaption(c: Caption): BBox {
   // Caption is a single-line text anchored at (x, y baseline). Approximate.
   return { x: c.x, y: c.y - 11, w: textWidth(c.text, 11), h: 14 };
+}
+
+function bboxTitle(t: Title): BBox {
+  // Title font is 18px bold; measured with the same width heuristic.
+  return { x: t.x, y: t.y - 18, w: textWidth(t.text, 18), h: 22 };
 }
 
 /**

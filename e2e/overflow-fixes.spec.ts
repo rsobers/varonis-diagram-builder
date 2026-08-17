@@ -56,6 +56,34 @@ test('grouped row has spec §9 padding (15px on each side of centred label)', as
   await page.screenshot({ path: join(DIR, 'grouped-row-padded.png') });
 });
 
+test('title item renders bold 18px and is inline-editable', async ({ page }) => {
+  page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  const canvas = page.locator('.canvas-svg');
+  const cb = await canvas.boundingBox();
+  if (!cb) throw new Error('canvas not laid out');
+
+  await page.locator('.palette-btn[data-add="title"]').click();
+  await page.mouse.click(cb.x + 200, cb.y + 100);
+
+  const t = page.locator('.canvas-svg [data-item-id] text').first();
+  await expect(t).toHaveAttribute('font-size', '18');
+  await expect(t).toHaveAttribute('font-weight', '600');
+  await expect(t).toHaveText('Diagram title');
+
+  const box = await page.locator('.canvas-svg [data-item-id]').first().boundingBox();
+  if (!box) throw new Error('placed title missing bbox');
+  await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
+  const input = page.locator('.inline-edit');
+  await input.fill('Varonis Data Protection Architecture');
+  await input.press('Enter');
+  await expect(t).toHaveText('Varonis Data Protection Architecture');
+
+  await page.mouse.click(cb.x + 20, cb.y + 20);
+  await page.screenshot({ path: join(DIR, 'diagram-title.png') });
+});
+
 test('small element expands horizontally to fit a long label (no clipping)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');

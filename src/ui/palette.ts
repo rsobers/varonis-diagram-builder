@@ -149,6 +149,21 @@ const ENTRIES: Entry[] = [
     chip: () => `<svg width="30" height="20" aria-hidden="true"><rect x="2" y="3" width="26" height="14" fill="#fff" stroke="#e4e8ec" rx="3"/><rect x="5" y="7" width="6" height="4" fill="#e8f1fc" stroke="#a3c2ea"/><rect x="5" y="12" width="6" height="4" fill="#f4f6f8" stroke="#d3d9e0"/></svg>`,
     make: (_c, x, y) => ({ kind: 'legend', x, y, encoding: 'Encoding', rows: [['blue', 'Focal'], ['white', 'Default']] }),
   },
+
+  // Text.
+  {
+    id: 'title',
+    section: 'Text', label: 'Title', usesFill: false,
+    chip: () => `<svg width="30" height="20" aria-hidden="true"><text x="2" y="15" font-size="12" font-weight="700" fill="#1f2933">Title</text></svg>`,
+    // Placed at click point; text baseline sits at y so bbox starts a bit above.
+    make: (_c, x, y) => ({ kind: 'title', x, y, text: 'Diagram title' }),
+  },
+  {
+    id: 'caption',
+    section: 'Text', label: 'Caption', usesFill: false,
+    chip: () => `<svg width="30" height="20" aria-hidden="true"><text x="2" y="15" font-size="10" fill="#5b6673">caption</text></svg>`,
+    make: (_c, x, y) => ({ kind: 'caption', x, y, text: 'Caption text' }),
+  },
 ];
 
 /** Rebuild an ItemDraft from a drag/drop spec + the current fill color. */
@@ -168,7 +183,7 @@ export function buildDraftFromSpec(specId: string, color: ColorName, x: number, 
   return entry ? entry.make(color, x, y) : null;
 }
 
-const SECTIONS = ['Elements', 'Grouped', 'Inline control', 'Boundaries', 'Zones', 'Actors', 'Legend'] as const;
+const SECTIONS = ['Elements', 'Grouped', 'Inline control', 'Boundaries', 'Zones', 'Actors', 'Legend', 'Text'] as const;
 
 export function createPalette(container: HTMLElement, editor: Editor): () => void {
   container.classList.add('palette');

@@ -30,7 +30,8 @@ export type Item =
   | ConnectorLabel
   | Connector
   | Legend
-  | Caption;
+  | Caption
+  | Title;
 
 type WithId = { id: string };
 
@@ -148,6 +149,18 @@ export type Legend = WithId & {
 
 export type Caption = WithId & {
   kind: 'caption';
+  x: number; y: number;
+  text: string;
+};
+
+/**
+ * Diagram title. Bold, larger than a Caption — the visible heading a
+ * reader sees first (e.g. "Intercom AI Engine Diagram"). Distinct from
+ * `DiagramDoc.title` which is the fixed doc-metadata pair rendered in the
+ * top-left; a Title item is placeable anywhere on the canvas.
+ */
+export type Title = WithId & {
+  kind: 'title';
   x: number; y: number;
   text: string;
 };

@@ -32,6 +32,7 @@ export function attachInlineEdit(svg: SVGSVGElement, container: HTMLElement, edi
       case 'connector':
         return { field: 'label', value: item.label ?? '' };
       case 'caption':
+      case 'title':
         return { field: 'text', value: item.text };
       case 'legend':
         return { field: 'text', value: item.encoding };
