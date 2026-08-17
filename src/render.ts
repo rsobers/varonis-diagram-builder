@@ -13,7 +13,7 @@ import type {
   InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
-import { layout, containmentDepth, inlineControlWidth, type BBox } from './layout';
+import { layout, containmentDepth, inlineControlWidth, groupedWidth, type BBox } from './layout';
 import { routeConnector } from './routing';
 
 /**
@@ -350,8 +350,10 @@ function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): voi
   L.nodes.push(wrapId(ctx, e.id, parts.join('')));
 }
 
-function renderGrouped(g: Grouped, L: Layers, warnings: string[], ctx: Ctx): void {
-  const w = 190;
+function renderGrouped(g: Grouped, L: Layers, _warnings: string[], ctx: Ctx): void {
+  // §3.2 default width is 190; we expand horizontally to fit the widest
+  // label (header or any row) so long labels never overflow the row rect.
+  const w = groupedWidth(g);
   const h = 46 + g.children.length * 30 + (g.children.length - 1) * 5 + 10;
   const { fill: f, stroke: s } = PALETTE[g.color ?? 'white'];
   const parts: string[] = [
@@ -366,34 +368,11 @@ function renderGrouped(g: Grouped, L: Layers, warnings: string[], ctx: Ctx): voi
     if (c.icon) parts.push(iconSvg(c.icon, g.x + 18, cy + 7));
     const tx = c.icon ? g.x + 41 : g.x + w / 2;
     const anchor = c.icon ? '' : ' text-anchor="middle"';
-    // Grouped is fixed 190px wide per §3.2 → row inner is 170px. Text
-    // starts at x+41 (with icon) or is centred; either way the widest
-    // safe label is roughly (170 - 10 padding). Overflow gets truncated
-    // with an ellipsis and a fit warning so nothing bleeds past the row.
-    const rowBudget = w - (c.icon ? 41 - 10 + 8 : 20);
-    const label = truncateToWidth(c.label, 11.5, rowBudget, () => {
-      warnings.push(`row "${c.label}" in grouped "${g.label}" is too long to fit — truncated`);
-    });
     parts.push(
-      `<text x="${num(tx)}" y="${num(cy + 19)}"${anchor} font-size="11.5" fill="${INK}">${esc(label)}</text>`
+      `<text x="${num(tx)}" y="${num(cy + 19)}"${anchor} font-size="11.5" fill="${INK}">${esc(c.label)}</text>`
     );
   });
   L.nodes.push(wrapId(ctx, g.id, parts.join('')));
-}
-
-/**
- * If `s` doesn't fit into `maxPx` at the given size, chop chars from the
- * right until it does and append an ellipsis. Fires `onOverflow` once.
- */
-function truncateToWidth(s: string, size: number, maxPx: number, onOverflow: () => void): string {
-  if (textWidth(s, size) <= maxPx) return s;
-  onOverflow();
-  const ELLIPSIS = '…';
-  let cut = s;
-  while (cut.length > 1 && textWidth(cut + ELLIPSIS, size) > maxPx) {
-    cut = cut.slice(0, -1);
-  }
-  return cut + ELLIPSIS;
 }
 
 function renderInlineControl(c: InlineControl, L: Layers, ctx: Ctx): void {

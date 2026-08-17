@@ -36,7 +36,7 @@ test('inline control pill fits a long label like "Metadata & Logs" without clipp
   await page.screenshot({ path: join(DIR, 'inline-control-fits.png') });
 });
 
-test('grouped row truncates + warns when the label overflows', async ({ page }) => {
+test('grouped expands horizontally to fit a long row label (no truncation)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.waitForLoadState('networkidle');
@@ -48,17 +48,23 @@ test('grouped row truncates + warns when the label overflows', async ({ page }) 
   await page.locator('.palette-btn[data-add="grouped"]').click();
   await page.mouse.click(cb.x + 300, cb.y + 200);
 
+  // Baseline: default group is 190 wide.
+  const outerRect = page.locator('.canvas-svg [data-item-id] rect').first();
+  expect(Number(await outerRect.getAttribute('width'))).toBe(190);
+
   // Edit the first child's label via the inspector to something too long.
   const rowInput = page.locator('.inspector .grouped-row input[type="text"]').first();
   await rowInput.fill('High-Volume Classification Engine');
   await rowInput.press('Enter');
 
-  // The rendered row text should be shorter than the source label (truncated).
+  // Group should have expanded past 190 to fit the label.
+  const w = Number(await outerRect.getAttribute('width'));
+  expect(w).toBeGreaterThan(190);
+
+  // The row label should render in full — no ellipsis.
   const rendered = await page.locator('.canvas-svg [data-item-id] text').nth(1).textContent();
-  expect(rendered).not.toBeNull();
-  expect(rendered!.length).toBeLessThan('High-Volume Classification Engine'.length);
-  expect(rendered).toContain('…');
+  expect(rendered).toBe('High-Volume Classification Engine');
 
   await page.mouse.click(cb.x + 20, cb.y + 20);
-  await page.screenshot({ path: join(DIR, 'grouped-row-truncated.png') });
+  await page.screenshot({ path: join(DIR, 'grouped-row-expanded.png') });
 });

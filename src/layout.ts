@@ -113,9 +113,29 @@ function bboxElement(e: Element): BBox {
 }
 
 function bboxGrouped(g: Grouped): BBox {
-  const w = 190;
+  const w = groupedWidth(g);
   const h = 46 + g.children.length * 30 + (g.children.length - 1) * 5 + 10;
   return { x: g.x, y: g.y, w, h };
+}
+
+/**
+ * Grouped shell width. §3.2 pins the default at 190px, but a row with a
+ * label wider than that will overflow — so we expand horizontally to fit
+ * the widest thing in the shell (header at 12px + each row at 11.5px).
+ * All rows stay the same width, header stays centred; only the outer
+ * width grows.
+ */
+export function groupedWidth(g: Grouped): number {
+  const HEADER_PAD = 20;     // 10px on each side of the centred header
+  const ROW_PAD_ICON = 51;   // row inset 10 + icon slot 31 + trailing 10
+  const ROW_PAD_PLAIN = 30;  // row inset 10 + 5px padding either side of centred text
+  const headerNeed = textWidth(g.label, 12) + HEADER_PAD;
+  let widest = headerNeed;
+  for (const c of g.children) {
+    const rowNeed = textWidth(c.label, 11.5) + (c.icon ? ROW_PAD_ICON : ROW_PAD_PLAIN);
+    if (rowNeed > widest) widest = rowNeed;
+  }
+  return Math.max(190, Math.ceil(widest));
 }
 
 function bboxInlineControl(c: InlineControl): BBox {
