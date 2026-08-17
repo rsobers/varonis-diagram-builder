@@ -137,13 +137,13 @@ const ENTRIES: Entry[] = [
   {
     id: 'actor:person',
     section: 'Actors', label: 'Single user', usesFill: false,
-    chip: () => `<svg width="30" height="20" aria-hidden="true" viewBox="0 0 30 20"><g transform="translate(9,-1) scale(0.5)"><path d="${iconPath('person')}" fill="#263238"/></g></svg>`,
+    chip: () => `<svg width="30" height="20" aria-hidden="true" viewBox="0 0 30 20"><g transform="translate(9,4) scale(0.5)"><path d="${iconPath('person')}" fill="#263238"/></g></svg>`,
     make: (_c, x, y) => ({ kind: 'actor', cx: x, y, label: 'User', icon: namedIcon('person') }),
   },
   {
     id: 'actor:people',
     section: 'Actors', label: 'User group', usesFill: false,
-    chip: () => `<svg width="30" height="20" aria-hidden="true" viewBox="0 0 30 20"><g transform="translate(9,-1) scale(0.5)"><path d="${iconPath('people')}" fill="#263238"/></g></svg>`,
+    chip: () => `<svg width="30" height="20" aria-hidden="true" viewBox="0 0 30 20"><g transform="translate(9,4) scale(0.5)"><path d="${iconPath('people')}" fill="#263238"/></g></svg>`,
     make: (_c, x, y) => ({ kind: 'actor', cx: x, y, label: 'Users', icon: namedIcon('people') }),
   },
 

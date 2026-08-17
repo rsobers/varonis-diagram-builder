@@ -2,6 +2,7 @@ import type { Editor } from './editorState';
 import { snapTo } from './editorState';
 import type { Item } from './model';
 import { buildCopy, buildPaste } from './copyPaste';
+import { layout, type BBox } from './layout';
 
 export type InteractionOptions = {
   /** Called with brief user-facing messages ("Now click the target"). */
@@ -30,6 +31,7 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
   let clipboard: Item[] = [];
   let drag: DragState | null = null;
   let resize: ResizeState | null = null;
+  let marquee: MarqueeState | null = null;
 
   function toSVG(e: PointerEvent | MouseEvent): { x: number; y: number } {
     const ctm = svg.getScreenCTM();
@@ -110,7 +112,17 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
     }
 
     if (!id) {
-      editor.dispatch({ kind: 'select', ids: [], mode: 'replace' });
+      // Empty canvas: begin a marquee. Whether it becomes a "click to clear"
+      // or "drag to select intersecting items" is decided on pointerup based
+      // on whether any move happened.
+      marquee = {
+        pointerId: e.pointerId,
+        startSVG: toSVG(e),
+        currentSVG: toSVG(e),
+        shiftKey: e.shiftKey,
+        rect: null,
+        moved: false,
+      };
       return;
     }
 
@@ -153,6 +165,26 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
   }
 
   function onPointerMove(e: PointerEvent): void {
+    if (marquee && e.pointerId === marquee.pointerId) {
+      marquee.currentSVG = toSVG(e);
+      const dx = marquee.currentSVG.x - marquee.startSVG.x;
+      const dy = marquee.currentSVG.y - marquee.startSVG.y;
+      if (!marquee.moved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+        marquee.moved = true;
+        marquee.rect = createMarqueeRect();
+        svg.appendChild(marquee.rect);
+        // Capture pointer so marquee follows even if it exits the SVG.
+        try { svg.setPointerCapture(marquee.pointerId); } catch { /* already */ }
+      }
+      if (marquee.moved && marquee.rect) {
+        const r = normalizeRect(marquee.startSVG, marquee.currentSVG);
+        marquee.rect.setAttribute('x', String(r.x));
+        marquee.rect.setAttribute('y', String(r.y));
+        marquee.rect.setAttribute('width', String(r.w));
+        marquee.rect.setAttribute('height', String(r.h));
+      }
+      return;
+    }
     if (resize && e.pointerId === resize.pointerId) {
       const state = editor.getState();
       const now = toSVG(e);
@@ -195,6 +227,32 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
   }
 
   function onPointerUp(e: PointerEvent): void {
+    if (marquee && e.pointerId === marquee.pointerId) {
+      const m = marquee;
+      marquee = null;
+      if (m.rect) m.rect.remove();
+      try { svg.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+
+      if (!m.moved) {
+        // Bare click on empty canvas — clear selection (unless shift, in
+        // which case leave the existing selection alone).
+        if (!m.shiftKey) editor.dispatch({ kind: 'select', ids: [], mode: 'replace' });
+        return;
+      }
+
+      // Marquee drag — collect items whose bboxes intersect the rect.
+      const r = normalizeRect(m.startSVG, m.currentSVG);
+      const bboxes = layout(editor.getState().doc);
+      const ids: string[] = [];
+      for (const [id, b] of bboxes) {
+        if (rectIntersects(b, r)) ids.push(id);
+      }
+      editor.dispatch({
+        kind: 'select', ids,
+        mode: m.shiftKey ? 'add' : 'replace',
+      });
+      return;
+    }
     if (resize && e.pointerId === resize.pointerId) {
       resize = null;
       try { svg.releasePointerCapture(e.pointerId); } catch { /* already released */ }
@@ -310,6 +368,38 @@ type ResizeState = {
   startW: number;
   startH: number;
 };
+
+type MarqueeState = {
+  pointerId: number;
+  startSVG: { x: number; y: number };
+  currentSVG: { x: number; y: number };
+  shiftKey: boolean;
+  rect: SVGRectElement | null;
+  moved: boolean;
+};
+
+function normalizeRect(a: { x: number; y: number }, b: { x: number; y: number }): BBox {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return { x, y, w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) };
+}
+
+function rectIntersects(a: BBox, b: BBox): boolean {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function createMarqueeRect(): SVGRectElement {
+  const el = document.createElementNS(SVG_NS, 'rect');
+  el.setAttribute('class', 'marquee');
+  el.setAttribute('fill', '#4c86d3');
+  el.setAttribute('fill-opacity', '0.08');
+  el.setAttribute('stroke', '#4c86d3');
+  el.setAttribute('stroke-width', '1');
+  el.setAttribute('stroke-dasharray', '3 3');
+  el.setAttribute('pointer-events', 'none');
+  return el;
+}
 
 function anchorOf(item: Item): { x: number; y: number } {
   switch (item.kind) {
