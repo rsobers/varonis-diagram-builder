@@ -30,13 +30,40 @@ describe('routeConnector — straight', () => {
     expect(r.points).toEqual([[50, 60], [50, 200]]);
   });
 
-  it('mixed offsets pick the dominant axis', () => {
-    // to is far right + slightly down → dominant horizontal
-    const a = box(0, 0);
-    const b = box(400, 10);
+  it('mixed offsets pick the dominant axis, then align to target midpoint (§4)', () => {
+    // to is far right + slightly down → dominant horizontal. y-ranges
+    // overlap [10, 60], so the route aligns to target's midpoint (40),
+    // truly horizontal — not the diagonal centre-to-centre used to emit.
+    const a = box(0, 0);           // y range [0, 60]
+    const b = box(400, 10);        // y range [10, 70], midpoint y=40
     const r = routeConnector(a, b, 'straight');
-    expect(r.points[0]).toEqual([100, 30]); // right of a
-    expect(r.points[1]).toEqual([400, 40]); // left of b
+    expect(r.points[0]).toEqual([100, 40]); // exit right, aligned to target midpoint
+    expect(r.points[1]).toEqual([400, 40]); // enter target's left-edge midpoint
+  });
+
+  it('grouped-vs-small case: taller box connects horizontally at target midpoint', () => {
+    // The bug the user hit: a tall group (h=400) connected to a shorter
+    // element (h=64) shouldn't render a diagonal.
+    const group = box(100, 100, 190, 400);       // y range [100, 500]
+    const element = box(500, 250, 180, 64);      // midpoint y=282
+    const r = routeConnector(group, element, 'straight');
+    // Both endpoints at y=282 (target's midpoint, inside group's range).
+    expect(r.points[0]![1]).toBe(282);
+    expect(r.points[1]![1]).toBe(282);
+    expect(r.points[0]![0]).toBe(290); // group's right edge
+    expect(r.points[1]![0]).toBe(500); // element's left edge
+  });
+
+  it('falls back to diagonal when perpendicular ranges do not overlap', () => {
+    // No y overlap: source is [0, 60], target is [200, 260]. Can't be
+    // truly straight; fallback to centre-to-centre.
+    const a = box(0, 0);
+    const b = box(400, 200);
+    const r = routeConnector(a, b, 'straight');
+    // Dominant horizontal, but with no y-overlap the two endpoints are at
+    // their own midpoints.
+    expect(r.points[0]).toEqual([100, 30]);
+    expect(r.points[1]).toEqual([400, 230]);
   });
 });
 

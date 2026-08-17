@@ -62,6 +62,42 @@ export function routeConnector(
   const tPt = edgeMidpointOffset(to, tSide, offset);
 
   if (style === 'straight') {
+    // §4: "A straight connector may align to its target's midpoint instead
+    // when that avoids an unnecessary elbow." When the two boxes' perpendicular
+    // ranges overlap we can pull the source's exit point away from its own
+    // midpoint so the line is truly straight, landing on the target's midpoint.
+    // When they don't overlap, no truly-straight route lands on both edges;
+    // we keep the current diagonal (user can toggle to elbow).
+    if (horizontal) {
+      const overlapMin = Math.max(from.y, to.y);
+      const overlapMax = Math.min(from.y + from.h, to.y + to.h);
+      if (overlapMin <= overlapMax) {
+        // Prefer target's midpoint + connector-group offset, clamped to overlap.
+        const preferred = tCy + offset;
+        const sharedY = Math.max(overlapMin, Math.min(overlapMax, preferred));
+        const straightF: Point = [fPt[0], sharedY];
+        const straightT: Point = [tPt[0], sharedY];
+        return {
+          points: [straightF, straightT],
+          mid: [(straightF[0] + straightT[0]) / 2, sharedY],
+        };
+      }
+    } else {
+      const overlapMin = Math.max(from.x, to.x);
+      const overlapMax = Math.min(from.x + from.w, to.x + to.w);
+      if (overlapMin <= overlapMax) {
+        const preferred = tCx + offset;
+        const sharedX = Math.max(overlapMin, Math.min(overlapMax, preferred));
+        const straightF: Point = [sharedX, fPt[1]];
+        const straightT: Point = [sharedX, tPt[1]];
+        return {
+          points: [straightF, straightT],
+          mid: [sharedX, (straightF[1] + straightT[1]) / 2],
+        };
+      }
+    }
+    // Fallback: no perpendicular overlap. Use the plain midpoint-to-midpoint
+    // segment (slight diagonal). User can switch to elbow.
     return {
       points: [fPt, tPt],
       mid: [(fPt[0] + tPt[0]) / 2, (fPt[1] + tPt[1]) / 2],
