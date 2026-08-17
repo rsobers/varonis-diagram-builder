@@ -153,6 +153,17 @@ const ENTRIES: Entry[] = [
 
 /** Rebuild an ItemDraft from a drag/drop spec + the current fill color. */
 export function buildDraftFromSpec(specId: string, color: ColorName, x: number, y: number): ItemDraft | null {
+  // Vendor marks piggyback on the same drag pipeline as element palette
+  // entries. Their spec is `mark:<id>:<style>`; `color` is ignored (marks
+  // sit on white).
+  if (specId.startsWith('mark:')) {
+    const [, id, style] = specId.split(':');
+    if (!id) return null;
+    const label = LOGOS.find((l) => l.id === id)?.name ?? id;
+    return style === 'badge'
+      ? { kind: 'element', x, y, size: 'md', color: 'white', label, markId: id, markStyle: 'badge' }
+      : { kind: 'element', x, y, size: 'md', color: 'white', label, markId: id };
+  }
   const entry = ENTRIES.find((e) => e.id === specId);
   return entry ? entry.make(color, x, y) : null;
 }
@@ -241,7 +252,7 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
       for (const l of matches) {
         const url = logoUrl(l.id) ?? '';
         html.push(
-          `<button type="button" class="palette-btn" draggable="false" data-mark="${l.id}">` +
+          `<button type="button" class="palette-btn" draggable="true" data-mark="${l.id}">` +
           `<span class="palette-chip"><img alt="" src="${url}" width="20" height="20" style="display:block"></span>` +
           `<span class="palette-label">${l.name}</span></button>`
         );
@@ -358,10 +369,18 @@ export function createPalette(container: HTMLElement, editor: Editor): () => voi
   const offRegistry = onLogosChanged(() => render(editor.getState()));
 
   container.addEventListener('dragstart', (ev) => {
-    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('[data-add]');
-    if (!btn) return;
-    // Transferable payload: spec id + fill color so the drop side can rebuild.
-    const spec = btn.dataset.add!;
+    const target = ev.target as HTMLElement;
+    const addBtn = target.closest<HTMLButtonElement>('[data-add]');
+    const markBtn = target.closest<HTMLButtonElement>('[data-mark]');
+    let spec: string | null = null;
+    if (addBtn) {
+      spec = addBtn.dataset.add!;
+    } else if (markBtn) {
+      // Encode current placement style into the spec so drag drops match
+      // what click-to-place would produce.
+      spec = `mark:${markBtn.dataset.mark}:${markPlacementStyle}`;
+    }
+    if (!spec) return;
     const payload = JSON.stringify({ spec, color: currentFill });
     ev.dataTransfer?.setData('application/x-vdb-item', payload);
     ev.dataTransfer?.setData('text/plain', payload);

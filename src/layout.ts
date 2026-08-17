@@ -202,9 +202,11 @@ function bboxInlineControl(c: InlineControl): BBox {
  * renderer: icon slot on the left + label + horizontal breathing room.
  */
 export function inlineControlWidth(label: string, hasIcon: boolean): number {
-  const iconPad = hasIcon ? 34 : 12;  // 12(left) + 16(icon) + 6(gap) OR 12(left)
+  // Text-start inset in the renderer: 38 with icon (matches iconSvg at x+12,
+  // 16px icon slot, 10px gap → text at x+38); 12 without.
+  const leftInset = hasIcon ? 38 : 12;
   const rightPad = 14;
-  return Math.max(90, iconPad + textWidth(label, 12) + rightPad);
+  return Math.max(90, leftInset + textWidth(label, 12) + rightPad);
 }
 
 function bboxActor(a: Actor): BBox {
