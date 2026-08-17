@@ -4,3 +4,7 @@ coverage
 .DS_Store
 *.log
 .vite
+test-results
+playwright-report
+playwright/.cache
+e2e/screenshots

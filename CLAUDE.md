@@ -62,13 +62,20 @@ The prototype called `api.anthropic.com` directly from the browser; that only wo
 Do not start the next one until the previous is committed and green.
 
 - **M0 — Renderer.** Scaffold, tokens, pure `render.ts`, both examples rendering headless, snapshot tests passing. No UI at all.
-- **M1 — Canvas.** Place, drag, select, edit, delete. Palette and inspector. Grid snapping.
-- **M2 — Full kit.** Connectors and connector labels, boundaries, zone dividers, inline controls, grouped elements, legends.
-- **M3 — Output.** SVG and 2x transparent PNG export, local persistence, keyboard shortcuts.
-- **M4 — Generate from image.** Serverless proxy, upload, JSON parsing with strict validation, drop onto canvas.
-- **M5 — Ship.** Deploy, decide on auth and shared storage.
+- **M1 — Editor.** Full editing surface. `prototype/diagram-builder.html` is the UX acceptance target — match or beat it on every interaction. Do not port its code; do match its capability. Required:
+  - **Drag-and-drop from the palette** onto the canvas, plus click-to-place as a fallback.
+  - **Full element kit**: element (sm/md/lg), grouped element with editable rows, inline control, boundary (plain and filled), zone divider, actor.
+  - **Connectors**: connect mode, click source then target, straight and elbow routing, solid and dashed, terminating on edge midpoints per §4 using `layout()`.
+  - **Connector labels**: pill with optional secondary text and number badge, editable from the inspector.
+  - **Inspector**: label, second line, size, fill, icon picker showing all icons as a grid, group row add/remove, per-kind fields.
+  - **Encoding selector**: Ownership / Emphasis / State / none. State unlocks amber/red/green and requires a legend. This is what makes the color restriction legible rather than broken — the palette is contextual to the declared encoding, not permissive-by-default with tribal knowledge attached.
+  - **Legend element**, auto-sized to its content.
+  - Grid snapping and keyboard shortcuts (Delete / Escape / arrows, shift-arrows for ×10).
+- **M2 — Output.** SVG and 2x transparent PNG export, local persistence, keyboard shortcuts. (Was M3.)
+- **M3 — Generate from image.** Serverless proxy, upload, JSON parsing with strict validation, drop onto canvas. (Was M4.)
+- **M4 — Ship.** Deploy, decide on auth and shared storage. (Was M5.)
 
-M0 is deliberately UI-free. The prototype's interaction bugs came from interaction and rendering being tangled; keeping the renderer pure and tested first prevents that.
+M0 is deliberately UI-free. The prototype's interaction bugs came from interaction and rendering being tangled; keeping the renderer pure and tested first prevents that. Everything M1 adds — connect mode, drag-and-drop, encoding, inspector — lives in `interactions.ts` and `ui/`, never in `render.ts`.
 
 ## Constraints
 
@@ -80,4 +87,4 @@ M0 is deliberately UI-free. The prototype's interaction bugs came from interacti
 
 `prototype/diagram-builder.html` is a single-file proof of concept. Its rendering is sound and matches the current spec; its interaction layer was never tested in a browser. Treat it as a design reference, not a codebase to port line by line.
 
-Outstanding bugs to reproduce and fix in M1/M2 — **to be filled in from the punch list before starting M1.**
+The prototype is the **UX acceptance target for M1**: any capability it has that the editor lacks is a bug in the editor. The parity checklist above is the definition of done. Match the shape of the interactions, not the shape of the code — the prototype's globals-and-strings model is exactly what M0's architecture was designed to avoid.

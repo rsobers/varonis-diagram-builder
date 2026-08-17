@@ -2,12 +2,18 @@ import {
   PALETTE, SIZES, INK, SUB, ICON_COLOR, CONN, CONN_DASHED,
   LABEL_STROKE, BOUNDARY_STROKE, OPTIONAL_TEXT, MONO_FAMILY, UI_FAMILY,
 } from './tokens';
-import { ICONS, type IconName } from './icons';
+import { namedIcon, type IconRef } from './icons';
+
+// Actors default to the "person" glyph when none is set. Resolved at
+// import so the fallback still bakes a self-contained path into exports.
+const DEFAULT_ACTOR_ICON: IconRef = namedIcon('person');
 import type {
   DiagramDoc, Item, Boundary, ZoneDivider, Element, Grouped,
-  InlineControl, Actor, Edge, ConnectorLabel, Legend, Caption,
+  InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
+import { layout, type BBox } from './layout';
+import { routeConnector } from './routing';
 
 /**
  * Pure renderer — no DOM, no globals, no side effects. Ported from
@@ -19,9 +25,18 @@ import { textWidth, wrap } from './textMetrics';
  * upstream geometry stays in full precision.
  */
 
+export type RenderOptions = {
+  /**
+   * When true, wraps each item's primary output in `<g data-item-id="…">` so
+   * the interactive editor can hit-test via `event.target.closest(...)`.
+   * Off by default so exported/committed SVGs stay unmarked.
+   */
+  interactive?: boolean;
+};
+
 export type RenderResult = { svg: string; warnings: string[] };
 
-export function render(doc: DiagramDoc): RenderResult {
+export function render(doc: DiagramDoc, opts: RenderOptions = {}): RenderResult {
   const layers = {
     boundaries: [] as string[],
     edges: [] as string[],
@@ -30,16 +45,24 @@ export function render(doc: DiagramDoc): RenderResult {
     labels: [] as string[],
   };
   const warnings: string[] = [];
+  // layout() is only needed when the doc has auto-routed connectors; skip
+  // when it doesn't so fixture rendering has no new dependency at runtime.
+  const hasConnector = doc.items.some((it) => it.kind === 'connector');
+  const bboxes = hasConnector ? layout(doc) : new Map<string, BBox>();
+  const ctx: Ctx = { interactive: opts.interactive === true, bboxes, items: doc.items };
 
   for (const item of doc.items) {
-    renderItem(item, layers, warnings);
+    renderItem(item, layers, warnings, ctx);
   }
 
+  // orient="auto-start-reverse" so the SAME marker works at either end of a
+  // connector — it flips 180° when used as marker-start, giving us source
+  // arrows without a second marker definition.
   const defs =
     `<defs>` +
-    `<marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" ` +
+    `<marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto-start-reverse" ` +
       `markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="${CONN}"/></marker>` +
-    `<marker id="ard" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" ` +
+    `<marker id="ard" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto-start-reverse" ` +
       `markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="${CONN_DASHED}"/></marker>` +
     `</defs>`;
 
@@ -71,18 +94,21 @@ type Layers = {
   nodes: string[]; labels: string[];
 };
 
-function renderItem(item: Item, layers: Layers, warnings: string[]): void {
+type Ctx = { interactive: boolean; bboxes: Map<string, BBox>; items: readonly Item[] };
+
+function renderItem(item: Item, layers: Layers, warnings: string[], ctx: Ctx): void {
   switch (item.kind) {
-    case 'boundary':        renderBoundary(item, layers); return;
-    case 'zoneDivider':     renderZoneDivider(item, layers); return;
-    case 'element':         renderElement(item, layers, warnings); return;
-    case 'grouped':         renderGrouped(item, layers); return;
-    case 'inlineControl':   renderInlineControl(item, layers); return;
-    case 'actor':           renderActor(item, layers); return;
-    case 'edge':            renderEdge(item, layers); return;
-    case 'connectorLabel':  renderConnectorLabel(item, layers); return;
-    case 'legend':          renderLegend(item, layers); return;
-    case 'caption':         renderCaption(item, layers); return;
+    case 'boundary':        renderBoundary(item, layers, ctx); return;
+    case 'zoneDivider':     renderZoneDivider(item, layers, ctx); return;
+    case 'element':         renderElement(item, layers, warnings, ctx); return;
+    case 'grouped':         renderGrouped(item, layers, ctx); return;
+    case 'inlineControl':   renderInlineControl(item, layers, ctx); return;
+    case 'actor':           renderActor(item, layers, ctx); return;
+    case 'edge':            renderEdge(item, layers, ctx); return;
+    case 'connectorLabel':  renderConnectorLabel(item, layers, ctx); return;
+    case 'connector':       renderConnector(item, layers, ctx); return;
+    case 'legend':          renderLegend(item, layers, ctx); return;
+    case 'caption':         renderCaption(item, layers, ctx); return;
   }
 }
 
@@ -102,9 +128,13 @@ function esc(s: string | number): string {
     .replace(/'/g, '&#x27;');
 }
 
-function iconSvg(key: IconName | undefined, x: number, y: number, scale = 0.667, fill = ICON_COLOR): string {
-  if (!key) return '';
-  return `<g transform="translate(${num(x)},${num(y)}) scale(${num(scale)})"><path d="${ICONS[key]}" fill="${fill}"/></g>`;
+function iconSvg(ref: IconRef | undefined, x: number, y: number, scale = 0.667, fill = ICON_COLOR): string {
+  if (!ref) return '';
+  return `<g transform="translate(${num(x)},${num(y)}) scale(${num(scale)})"><path d="${ref.path}" fill="${fill}"/></g>`;
+}
+
+function wrapId(ctx: Ctx, id: string, content: string): string {
+  return ctx.interactive ? `<g data-item-id="${esc(id)}">${content}</g>` : content;
 }
 
 function dedupe(arr: string[]): string[] {
@@ -118,7 +148,7 @@ function dedupe(arr: string[]): string[] {
 
 // ---- containers ---------------------------------------------------------
 
-function renderBoundary(b: Boundary, L: Layers): void {
+function renderBoundary(b: Boundary, L: Layers, ctx: Ctx): void {
   let fill: string;
   let stroke: string;
   let back: string;
@@ -137,10 +167,14 @@ function renderBoundary(b: Boundary, L: Layers): void {
     back = '#ffffff';
   }
 
-  L.boundaries.push(
+  // In interactive mode the boundary rect is made hit-testable so clicks in
+  // its interior land on the boundary rather than falling through to the
+  // background. Nested elements draw later in DOM order and still win.
+  const peAttr = ctx.interactive ? ' pointer-events="all"' : '';
+  L.boundaries.push(wrapId(ctx, b.id,
     `<rect x="${num(b.x)}" y="${num(b.y)}" width="${num(b.w)}" height="${num(b.h)}" fill="${fill}" ` +
-    `stroke="${stroke}" stroke-width="1.2" stroke-dasharray="6 4"/>`
-  );
+    `stroke="${stroke}" stroke-width="1.2" stroke-dasharray="6 4"${peAttr}/>`
+  ));
 
   const tw = textWidth(b.label, 12) + 12;
   let tx: number; let anchor: string; let bx: number;
@@ -159,22 +193,21 @@ function renderBoundary(b: Boundary, L: Layers): void {
   );
 }
 
-function renderZoneDivider(z: ZoneDivider, L: Layers): void {
-  L.boundaries.push(
-    `<line x1="${num(z.x)}" y1="${num(z.y1 + 22)}" x2="${num(z.x)}" y2="${num(z.y2)}" stroke="${BOUNDARY_STROKE}" ` +
-    `stroke-width="1" stroke-dasharray="6 4"/>`
-  );
+function renderZoneDivider(z: ZoneDivider, L: Layers, ctx: Ctx): void {
   const w = z.label.length * 5.6 + 20;
-  L.boundaries.push(
+  const line =
+    `<line x1="${num(z.x)}" y1="${num(z.y1 + 22)}" x2="${num(z.x)}" y2="${num(z.y2)}" stroke="${BOUNDARY_STROKE}" ` +
+    `stroke-width="1" stroke-dasharray="6 4"/>`;
+  const chip =
     `<rect x="${num(z.x - w / 2)}" y="${num(z.y1)}" width="${num(w)}" height="18" rx="9" fill="#ffffff" stroke="${BOUNDARY_STROKE}"/>` +
     `<text x="${num(z.x)}" y="${num(z.y1 + 12)}" text-anchor="middle" font-size="8" font-weight="700" ` +
-    `font-family="${MONO_FAMILY}" fill="${SUB}">${esc(z.label.toUpperCase())}</text>`
-  );
+    `font-family="${MONO_FAMILY}" fill="${SUB}">${esc(z.label.toUpperCase())}</text>`;
+  L.boundaries.push(wrapId(ctx, z.id, line + chip));
 }
 
 // ---- elements -----------------------------------------------------------
 
-function renderElement(e: Element, L: Layers, warnings: string[]): void {
+function renderElement(e: Element, L: Layers, warnings: string[], ctx: Ctx): void {
   const size = e.size ?? 'sm';
   const [w, h] = SIZES[size];
   const { fill: f, stroke: s } = PALETTE[e.color ?? 'white'];
@@ -224,10 +257,10 @@ function renderElement(e: Element, L: Layers, warnings: string[]): void {
       );
     }
   }
-  L.nodes.push(parts.join(''));
+  L.nodes.push(wrapId(ctx, e.id, parts.join('')));
 }
 
-function renderGrouped(g: Grouped, L: Layers): void {
+function renderGrouped(g: Grouped, L: Layers, ctx: Ctx): void {
   const w = 190;
   const h = 46 + g.children.length * 30 + (g.children.length - 1) * 5 + 10;
   const { fill: f, stroke: s } = PALETTE[g.color ?? 'white'];
@@ -247,10 +280,10 @@ function renderGrouped(g: Grouped, L: Layers): void {
       `<text x="${num(tx)}" y="${num(cy + 19)}"${anchor} font-size="11.5" fill="${INK}">${esc(c.label)}</text>`
     );
   });
-  L.nodes.push(parts.join(''));
+  L.nodes.push(wrapId(ctx, g.id, parts.join('')));
 }
 
-function renderInlineControl(c: InlineControl, L: Layers): void {
+function renderInlineControl(c: InlineControl, L: Layers, ctx: Ctx): void {
   const w = Math.max(90, c.label.length * 7.0 + (c.icon ? 34 : 24));
   const h = 36;
   const parts: string[] = [
@@ -263,59 +296,77 @@ function renderInlineControl(c: InlineControl, L: Layers): void {
   parts.push(
     `<text x="${num(tx)}" y="${num(c.y + h / 2 + 4)}"${anchor} font-size="12" fill="${INK}">${esc(c.label)}</text>`
   );
-  L.nodes.push(parts.join(''));
+  L.nodes.push(wrapId(ctx, c.id, parts.join('')));
 }
 
-function renderActor(a: Actor, L: Layers): void {
-  const ic = a.icon ?? 'person';
+function renderActor(a: Actor, L: Layers, ctx: Ctx): void {
+  const ic = a.icon ?? DEFAULT_ACTOR_ICON;
   const parts: string[] = [
     iconSvg(ic, a.cx - 16, a.y, 1.333),
     `<text x="${num(a.cx)}" y="${num(a.y + 50)}" text-anchor="middle" font-size="12" fill="${INK}">${esc(a.label)}</text>`,
   ];
-  L.nodes.push(parts.join(''));
+  L.nodes.push(wrapId(ctx, a.id, parts.join('')));
 }
 
 // ---- connectors ---------------------------------------------------------
 
-function renderEdge(e: Edge, L: Layers): void {
+function renderEdge(e: Edge, L: Layers, ctx: Ctx): void {
   const d = 'M' + e.points.map(([x, y]) => `${num(x)},${num(y)}`).join(' L');
   const col = e.dashed ? CONN_DASHED : CONN;
   const dash = e.dashed ? ' stroke-dasharray="5 4"' : '';
   const arrow = e.arrow !== false;
   const mk = arrow ? ` marker-end="url(#${e.dashed ? 'ard' : 'ar'})"` : '';
-  L.edges.push(`<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mk}/>`);
+  L.edges.push(wrapId(ctx, e.id,
+    `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mk}/>`
+  ));
 }
 
-function renderConnectorLabel(c: ConnectorLabel, L: Layers): void {
+function renderConnectorLabel(c: ConnectorLabel, L: Layers, ctx: Ctx): void {
+  L.labels.push(wrapId(ctx, c.id, pillSvg({
+    cx: c.cx, cy: c.cy,
+    text: c.text,
+    optional: c.optional ?? '',
+    num: c.num ?? '',
+  })));
+}
+
+/**
+ * Connector-label pill geometry ported from reference/v2.py::clabel(). Text
+ * is uppercased and centred; optional secondary text runs alongside the
+ * label; number badge occupies a leading circle. Returned as an SVG string
+ * fragment (not wrapped in <g>) so both ConnectorLabel and Connector can
+ * decide how to identify it.
+ */
+function pillSvg(o: { cx: number; cy: number; text: string; optional: string; num: string }): string {
   const CW = 5.0;
   const GAP = 8;
-  const lines = c.text.toUpperCase().split('\n');
-  const opt = (c.optional ?? '').toUpperCase();
+  const lines = o.text.toUpperCase().split('\n');
+  const opt = o.optional.toUpperCase();
   const lastIdx = lines.length - 1;
 
   const lw = lines.map((l, i) =>
     l.length * CW + (i === lastIdx && opt ? GAP + opt.length * CW : 0)
   );
-  const badge = c.num ? 20 : 0;
+  const badge = o.num ? 20 : 0;
   const w = Math.max(46, Math.max(...lw) + 22 + badge);
   const h = lines.length > 1 ? 32 : 18;
-  const x = c.cx - w / 2;
-  const y = c.cy - h / 2;
+  const x = o.cx - w / 2;
+  const y = o.cy - h / 2;
 
   const parts: string[] = [
     `<rect x="${num(x)}" y="${num(y)}" width="${num(w)}" height="${num(h)}" rx="${num(h / 2)}" fill="#ffffff" stroke="${LABEL_STROKE}"/>`,
   ];
 
-  if (c.num) {
+  if (o.num) {
     parts.push(
-      `<circle cx="${num(x + 13)}" cy="${num(c.cy)}" r="7.5" fill="#ffffff" stroke="${LABEL_STROKE}"/>` +
-      `<text x="${num(x + 13)}" y="${num(c.cy + 3)}" text-anchor="middle" font-size="8" font-weight="700" ` +
-      `font-family="${MONO_FAMILY}" fill="${ICON_COLOR}">${esc(c.num)}</text>`
+      `<circle cx="${num(x + 13)}" cy="${num(o.cy)}" r="7.5" fill="#ffffff" stroke="${LABEL_STROKE}"/>` +
+      `<text x="${num(x + 13)}" y="${num(o.cy + 3)}" text-anchor="middle" font-size="8" font-weight="700" ` +
+      `font-family="${MONO_FAMILY}" fill="${ICON_COLOR}">${esc(o.num)}</text>`
     );
   }
 
   const tcx = x + badge + (w - badge) / 2;
-  const sy = lines.length > 1 ? c.cy - 4 : c.cy + 3;
+  const sy = lines.length > 1 ? o.cy - 4 : o.cy + 3;
   const F = `font-size="8" font-family="${MONO_FAMILY}" text-anchor="middle"`;
 
   lines.forEach((ln, i) => {
@@ -337,10 +388,56 @@ function renderConnectorLabel(c: ConnectorLabel, L: Layers): void {
     }
   });
 
-  L.labels.push(parts.join(''));
+  return parts.join('');
 }
 
-function renderLegend(lg: Legend, L: Layers): void {
+function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
+  const from = ctx.bboxes.get(c.from);
+  const to = ctx.bboxes.get(c.to);
+  if (!from || !to) return; // Endpoint gone — connector renders nothing.
+
+  // Sibling awareness: connectors sharing the same unordered endpoint pair
+  // are spaced along the shared edge per §4. We index by DOM order among
+  // items with the same {from, to} set.
+  const pairKey = [c.from, c.to].slice().sort().join('|');
+  const siblings = ctx.items.filter((it): it is Connector =>
+    it.kind === 'connector' && [it.from, it.to].slice().sort().join('|') === pairKey
+  );
+  const index = siblings.findIndex((s) => s.id === c.id);
+  const total = siblings.length;
+
+  const route = routeConnector(from, to, c.routing ?? 'straight', { index, total });
+  const d = 'M' + route.points.map(([x, y]) => `${num(x)},${num(y)}`).join(' L');
+  const col = c.dashed ? CONN_DASHED : CONN;
+  const dash = c.dashed ? ' stroke-dasharray="5 4"' : '';
+
+  const arrows: 'none' | 'target' | 'source' | 'both' = c.arrows ?? 'target';
+  const arrowId = c.dashed ? 'ard' : 'ar';
+  const mkEnd = arrows === 'target' || arrows === 'both' ? ` marker-end="url(#${arrowId})"` : '';
+  const mkStart = arrows === 'source' || arrows === 'both' ? ` marker-start="url(#${arrowId})"` : '';
+
+  L.edges.push(wrapId(ctx, c.id,
+    `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mkStart}${mkEnd}/>`
+  ));
+
+  // Optional embedded label at the route midpoint. Reuses the same pill
+  // geometry as ConnectorLabel so the two shapes are visually identical.
+  const hasLabel = (c.label && c.label.length > 0) || (c.num && c.num.length > 0);
+  if (hasLabel) {
+    const [mx, my] = route.mid;
+    const pill = pillSvg({
+      cx: mx, cy: my,
+      text: c.label ?? '',
+      optional: c.optional ?? '',
+      num: c.num ?? '',
+    });
+    // Under interactive mode, wrap the pill under the connector's id too so
+    // clicking either the line or the label selects the connector.
+    L.labels.push(wrapId(ctx, c.id, pill));
+  }
+}
+
+function renderLegend(lg: Legend, L: Layers, ctx: Ctx): void {
   const h = 26 + lg.rows.length * 16;
   const rowMax = lg.rows.length > 0
     ? Math.max(...lg.rows.map(([, lab]) => textWidth(lab, 10)))
@@ -359,9 +456,11 @@ function renderLegend(lg: Legend, L: Layers): void {
       `<text x="${num(lg.x + 32)}" y="${num(ry + 9)}" font-size="10" fill="${INK}">${esc(lab)}</text>`
     );
   });
-  L.labels.push(parts.join(''));
+  L.labels.push(wrapId(ctx, lg.id, parts.join('')));
 }
 
-function renderCaption(c: Caption, L: Layers): void {
-  L.labels.push(`<text x="${num(c.x)}" y="${num(c.y)}" font-size="11" fill="${SUB}">${esc(c.text)}</text>`);
+function renderCaption(c: Caption, L: Layers, ctx: Ctx): void {
+  L.labels.push(wrapId(ctx, c.id,
+    `<text x="${num(c.x)}" y="${num(c.y)}" font-size="11" fill="${SUB}">${esc(c.text)}</text>`
+  ));
 }

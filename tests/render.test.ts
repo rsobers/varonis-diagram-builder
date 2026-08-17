@@ -38,3 +38,17 @@ describe('render(example2)', () => {
     expect(warnings).toEqual([]);
   });
 });
+
+describe('render(interactive)', () => {
+  it('does not emit data-item-id by default', () => {
+    const { svg } = render(example1);
+    expect(svg).not.toContain('data-item-id');
+  });
+
+  it('wraps each item in <g data-item-id="…"> when interactive: true', () => {
+    const { svg } = render(example1, { interactive: true });
+    for (const item of example1.items) {
+      expect(svg).toContain(`data-item-id="${item.id}"`);
+    }
+  });
+});
