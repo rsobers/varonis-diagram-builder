@@ -28,24 +28,24 @@ export const example2: DiagramDoc = {
     { id: 'user', kind: 'actor', cx: 760, y: 280, label: 'User' },
 
     { kind: 'connector', from: 'exchange', to: 'email-security', routing: 'straight',
-      label: 'NEW EMAIL\nNOTIFICATIONS' },
+      label: 'NEW EMAIL\nNOTIFICATIONS', labelOffset: 0.447 },
     { kind: 'connector', from: 'email-security', to: 'exchange', routing: 'straight',
-      label: 'PULL EMAIL' },
+      label: 'PULL EMAIL', labelOffset: 0.528 },
     { kind: 'connector', from: 'user', to: 'email-security', routing: 'straight' },
 
     // MNET
     { id: 'ml-mnet', kind: 'element', x: 470, y: 440, label: 'ML models', icon: namedIcon('robot') },
     { kind: 'connector', from: 'email-security', to: 'ml-mnet', routing: 'straight',
-      label: 'PULL EMAIL' },
+      label: 'PULL EMAIL', labelOffset: 0.243 },
     { kind: 'connector', from: 'ml-mnet', to: 'email-security', routing: 'straight',
-      label: 'PULL VERDICTS' },
+      label: 'PULL VERDICTS', labelOffset: 0.758 },
 
     // SNET
     { id: 'virtual-browsers', kind: 'element', x: 470, y: 634, label: 'Virtual browsers', icon: namedIcon('monitor') },
     { id: 'ml-snet', kind: 'element', x: 470, y: 694, label: 'ML models', icon: namedIcon('robot') },
     { id: 'threat-db-snet', kind: 'element', x: 470, y: 754, label: 'Threat database', icon: namedIcon('database') },
     { kind: 'connector', from: 'ml-mnet', to: 'virtual-browsers', routing: 'straight',
-      label: 'LINKS & ATTACHMENTS\nFOR SCAN' },
+      label: 'LINKS & ATTACHMENTS\nFOR SCAN', labelOffset: 0.439 },
 
     // SREP + OTI
     { id: 'threat-db-srep', kind: 'element', x: 70, y: 650, label: 'Threat database',
@@ -53,13 +53,13 @@ export const example2: DiagramDoc = {
     { id: 'oti', kind: 'element', x: 70, y: 426, label: 'On-demand threat intelligence',
       size: 'lg', icon: namedIcon('globe') },
     { kind: 'connector', from: 'oti', to: 'threat-db-srep', routing: 'straight',
-      label: 'PULL UPDATES' },
+      label: 'PULL UPDATES', labelOffset: 0.321 },
     { kind: 'connector', from: 'threat-db-srep', to: 'ml-mnet', routing: 'elbow',
       label: 'PULL THREATS' },
     { kind: 'connector', from: 'threat-db-srep', to: 'threat-db-snet', routing: 'elbow',
-      label: 'PULL THREATS' },
+      label: 'PULL THREATS', labelOffset: 0.341 },
     { kind: 'connector', from: 'oti', to: 'email-security', routing: 'elbow',
-      label: 'LINK FOR SCAN' },
+      label: 'LINK FOR SCAN', labelOffset: 0.541 },
 
     // egress
     { id: 'proxies', kind: 'element', x: 830, y: 440, label: 'Proxies', icon: namedIcon('tune') },
@@ -68,7 +68,7 @@ export const example2: DiagramDoc = {
     { kind: 'connector', from: 'ml-mnet', to: 'proxies', routing: 'straight',
       label: 'RESOLVE URLS' },
     { kind: 'connector', from: 'virtual-browsers', to: 'proxies', routing: 'elbow',
-      label: 'FETCH URLS' },
+      label: 'FETCH URLS', labelOffset: 0.539 },
     { kind: 'connector', from: 'proxies', to: 'internet', routing: 'straight' },
 
     { kind: 'legend', x: 70, y: 790, encoding: 'State',
