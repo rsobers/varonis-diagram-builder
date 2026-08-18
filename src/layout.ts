@@ -24,10 +24,35 @@ export function layout(doc: DiagramDoc): Map<string, BBox> {
   }
   // Second pass: connectors resolve to the bounding rect of their route,
   // using the first-pass bboxes of from/to. Skip if either endpoint missing.
+  const routingBoxes = anchorBBoxes(doc.items, out);
   for (const item of doc.items) {
     if (item.kind !== 'connector') continue;
-    const b = bboxConnector(item, out);
+    const b = bboxConnector(item, routingBoxes);
     if (b) out.set(item.id, b);
+  }
+  return out;
+}
+
+/**
+ * The rect an inbound connector should target for a given item. For most
+ * shapes this is the visual bbox. For Actors it's the icon square only —
+ * the label sits below the icon, and a connector should land on the person,
+ * not the caption underneath them.
+ */
+function anchorBBox(item: Item, visual: BBox | undefined): BBox | undefined {
+  if (!visual) return visual;
+  if (item.kind === 'actor') {
+    // Icon is 32×32, centred on cx starting at y.
+    return { x: item.cx - 16, y: item.y, w: 32, h: 32 };
+  }
+  return visual;
+}
+
+export function anchorBBoxes(items: readonly Item[], visual: Map<string, BBox>): Map<string, BBox> {
+  const out = new Map<string, BBox>();
+  for (const it of items) {
+    const b = anchorBBox(it, visual.get(it.id));
+    if (b) out.set(it.id, b);
   }
   return out;
 }
@@ -291,9 +316,9 @@ function strictlyContains(outer: Boundary, inner: Boundary): boolean {
   return false;
 }
 
-function bboxConnector(c: Connector, resolved: Map<string, BBox>): BBox | null {
-  const from = resolved.get(c.from);
-  const to = resolved.get(c.to);
+function bboxConnector(c: Connector, routingBoxes: Map<string, BBox>): BBox | null {
+  const from = routingBoxes.get(c.from);
+  const to = routingBoxes.get(c.to);
   if (!from || !to) return null;
   // Layout doesn't know about the sibling group, so bbox uses the geometry-
   // only defaults. Overhead versus the perfect route is at most `spacing` px,
@@ -322,12 +347,28 @@ export type ConnectorAnchor = {
 };
 
 export function computeConnectorAnchors(
-  items: readonly Item[], bboxes: Map<string, BBox>,
+  items: readonly Item[], visualBboxes: Map<string, BBox>,
 ): Map<string, ConnectorAnchor> {
-  type Landing = { connId: string; side: Side; farCx: number; farCy: number };
+  type Landing = { connId: string; side: Side; farCx: number; farCy: number; labelW: number };
   const landingsByElement = new Map<string, Landing[]>();
 
   const connectors = items.filter((i): i is Connector => i.kind === 'connector');
+  // Anchors leave/enter the *routing* rect (icon-only for Actors, visual bbox
+  // for everything else), not the hit-test rect that includes labels.
+  const bboxes = anchorBBoxes(items, visualBboxes);
+
+  // Approximate label-pill width for spacing decisions. Route spacing must
+  // be at least this so parallel labels don't stack. Two-line labels count
+  // the longer line; the number badge adds a fixed slot; optional text
+  // extends the pill.
+  const labelWidthOf = (c: Connector): number => {
+    if (!c.label && !c.num) return 0;
+    const lines = (c.label ?? '').split('\n');
+    const longest = lines.reduce((w, ln) => Math.max(w, textWidth(ln, 8)), 0);
+    const opt = c.optional ? textWidth(c.optional, 8) + 8 : 0;
+    const num = c.num ? 18 : 0;
+    return longest + opt + num + 20; // pill horizontal padding
+  };
 
   // First pass: decide the side each endpoint lands on, from centre-to-centre
   // geometry (matches routeConnector's own rule).
@@ -349,14 +390,15 @@ export function computeConnectorAnchors(
     }
     firstPass.set(c.id, { fSide, tSide });
 
-    push(landingsByElement, c.from, { connId: c.id, side: fSide, farCx: tCx, farCy: tCy });
-    push(landingsByElement, c.to,   { connId: c.id, side: tSide, farCx: fCx, farCy: fCy });
+    const labelW = labelWidthOf(c);
+    push(landingsByElement, c.from, { connId: c.id, side: fSide, farCx: tCx, farCy: tCy, labelW });
+    push(landingsByElement, c.to,   { connId: c.id, side: tSide, farCx: fCx, farCy: fCy, labelW });
   }
 
   // Second pass: within each (element, side), sort by the far endpoint's
-  // perpendicular coordinate and assign each connector an index/total.
-  // Vertical sides (left/right) sort by farCy; horizontal (top/bottom) by farCx.
-  const sideOrder = new Map<string, { index: number; total: number }>();
+  // perpendicular coordinate, assign index/total, and derive a spacing
+  // that keeps labels apart. Vertical sides sort by farCy; horizontal by farCx.
+  const sideOrder = new Map<string, SideGroup>();
   for (const [elId, list] of landingsByElement) {
     const bySide = new Map<Side, Landing[]>();
     for (const l of list) {
@@ -369,8 +411,12 @@ export function computeConnectorAnchors(
         side === 'left' || side === 'right' ? a.farCy - b.farCy : a.farCx - b.farCx
       );
       const total = arr.length;
+      // Widest label in this group + 8px gutter. Falls back to 30 for
+      // groups of unlabelled connectors so lines still separate cleanly.
+      const maxLabel = arr.reduce((w, l) => Math.max(w, l.labelW), 0);
+      const spacing = total <= 1 ? 0 : Math.max(30, maxLabel + 8);
       arr.forEach((l, i) => {
-        sideOrder.set(`${elId}|${l.connId}`, { index: i, total });
+        sideOrder.set(`${elId}|${l.connId}`, { index: i, total, spacing });
       });
     }
   }

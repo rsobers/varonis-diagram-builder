@@ -30,7 +30,7 @@ export type Side = 'top' | 'right' | 'bottom' | 'left';
  * whole group of connectors, so a slight overlap in centres doesn't flip
  * one connector to the opposite side of the box.
  */
-export type SideGroup = { index: number; total: number };
+export type SideGroup = { index: number; total: number; spacing?: number };
 export type RouteOptions = {
   fromSide?: Side;
   toSide?: Side;
@@ -68,8 +68,13 @@ export function routeConnector(
     else         { fSide = 'top';    tSide = 'bottom'; }
   }
 
-  const fOffset = offsetForGroup(opts.fromGroup, spacing);
-  const tOffset = offsetForGroup(opts.toGroup, spacing);
+  // Prefer per-group spacing (label-width-aware, computed by
+  // computeConnectorAnchors) over the router-level default; falls back to
+  // `opts.spacing` when the caller doesn't supply groups.
+  const fSpacing = opts.fromGroup?.spacing ?? spacing;
+  const tSpacing = opts.toGroup?.spacing ?? spacing;
+  const fOffset = offsetForGroup(opts.fromGroup, fSpacing);
+  const tOffset = offsetForGroup(opts.toGroup, tSpacing);
   const fPt = edgeMidpointOffset(from, fSide, fOffset);
   const tPt = edgeMidpointOffset(to, tSide, tOffset);
 

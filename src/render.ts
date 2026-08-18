@@ -13,7 +13,7 @@ import type {
   InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption, Title,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
-import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, elementWidth, computeConnectorAnchors, type BBox, type ConnectorAnchor } from './layout';
+import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, elementWidth, computeConnectorAnchors, anchorBBoxes, type BBox, type ConnectorAnchor } from './layout';
 import { routeConnector } from './routing';
 
 /**
@@ -62,10 +62,13 @@ export function render(doc: DiagramDoc, opts: RenderOptions = {}): RenderResult 
   // when it doesn't so fixture rendering has no new dependency at runtime.
   const hasConnector = doc.items.some((it) => it.kind === 'connector');
   const bboxes = hasConnector ? layout(doc) : new Map<string, BBox>();
+  // Routing bboxes: icon-only for actors so connectors don't attach to
+  // the caption strip beneath them.
+  const routingBoxes = hasConnector ? anchorBBoxes(doc.items, bboxes) : bboxes;
   const anchors = hasConnector
     ? computeConnectorAnchors(doc.items, bboxes)
     : new Map<string, ConnectorAnchor>();
-  const ctx: Ctx = { interactive: opts.interactive === true, bboxes, anchors, items: doc.items, doc };
+  const ctx: Ctx = { interactive: opts.interactive === true, bboxes, routingBoxes, anchors, items: doc.items, doc };
 
   // Boundaries must emit outer-first so nested ones layer on top with their
   // derived fill. Everything else keeps document order.
@@ -120,7 +123,7 @@ type Layers = {
   nodes: string[]; labels: string[];
 };
 
-type Ctx = { interactive: boolean; bboxes: Map<string, BBox>; anchors: Map<string, ConnectorAnchor>; items: readonly Item[]; doc: DiagramDoc };
+type Ctx = { interactive: boolean; bboxes: Map<string, BBox>; routingBoxes: Map<string, BBox>; anchors: Map<string, ConnectorAnchor>; items: readonly Item[]; doc: DiagramDoc };
 
 function renderItem(item: Item, layers: Layers, warnings: string[], ctx: Ctx): void {
   switch (item.kind) {
@@ -532,8 +535,8 @@ function pointAlongRoute(points: readonly [number, number][], t: number): [numbe
 }
 
 function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
-  const from = ctx.bboxes.get(c.from);
-  const to = ctx.bboxes.get(c.to);
+  const from = ctx.routingBoxes.get(c.from);
+  const to = ctx.routingBoxes.get(c.to);
   if (!from || !to) return; // Endpoint gone — connector renders nothing.
 
   // Per-side sibling awareness (§4). computeConnectorAnchors decides which
@@ -556,15 +559,26 @@ function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
     `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mkStart}${mkEnd}/>`
   ));
 
-  // Optional embedded label. Normally at the route midpoint; when several
-  // parallel connectors share the same side-group we stagger labels along
-  // the route so pills don't stack on top of each other. Perpendicular
-  // spacing alone (§4 route spacing) is too tight for wide labels.
+  // Optional embedded label. Straight routes: at route midpoint (with a
+  // longitudinal stagger for parallel siblings). Elbows: place on the first
+  // segment near the source rather than at the crook, which usually sits
+  // between element rows and collides with unrelated boxes. The label
+  // should read as "labels this outgoing edge."
   const hasLabel = (c.label && c.label.length > 0) || (c.num && c.num.length > 0);
   if (hasLabel) {
-    const [mx, my] = a && a.fromGroup.total > 1
-      ? pointAlongRoute(route.points, labelT(a.fromGroup.index, a.fromGroup.total))
-      : route.mid;
+    const isElbow = route.points.length >= 3;
+    let mx: number, my: number;
+    if (isElbow) {
+      // Midpoint of the first segment (source → first bend).
+      const [x0, y0] = route.points[0]!;
+      const [x1, y1] = route.points[1]!;
+      mx = (x0 + x1) / 2;
+      my = (y0 + y1) / 2;
+    } else if (a && a.fromGroup.total > 1) {
+      [mx, my] = pointAlongRoute(route.points, labelT(a.fromGroup.index, a.fromGroup.total));
+    } else {
+      [mx, my] = route.mid;
+    }
     const pill = pillSvg({
       cx: mx, cy: my,
       text: c.label ?? '',
