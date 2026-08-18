@@ -507,10 +507,11 @@ function update(editor: Editor, id: string, patch: Record<string, unknown>): voi
 }
 
 /**
- * Vendor-mark picker. Grid of registered marks + a "None" option. Blocked
- * with an explanation when the item's color is not white/gray (§8.2).
+ * Vendor-mark picker. Grid of registered marks + a "None" option.
+ * Any fill is allowed — an ownership-blue element with a vendor mark
+ * (see example 1: Varonis AI Services) is intentional, not a violation.
  */
-function markPicker(parent: HTMLElement, current: string | undefined, color: string, on: (id: string | undefined) => void): void {
+function markPicker(parent: HTMLElement, current: string | undefined, _color: string, on: (id: string | undefined) => void): void {
   const wrap = document.createElement('div');
   wrap.className = 'field mark-picker';
 
@@ -525,17 +526,6 @@ function markPicker(parent: HTMLElement, current: string | undefined, color: str
     : 'Current: none';
   header.append(span, status);
   wrap.appendChild(header);
-
-  const allowedFill = color === 'white' || color === 'gray';
-  if (!allowedFill) {
-    const note = document.createElement('p');
-    note.className = 'muted';
-    note.style.fontSize = '11px';
-    note.textContent = `Marks only sit on white or gray fills (§8.2). Change the fill to add a mark.`;
-    wrap.appendChild(note);
-    parent.appendChild(wrap);
-    return;
-  }
 
   if (LOGOS.length === 0) {
     const note = document.createElement('p');

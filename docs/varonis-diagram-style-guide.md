@@ -283,7 +283,7 @@ A vendor logo is a claim that **this specific vendor** matters to the diagram. U
 - **Rendered size:** 16px on Small, 20px on Medium and Large. The 24px figure in §7.3 is the source glyph size; on-canvas it renders proportionate to the element so it never overwhelms the label
 - A mark **replaces** the icon. Never both
 - Never recolor, rotate, outline, crop, or add effects
-- **Marks sit on white or gray fills only.** A mark on a blue or State-colored element is a violation
+- **Marks may sit on any fill the encoding permits.** A Varonis mark on a blue Ownership element (see §10, Example 1) reinforces the ownership claim rather than contradicting it; under State encoding a mark on a colored element is likewise consistent with the fill's meaning. The earlier "white or gray only" rule is retired
 
 **Badge form.** As an alternative to inline placement, a mark may take over an element as a square badge — the mark centred, the text label suppressed. Use it for a Grouped Element header or a standalone vendor tile where the mark is the whole point. Badge sizes track the element choice (Small 64, Medium 90, Large 120). The suppressed label still lives in the model for accessibility.
 
@@ -480,7 +480,7 @@ Machine-readable spec for build tooling. These values are authoritative; the pro
     "legendRequiredForState": true
   },
   "vendorMarks": {
-    "size": 24, "replacesIcon": true, "allowedFills": ["white", "gray"],
+    "size": 24, "replacesIcon": true, "allowedFills": "any",
     "boundaryBadgePosition": "top-right", "peerGroupConsistency": true,
     "varonisMarkMaxPerDiagram": 1
   },

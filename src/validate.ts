@@ -195,24 +195,13 @@ export function validate(doc: DiagramDoc): Violation[] {
     });
   }
 
-  // §8.2 — Vendor mark on a colored fill.
-  for (const el of elements) {
-    if (!el.markId) continue;
-    const color = el.color ?? 'white';
-    if (color !== 'white' && color !== 'gray') {
-      violations.push({
-        id: `mark-on-color:${el.id}`,
-        severity: 'error',
-        ruleRef: '§8.2',
-        message: `"${el.label}" carries a vendor mark on a ${color} fill. Marks only sit on white or gray.`,
-        itemIds: [el.id],
-        fix: {
-          label: 'Change fill to white',
-          action: { kind: 'update', id: el.id, patch: { color: 'white' } },
-        },
-      });
-    }
-  }
+  // §8.2 fill guard on vendor marks removed intentionally. Under an
+  // Ownership encoding blue is not decoration — it is the claim of
+  // ownership itself, and a Varonis mark on a blue element reinforces
+  // the claim rather than contradicting it. Under State encoding the
+  // colored fill is likewise carrying its own meaning. The guide gains
+  // more from letting authors pair marks with meaningful fills than
+  // from a blanket "white or gray only" rule.
 
   // §8.4 — Varonis mark appears at most once per diagram.
   const varonisCount = doc.items.filter(

@@ -90,7 +90,7 @@ export const TOKENS = {
     legendRequiredForState: true,
   },
   vendorMarks: {
-    size: 24, replacesIcon: true, allowedFills: ['white', 'gray'],
+    size: 24, replacesIcon: true, allowedFills: 'any',
     boundaryBadgePosition: 'top-right', peerGroupConsistency: true,
     varonisMarkMaxPerDiagram: 1,
   },

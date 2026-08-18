@@ -69,7 +69,7 @@ export const example1: DiagramDoc = {
 
     // azure
     { id: 'varonis-ai', kind: 'element', x: 1020, y: 438, label: 'Varonis AI services',
-      size: 'md', color: 'blue', icon: namedIcon('robot') },
+      size: 'md', color: 'blue', markId: 'varonis' },
     { id: 'aoai', kind: 'element', x: 1020, y: 518, label: 'Azure OpenAI Service',
       size: 'md', color: 'gray', markId: 'azure' },
     { kind: 'connector', from: 'saas-backend', to: 'varonis-ai', routing: 'elbow',

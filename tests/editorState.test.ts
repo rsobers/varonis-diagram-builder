@@ -57,7 +57,7 @@ describe('reduce', () => {
     expect('icon' in item).toBe(false);
   });
 
-  it('update: recolouring a marked element preserves markId (§8.2 violation surfaces via validation, not silent data loss)', () => {
+  it('update: recolouring a marked element preserves markId (mark + fill are independent — see example 1)', () => {
     let s = initialState(docWith([
       { kind: 'element', x: 0, y: 0, label: 'AWS', color: 'white', markId: 'aws' },
     ]));
