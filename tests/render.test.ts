@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render } from '../src/render';
 import { example1 } from '../src/fixtures/example1';
 import { example2 } from '../src/fixtures/example2';
+import { example3 } from '../src/fixtures/example3';
 
 /**
  * Snapshot tests are the backbone. Any change to spacing, padding, or wrapping
@@ -32,6 +33,18 @@ describe('render(example2)', () => {
 
   it('matches the committed snapshot', async () => {
     await expect(svg).toMatchFileSnapshot('./__snapshots__/example-2.svg');
+  });
+
+  it('produces zero fit warnings', () => {
+    expect(warnings).toEqual([]);
+  });
+});
+
+describe('render(example3)', () => {
+  const { svg, warnings } = render(example3);
+
+  it('matches the committed snapshot', async () => {
+    await expect(svg).toMatchFileSnapshot('./__snapshots__/example-3.svg');
   });
 
   it('produces zero fit warnings', () => {

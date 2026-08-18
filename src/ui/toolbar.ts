@@ -2,6 +2,7 @@ import type { Editor, EditorState, EditorMode } from '../editorState';
 import type { DiagramDoc, Encoding } from '../model';
 import { example1 } from '../fixtures/example1';
 import { example2 } from '../fixtures/example2';
+import { example3 } from '../fixtures/example3';
 
 const REPO_BASE = 'https://github.com/rsobers/varonis-diagram-builder/blob/main';
 const STYLE_GUIDE_URL = `${REPO_BASE}/docs/varonis-diagram-style-guide.md`;
@@ -36,6 +37,7 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
       <span class="toolbar-hint">Examples</span>
       <button type="button" class="tb-btn tb-example" data-example="1">1</button>
       <button type="button" class="tb-btn tb-example" data-example="2">2</button>
+      <button type="button" class="tb-btn tb-example" data-example="3">3</button>
     </div>
     <a class="tb-link" href="${STYLE_GUIDE_URL}" target="_blank" rel="noopener noreferrer" title="Open the Varonis diagram style guide (source of truth)">Style guide ↗</a>
     <div class="toolbar-sep" aria-hidden="true"></div>
@@ -72,7 +74,7 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
   });
 
   const exampleBtns = container.querySelectorAll<HTMLButtonElement>('.tb-example');
-  const examples: Record<string, DiagramDoc> = { '1': example1, '2': example2 };
+  const examples: Record<string, DiagramDoc> = { '1': example1, '2': example2, '3': example3 };
   exampleBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const which = btn.dataset.example!;

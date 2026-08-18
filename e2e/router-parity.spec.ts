@@ -44,3 +44,12 @@ test('example 2: python reference vs app-renderer output side by side', async ({
     join(DIR, 'example-2-compare.png'),
   );
 });
+
+test('example 3: source screenshot vs app-renderer output side by side', async ({ page }) => {
+  await compareTwo(
+    page,
+    '/Users/robertsobers/Downloads/diagram (2).svg',
+    join(ROOT, 'tests/__snapshots__/example-3.svg'),
+    join(DIR, 'example-3-compare.png'),
+  );
+});
