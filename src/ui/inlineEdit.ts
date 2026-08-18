@@ -181,8 +181,14 @@ export function attachInlineEdit(svg: SVGSVGElement, container: HTMLElement, edi
 
   // Capture-phase so it beats any bubbling stopPropagation calls.
   svg.addEventListener('dblclick', onDblClick, true);
+  // Doc title opens via a custom event dispatched from interactions.ts on
+  // single-click. Kept out of the dblclick path because SVG dblclick is
+  // unreliable when the group's clickable region is a stack of shapes.
+  const onOpenDocTitle = (): void => openDocTitle();
+  window.addEventListener('vdb:open-doc-title', onOpenDocTitle);
   return () => {
     svg.removeEventListener('dblclick', onDblClick, true);
+    window.removeEventListener('vdb:open-doc-title', onOpenDocTitle);
     if (activeInput) closeInput(false);
   };
 }

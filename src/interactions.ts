@@ -57,6 +57,18 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
     if (e.button !== 0) return;
     const state = editor.getState();
 
+    // Doc title strip acts like a text field: single click opens the
+    // editor immediately. Double-click on SVG groups with layered hit
+    // targets is unreliable in Chromium (two clicks may resolve to
+    // different sub-elements), so we don't rely on it here.
+    const titleEl = (e.target instanceof Element) ? e.target.closest('[data-doc-title]') : null;
+    if (titleEl && state.mode === 'select' && !state.placing) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('vdb:open-doc-title'));
+      return;
+    }
+
     // Connector label drag — takes priority over normal item drag. Users
     // grab the pill directly to slide it along the connector line.
     const labelEl = (e.target instanceof Element) ? e.target.closest('[data-connector-label]') : null;

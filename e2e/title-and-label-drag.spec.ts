@@ -7,7 +7,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const DIR = join(HERE, 'screenshots');
 mkdirSync(DIR, { recursive: true });
 
-test('doc title: double-click to edit, empty to clear', async ({ page }) => {
+test('doc title: single-click to edit, empty to clear', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
   // Load example 1 (has a doc title) — no ?blank so the preload fires.
   await page.goto('/');
@@ -16,7 +16,7 @@ test('doc title: double-click to edit, empty to clear', async ({ page }) => {
   const titleGroup = page.locator('.canvas-svg [data-doc-title]');
   await expect(titleGroup).toBeVisible();
 
-  await titleGroup.dispatchEvent('dblclick');
+  await titleGroup.click();
   const editor = page.locator('.inline-edit-title');
   await expect(editor).toBeVisible();
 
@@ -26,7 +26,7 @@ test('doc title: double-click to edit, empty to clear', async ({ page }) => {
   await expect(page.locator('.canvas-svg text').first()).toHaveText('My custom diagram');
 
   // Now clear it — open again, wipe, commit.
-  await titleGroup.dispatchEvent('dblclick');
+  await titleGroup.click();
   const editor2 = page.locator('.inline-edit-title');
   await editor2.fill('');
   await editor2.press('Enter');

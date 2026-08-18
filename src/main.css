@@ -293,6 +293,11 @@ body {
 
 /* Hover cue for the doc title strip — signals it's editable. */
 .canvas-svg [data-doc-title] { cursor: text; }
+.canvas-svg [data-doc-title]:hover > rect[fill="none"] {
+  fill: rgba(76, 134, 211, 0.06);
+  stroke: rgba(76, 134, 211, 0.4);
+  stroke-dasharray: 3 3;
+}
 
 /* ---- Generate-from-image dialog ---- */
 .tb-btn.primary { background: #1c6fd0; border-color: #1c6fd0; color: #fff; }
