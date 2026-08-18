@@ -6,6 +6,7 @@ import { createToolbar } from './toolbar';
 import { createToast } from './toast';
 import { createViolationsPanel } from './violations';
 import { createGenerateDialog } from './generateDialog';
+import { attachSidebarResize } from './sidebars';
 import { exportSvg, exportPng, downloadBlob, suggestedFilename } from '../export';
 import { example1 } from '../fixtures/example1';
 
@@ -35,6 +36,7 @@ export function mountApp(root: HTMLElement): void {
   createCanvas(root.querySelector<HTMLElement>('#canvas-slot')!, editor, toast);
   createInspector(root.querySelector<HTMLElement>('#inspector-slot')!, editor);
   createViolationsPanel(root.querySelector<HTMLElement>('#violations-slot')!, editor);
+  attachSidebarResize(root);
 
   const generate = createGenerateDialog(root, editor);
   root.querySelector<HTMLButtonElement>('.tb-generate')?.addEventListener('click', () => generate.open());

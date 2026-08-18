@@ -3,6 +3,10 @@ import type { DiagramDoc, Encoding } from '../model';
 import { example1 } from '../fixtures/example1';
 import { example2 } from '../fixtures/example2';
 import { example3 } from '../fixtures/example3';
+import { TOKENS } from '../tokens';
+import {
+  CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_MAX_W, CANVAS_MAX_H, contentExtent,
+} from '../canvasSize';
 
 const REPO_BASE = 'https://github.com/rsobers/varonis-diagram-builder/blob/main';
 const STYLE_GUIDE_URL = `${REPO_BASE}/docs/varonis-diagram-style-guide.md`;
@@ -32,6 +36,16 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
     <label class="toolbar-check">
       <input type="checkbox" class="tb-snap"> Snap to grid
     </label>
+    <div class="toolbar-sep" aria-hidden="true"></div>
+    <div class="toolbar-field" role="group" aria-label="Canvas size">
+      <span>Canvas</span>
+      <input type="number" class="tb-canvas-w" aria-label="Canvas width" step="${TOKENS.canvas.grid}"
+             min="${CANVAS_MIN_W}" max="${CANVAS_MAX_W}" title="Canvas width in px">
+      <span aria-hidden="true">×</span>
+      <input type="number" class="tb-canvas-h" aria-label="Canvas height" step="${TOKENS.canvas.grid}"
+             min="${CANVAS_MIN_H}" max="${CANVAS_MAX_H}" title="Canvas height in px">
+      <button type="button" class="tb-btn tb-canvas-fit" title="Shrink the canvas to fit the diagram">Fit</button>
+    </div>
     <span class="toolbar-grow"></span>
     <div class="toolbar-group" role="group" aria-label="Load example">
       <span class="toolbar-hint">Examples</span>
@@ -51,6 +65,9 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
   const encSel = container.querySelector<HTMLSelectElement>('.tb-encoding')!;
   const snapCk = container.querySelector<HTMLInputElement>('.tb-snap')!;
   const newBtn = container.querySelector<HTMLButtonElement>('.tb-new')!;
+  const canvasW = container.querySelector<HTMLInputElement>('.tb-canvas-w')!;
+  const canvasH = container.querySelector<HTMLInputElement>('.tb-canvas-h')!;
+  const canvasFit = container.querySelector<HTMLButtonElement>('.tb-canvas-fit')!;
 
   modeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -65,6 +82,38 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
   snapCk.addEventListener('change', () => {
     editor.dispatch({ kind: 'setSnap', on: snapCk.checked });
   });
+  // Commit on change (blur / Enter / stepper), not on every keystroke —
+  // typing "1" on the way to "1200" should not resize to the minimum.
+  //
+  // The accepted values are written back here rather than left to
+  // refresh(): refresh deliberately skips a focused field so a background
+  // update can't yank the caret, and on commit the field is focused and is
+  // precisely what needs correcting. A rejected entry also produces no
+  // state change at all (the reducer no-ops), so there'd be nothing to
+  // subscribe to.
+  function commitCanvasSize(): void {
+    editor.dispatch({
+      kind: 'setCanvasSize',
+      width: Number(canvasW.value),
+      height: Number(canvasH.value),
+    });
+    const doc = editor.getState().doc;
+    canvasW.value = String(doc.width);
+    canvasH.value = String(doc.height);
+  }
+  canvasW.addEventListener('change', commitCanvasSize);
+  canvasH.addEventListener('change', commitCanvasSize);
+  for (const input of [canvasW, canvasH]) {
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); commitCanvasSize(); }
+    });
+  }
+  canvasFit.addEventListener('click', () => {
+    // 0×0 is below every floor, so the reducer's clamp resolves it to
+    // exactly the content extent — "shrink-wrap to the diagram".
+    editor.dispatch({ kind: 'setCanvasSize', width: 0, height: 0 });
+  });
+
   newBtn.addEventListener('click', () => {
     if (!confirm('Clear the canvas? This cannot be undone.')) return;
     editor.dispatch({
@@ -92,6 +141,12 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
     });
     encSel.value = state.doc.encoding ?? '';
     snapCk.checked = state.snap;
+    // Don't fight the user's cursor while they're typing in the field.
+    if (document.activeElement !== canvasW) canvasW.value = String(state.doc.width);
+    if (document.activeElement !== canvasH) canvasH.value = String(state.doc.height);
+    const content = contentExtent(state.doc.items);
+    const alreadyFit = state.doc.width <= content.w && state.doc.height <= content.h;
+    canvasFit.disabled = state.doc.items.length === 0 || alreadyFit;
   }
 
   refresh(editor.getState());

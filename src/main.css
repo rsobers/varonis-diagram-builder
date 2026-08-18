@@ -7,9 +7,15 @@ body {
 }
 
 #app {
+  /* Panel widths are driven by prefs (src/prefs.ts) at runtime; these are
+     the fallbacks before the first paint. */
+  --side-left: 240px;
+  --side-right: 300px;
+  --toolbar-h: 44px;
+
   display: grid;
-  grid-template-columns: 240px 1fr 300px;
-  grid-template-rows: 44px 1fr;
+  grid-template-columns: var(--side-left) 1fr var(--side-right);
+  grid-template-rows: var(--toolbar-h) 1fr;
   height: 100vh;
   position: relative;
 }
@@ -17,6 +23,57 @@ body {
 #palette-slot { grid-column: 1; grid-row: 2; }
 #canvas-slot { grid-column: 2; grid-row: 2; }
 #right-slot { grid-column: 3; grid-row: 2; }
+
+/* ---- Column gutters (draggable panel edges) ---- */
+.col-gutter {
+  position: absolute;
+  top: var(--toolbar-h);
+  bottom: 0;
+  width: 9px;
+  z-index: 5;
+  cursor: col-resize;
+  background: transparent;
+  /* The visible affordance is a hairline that thickens on hover, so the
+     panel border reads as grabbable without adding chrome at rest. */
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+}
+.col-gutter-left  { left: var(--side-left); transform: translateX(-4px); }
+.col-gutter-right { right: var(--side-right); transform: translateX(4px); }
+.col-gutter:hover, .col-gutter.dragging { background: #cfe0f5; }
+.col-gutter:focus-visible {
+  outline: 2px solid #4c86d3;
+  outline-offset: -2px;
+  background: #e8f1fc;
+}
+body.resizing-col { cursor: col-resize; user-select: none; }
+
+/* ---- Canvas resize handles ---- */
+.canvas-handle {
+  position: absolute;
+  z-index: 4;
+  background: transparent;
+}
+.canvas-handle:hover, .canvas-handle.dragging { background: #cfe0f5; }
+.canvas-handle-se {
+  background: #ffffff;
+  border: 1.5px solid #8ba7c9;
+  border-radius: 2px;
+}
+.canvas-handle-se:hover, .canvas-handle-se.dragging {
+  background: #4c86d3;
+  border-color: #4c86d3;
+}
+.canvas-handle:focus-visible {
+  outline: 2px solid #4c86d3;
+  outline-offset: 1px;
+  background: #e8f1fc;
+}
+body.resizing-canvas { user-select: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .col-gutter, .canvas-handle { transition: none; }
+}
 
 /* ---- Toolbar ---- */
 .toolbar {
@@ -32,6 +89,13 @@ body {
 .toolbar-grow { flex: 1; }
 .toolbar-field { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5a6570; }
 .toolbar-field select { padding: 4px 6px; border: 1px solid #d3d9e0; border-radius: 4px; font: inherit; background: #fff; color: #1f2933; }
+.toolbar-field input[type="number"] {
+  width: 62px; padding: 4px 6px; border: 1px solid #d3d9e0; border-radius: 4px;
+  font: inherit; font-size: 12px; background: #fff; color: #1f2933;
+}
+.tb-btn.tb-canvas-fit { padding: 4px 8px; font-size: 12px; }
+.tb-btn:disabled { opacity: 0.45; cursor: default; }
+.tb-btn:disabled:hover { background: #fff; }
 .toolbar-check { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #5a6570; }
 .tb-btn {
   font: inherit; font-size: 12.5px; padding: 5px 11px;

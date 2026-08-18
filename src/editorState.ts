@@ -2,6 +2,7 @@ import { TOKENS } from './tokens';
 import { migrateDoc, type DiagramDoc, type Item, type ItemDraft, type Encoding, type Grouped } from './model';
 import type { IconRef } from './icons';
 import { clampToCanvas } from './layout';
+import { clampCanvasSize } from './canvasSize';
 
 /**
  * Editor state layer. The reducer is pure so it can be unit-tested without
@@ -66,6 +67,12 @@ export type EditorAction =
   | { kind: 'updateGroupChild'; id: string; index: number; patch: { label?: string; icon?: IconRef | undefined } }
   | { kind: 'reverseConnector'; id: string }
   | { kind: 'setDocTitle'; title: [string, string] | null }
+  /**
+   * Resize the base canvas. Requested dimensions are advisory — the
+   * reducer clamps them (grid, hard bounds, content extent) so no caller
+   * can put the doc into a size that clips the diagram.
+   */
+  | { kind: 'setCanvasSize'; width: number; height: number }
   | { kind: 'load'; doc: DiagramDoc }
   | { kind: 'undo' }
   | { kind: 'redo' };
@@ -289,6 +296,14 @@ function reduceInner(state: EditorState, action: EditorAction): EditorState {
         return { ...state, doc: rest };
       }
       return { ...state, doc: { ...state.doc, title: action.title } };
+    }
+    case 'setCanvasSize': {
+      const { width, height } = clampCanvasSize(action.width, action.height, state.doc);
+      // Returning the same doc reference when nothing changed keeps the
+      // undo stack free of no-op entries during a drag, which emits many
+      // identical sizes as the pointer moves within one grid cell.
+      if (width === state.doc.width && height === state.doc.height) return state;
+      return { ...state, doc: { ...state.doc, width, height } };
     }
     case 'load': return {
       ...initialState(migrateDoc(action.doc)),

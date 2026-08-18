@@ -2,6 +2,7 @@ import { render } from '../render';
 import { layout } from '../layout';
 import { attachInteractions } from '../interactions';
 import { attachInlineEdit } from './inlineEdit';
+import { attachCanvasResize } from './canvasResize';
 import { snapTo, type Editor, type EditorState } from '../editorState';
 import { buildDraftFromSpec } from './palette';
 import type { ItemDraft } from '../model';
@@ -31,6 +32,7 @@ export function createCanvas(container: HTMLElement, editor: Editor, toast?: Toa
 
   const detachInteractions = attachInteractions(svg, editor, toast ? { toast } : {});
   const detachInlineEdit = attachInlineEdit(svg, container, editor);
+  const detachCanvasResize = attachCanvasResize(svg, container, editor);
 
   // Live drop-preview node. Rebuilt per dragover so a size change (spec
   // changed mid-drag, rare) still previews correctly.
@@ -207,6 +209,7 @@ export function createCanvas(container: HTMLElement, editor: Editor, toast?: Toa
     unsubscribe();
     detachInteractions();
     detachInlineEdit();
+    detachCanvasResize();
     container.removeEventListener('dragover', onDragOver);
     container.removeEventListener('dragleave', onDragLeave);
     container.removeEventListener('drop', onDrop);
