@@ -102,27 +102,18 @@ export function reduce(state: EditorState, action: EditorAction): EditorState {
           if (v === undefined) delete next[k];
           else next[k] = v;
         }
-        // §8.2 invariants — mark and icon are mutually exclusive on elements,
-        // and marks are only valid on white/gray fills.
+        // §8.2 — mark and icon are mutually exclusive on elements. That's
+        // a rendering constraint (they share one slot), so drop the loser.
+        // The "marks sit on white/gray only" rule is a *style* violation,
+        // not a rendering one — leave the data intact and let validate.ts
+        // surface it so the user can decide whether to change the fill or
+        // remove the mark, rather than silently losing the mark when they
+        // recolor the box.
         if (next['kind'] === 'element') {
           const settingMark = 'markId' in action.patch && action.patch['markId'] !== undefined;
           const settingIcon = 'icon' in action.patch && action.patch['icon'] !== undefined;
-          if (settingMark) {
-            delete next['icon'];
-            // Fill guard: block markId on non-white/gray fills.
-            const color = (next['color'] as string | undefined) ?? 'white';
-            if (color !== 'white' && color !== 'gray') {
-              delete next['markId'];
-            }
-          }
+          if (settingMark) delete next['icon'];
           if (settingIcon) delete next['markId'];
-          // Changing color to something non-white/non-gray clears markId.
-          if ('color' in action.patch) {
-            const color = (next['color'] as string | undefined) ?? 'white';
-            if (color !== 'white' && color !== 'gray' && 'markId' in next) {
-              delete next['markId'];
-            }
-          }
         }
         return next as Item;
       });

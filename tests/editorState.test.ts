@@ -57,6 +57,36 @@ describe('reduce', () => {
     expect('icon' in item).toBe(false);
   });
 
+  it('update: recolouring a marked element preserves markId (§8.2 violation surfaces via validation, not silent data loss)', () => {
+    let s = initialState(docWith([
+      { kind: 'element', x: 0, y: 0, label: 'AWS', color: 'white', markId: 'aws' },
+    ]));
+    s = reduce(s, { kind: 'update', id: 'i0', patch: { color: 'blue' } });
+    const item = s.doc.items[0] as Record<string, unknown>;
+    expect(item['color']).toBe('blue');
+    expect(item['markId']).toBe('aws');
+  });
+
+  it('update: setting an icon removes any existing mark (shared render slot)', () => {
+    let s = initialState(docWith([
+      { kind: 'element', x: 0, y: 0, label: 'AWS', color: 'white', markId: 'aws' },
+    ]));
+    s = reduce(s, { kind: 'update', id: 'i0', patch: { icon: namedIcon('shield') } });
+    const item = s.doc.items[0] as Record<string, unknown>;
+    expect('markId' in item).toBe(false);
+    expect(item['icon']).toBeDefined();
+  });
+
+  it('update: setting a mark removes any existing icon (shared render slot)', () => {
+    let s = initialState(docWith([
+      { kind: 'element', x: 0, y: 0, label: 'AWS', color: 'white', icon: namedIcon('shield') },
+    ]));
+    s = reduce(s, { kind: 'update', id: 'i0', patch: { markId: 'aws' } });
+    const item = s.doc.items[0] as Record<string, unknown>;
+    expect('icon' in item).toBe(false);
+    expect(item['markId']).toBe('aws');
+  });
+
   it('update: merges patch into the matching item', () => {
     const s = reduce(seed(), { kind: 'update', id: 'i0', patch: { label: 'renamed' } });
     const item = s.doc.items.find((i) => i.id === 'i0');
