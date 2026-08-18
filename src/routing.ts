@@ -16,17 +16,26 @@ export type RouteStyle = 'straight' | 'elbow';
 export type Point = [number, number];
 export type Route = { points: Point[]; mid: Point };
 
-type Side = 'top' | 'right' | 'bottom' | 'left';
+export type Side = 'top' | 'right' | 'bottom' | 'left';
 
 /**
- * Options for parallel-connector spacing. When N connectors share the same
- * pair of endpoints, they're spaced evenly and centred on the midpoint per
- * spec §4. Callers supply their own index-in-group and total-in-group;
- * routing.ts doesn't need to know the doc structure.
+ * Options for parallel-connector spacing. Callers supply the source and
+ * target side indices independently — a connector shares its source side
+ * with siblings that leave the source's same edge, and its target side
+ * with siblings that arrive at the target's same edge. Those are two
+ * different crowds; the router doesn't guess, the caller resolves it.
+ *
+ * `fromSide` / `toSide`, when supplied, override the geometry-derived
+ * side choice. This lets the caller enforce a consistent side pick for a
+ * whole group of connectors, so a slight overlap in centres doesn't flip
+ * one connector to the opposite side of the box.
  */
+export type SideGroup = { index: number; total: number };
 export type RouteOptions = {
-  index?: number;
-  total?: number;
+  fromSide?: Side;
+  toSide?: Side;
+  fromGroup?: SideGroup;
+  toGroup?: SideGroup;
   spacing?: number;
 };
 
@@ -35,10 +44,8 @@ export function routeConnector(
   style: RouteStyle = 'straight',
   opts: RouteOptions = {},
 ): Route {
-  const total = Math.max(1, opts.total ?? 1);
-  const index = opts.index ?? 0;
-  const spacing = opts.spacing ?? 18;
-  const offset = total <= 1 ? 0 : -((total - 1) * spacing) / 2 + index * spacing;
+  const spacing = opts.spacing ?? 30;
+  const { fromSide: pinnedF, toSide: pinnedT } = opts;
 
   const fCx = from.x + from.w / 2;
   const fCy = from.y + from.h / 2;
@@ -50,7 +57,10 @@ export function routeConnector(
   const horizontal = Math.abs(dx) >= Math.abs(dy);
 
   let fSide: Side, tSide: Side;
-  if (horizontal) {
+  if (pinnedF && pinnedT) {
+    fSide = pinnedF;
+    tSide = pinnedT;
+  } else if (horizontal) {
     if (dx >= 0) { fSide = 'right'; tSide = 'left'; }
     else         { fSide = 'left';  tSide = 'right'; }
   } else {
@@ -58,22 +68,26 @@ export function routeConnector(
     else         { fSide = 'top';    tSide = 'bottom'; }
   }
 
-  const fPt = edgeMidpointOffset(from, fSide, offset);
-  const tPt = edgeMidpointOffset(to, tSide, offset);
+  const fOffset = offsetForGroup(opts.fromGroup, spacing);
+  const tOffset = offsetForGroup(opts.toGroup, spacing);
+  const fPt = edgeMidpointOffset(from, fSide, fOffset);
+  const tPt = edgeMidpointOffset(to, tSide, tOffset);
+
+  const alignedHorizontally = fSide === 'right' && tSide === 'left' || fSide === 'left' && tSide === 'right';
+  const alignedVertically = fSide === 'top' && tSide === 'bottom' || fSide === 'bottom' && tSide === 'top';
 
   if (style === 'straight') {
     // §4: "A straight connector may align to its target's midpoint instead
     // when that avoids an unnecessary elbow." When the two boxes' perpendicular
     // ranges overlap we can pull the source's exit point away from its own
     // midpoint so the line is truly straight, landing on the target's midpoint.
-    // When they don't overlap, no truly-straight route lands on both edges;
-    // we keep the current diagonal (user can toggle to elbow).
-    if (horizontal) {
+    // With only one connector on each side, prefer the target's midpoint.
+    // With crowds, keep each connector at its group-assigned offset.
+    if (alignedHorizontally) {
       const overlapMin = Math.max(from.y, to.y);
       const overlapMax = Math.min(from.y + from.h, to.y + to.h);
       if (overlapMin <= overlapMax) {
-        // Prefer target's midpoint + connector-group offset, clamped to overlap.
-        const preferred = tCy + offset;
+        const preferred = (opts.fromGroup && opts.fromGroup.total > 1) ? fPt[1] : tPt[1];
         const sharedY = Math.max(overlapMin, Math.min(overlapMax, preferred));
         const straightF: Point = [fPt[0], sharedY];
         const straightT: Point = [tPt[0], sharedY];
@@ -82,11 +96,11 @@ export function routeConnector(
           mid: [(straightF[0] + straightT[0]) / 2, sharedY],
         };
       }
-    } else {
+    } else if (alignedVertically) {
       const overlapMin = Math.max(from.x, to.x);
       const overlapMax = Math.min(from.x + from.w, to.x + to.w);
       if (overlapMin <= overlapMax) {
-        const preferred = tCx + offset;
+        const preferred = (opts.fromGroup && opts.fromGroup.total > 1) ? fPt[0] : tPt[0];
         const sharedX = Math.max(overlapMin, Math.min(overlapMax, preferred));
         const straightF: Point = [sharedX, fPt[1]];
         const straightT: Point = [sharedX, tPt[1]];
@@ -96,16 +110,19 @@ export function routeConnector(
         };
       }
     }
-    // Fallback: no perpendicular overlap. Use the plain midpoint-to-midpoint
-    // segment (slight diagonal). User can switch to elbow.
+    // Fallback: no perpendicular overlap or sides don't oppose. Use the
+    // plain midpoint-to-midpoint segment (slight diagonal). User can switch
+    // to elbow.
     return {
       points: [fPt, tPt],
       mid: [(fPt[0] + tPt[0]) / 2, (fPt[1] + tPt[1]) / 2],
     };
   }
 
-  // Elbow: 3 orthogonal segments. Bend along the dominant axis.
-  if (horizontal) {
+  // Elbow: 3 orthogonal segments. Bend along the dominant axis given by the
+  // chosen sides.
+  const bendHorizontal = alignedHorizontally || (!alignedVertically && horizontal);
+  if (bendHorizontal) {
     const midX = (fPt[0] + tPt[0]) / 2;
     return {
       points: [fPt, [midX, fPt[1]], [midX, tPt[1]], tPt],
@@ -117,6 +134,11 @@ export function routeConnector(
     points: [fPt, [fPt[0], midY], [tPt[0], midY], tPt],
     mid: [(fPt[0] + tPt[0]) / 2, midY],
   };
+}
+
+function offsetForGroup(g: SideGroup | undefined, spacing: number): number {
+  if (!g || g.total <= 1) return 0;
+  return -((g.total - 1) * spacing) / 2 + g.index * spacing;
 }
 
 export function edgeMidpoint(b: BBox, side: Side): Point {

@@ -133,6 +133,12 @@ password gate.
 
 ## Reference
 
-`reference/v2.py` is the debugged Python renderer we ported from. `docs/example-1-v2.svg`
-and `docs/example-2-v2.svg` are its output for the two canonical example
-diagrams — the visual bar the TypeScript renderer had to clear.
+`reference/v2.py` is the debugged Python renderer we originally ported from.
+It's kept for historical comparison — it's no longer authoritative.
+
+`docs/example-1-v2.svg` and `docs/example-2-v2.svg` are now the app's own
+output for the two canonical example fixtures (`src/fixtures/example{1,2}.ts`).
+The snapshot test in `tests/render.test.ts` renders those fixtures through
+`src/render.ts` and writes to `tests/__snapshots__/example-{1,2}.svg`; the
+files in `docs/` are the same bytes. The app is the source of truth: what
+users see in the editor is what the docs show.

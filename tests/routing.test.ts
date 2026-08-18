@@ -77,8 +77,8 @@ describe('routeConnector — parallel siblings', () => {
     expect(solo.points[0]![1]).toBe(30);
 
     // Two siblings should offset above and below the midpoint.
-    const first = routeConnector(a, b, 'straight', { index: 0, total: 2 });
-    const second = routeConnector(a, b, 'straight', { index: 1, total: 2 });
+    const first = routeConnector(a, b, 'straight', { fromGroup: { index: 0, total: 2 }, toGroup: { index: 0, total: 2 } });
+    const second = routeConnector(a, b, 'straight', { fromGroup: { index: 1, total: 2 }, toGroup: { index: 1, total: 2 } });
     // Same x (right/left edges), different y — offset perpendicular to run.
     expect(first.points[0]![0]).toBe(100);
     expect(second.points[0]![0]).toBe(100);
@@ -91,8 +91,8 @@ describe('routeConnector — parallel siblings', () => {
   it('spaces top/bottom sides along X and left/right along Y', () => {
     const a = box(0, 0);         // bottom (50, 60)
     const b = box(0, 300);       // top (50, 300)
-    const first = routeConnector(a, b, 'straight', { index: 0, total: 2 });
-    const second = routeConnector(a, b, 'straight', { index: 1, total: 2 });
+    const first = routeConnector(a, b, 'straight', { fromGroup: { index: 0, total: 2 }, toGroup: { index: 0, total: 2 } });
+    const second = routeConnector(a, b, 'straight', { fromGroup: { index: 1, total: 2 }, toGroup: { index: 1, total: 2 } });
     // Bottom edge is horizontal → offset shifts X, not Y.
     expect(first.points[0]![1]).toBe(60);
     expect(second.points[0]![1]).toBe(60);

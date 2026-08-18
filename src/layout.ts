@@ -1,6 +1,6 @@
 import { SIZES } from './tokens';
 import { textWidth, wrap } from './textMetrics';
-import { routeConnector } from './routing';
+import { routeConnector, type Side, type SideGroup } from './routing';
 import type {
   DiagramDoc, Item, Boundary, ZoneDivider, Element, Grouped,
   InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption, Title,
@@ -295,10 +295,99 @@ function bboxConnector(c: Connector, resolved: Map<string, BBox>): BBox | null {
   const from = resolved.get(c.from);
   const to = resolved.get(c.to);
   if (!from || !to) return null;
+  // Layout doesn't know about the sibling group, so bbox uses the geometry-
+  // only defaults. Overhead versus the perfect route is at most `spacing` px,
+  // which is fine for selection rings and connector-label collision checks.
   const route = routeConnector(from, to, c.routing ?? 'straight');
   const xs = route.points.map((p) => p[0]);
   const ys = route.points.map((p) => p[1]);
   const minX = Math.min(...xs), maxX = Math.max(...xs);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
+/**
+ * Per-connector anchor metadata: which side of each endpoint the connector
+ * leaves/arrives on, and its index within the set of siblings sharing that
+ * side. Computed once per render/layout pass; connectors then look up their
+ * own entry when it's their turn to be drawn.
+ *
+ * §4: connectors sharing one edge are spaced evenly and centred on the
+ * midpoint. Sort within a side by the far endpoint's centre so parallel
+ * lines don't cross each other unnecessarily.
+ */
+export type ConnectorAnchor = {
+  fSide: Side; tSide: Side;
+  fromGroup: SideGroup; toGroup: SideGroup;
+};
+
+export function computeConnectorAnchors(
+  items: readonly Item[], bboxes: Map<string, BBox>,
+): Map<string, ConnectorAnchor> {
+  type Landing = { connId: string; side: Side; farCx: number; farCy: number };
+  const landingsByElement = new Map<string, Landing[]>();
+
+  const connectors = items.filter((i): i is Connector => i.kind === 'connector');
+
+  // First pass: decide the side each endpoint lands on, from centre-to-centre
+  // geometry (matches routeConnector's own rule).
+  const firstPass = new Map<string, { fSide: Side; tSide: Side }>();
+  for (const c of connectors) {
+    const from = bboxes.get(c.from);
+    const to = bboxes.get(c.to);
+    if (!from || !to) continue;
+    const fCx = from.x + from.w / 2, fCy = from.y + from.h / 2;
+    const tCx = to.x + to.w / 2, tCy = to.y + to.h / 2;
+    const dx = tCx - fCx, dy = tCy - fCy;
+    let fSide: Side, tSide: Side;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      if (dx >= 0) { fSide = 'right'; tSide = 'left'; }
+      else         { fSide = 'left';  tSide = 'right'; }
+    } else {
+      if (dy >= 0) { fSide = 'bottom'; tSide = 'top'; }
+      else         { fSide = 'top';    tSide = 'bottom'; }
+    }
+    firstPass.set(c.id, { fSide, tSide });
+
+    push(landingsByElement, c.from, { connId: c.id, side: fSide, farCx: tCx, farCy: tCy });
+    push(landingsByElement, c.to,   { connId: c.id, side: tSide, farCx: fCx, farCy: fCy });
+  }
+
+  // Second pass: within each (element, side), sort by the far endpoint's
+  // perpendicular coordinate and assign each connector an index/total.
+  // Vertical sides (left/right) sort by farCy; horizontal (top/bottom) by farCx.
+  const sideOrder = new Map<string, { index: number; total: number }>();
+  for (const [elId, list] of landingsByElement) {
+    const bySide = new Map<Side, Landing[]>();
+    for (const l of list) {
+      const arr = bySide.get(l.side) ?? [];
+      arr.push(l);
+      bySide.set(l.side, arr);
+    }
+    for (const [side, arr] of bySide) {
+      arr.sort((a, b) =>
+        side === 'left' || side === 'right' ? a.farCy - b.farCy : a.farCx - b.farCx
+      );
+      const total = arr.length;
+      arr.forEach((l, i) => {
+        sideOrder.set(`${elId}|${l.connId}`, { index: i, total });
+      });
+    }
+  }
+
+  const out = new Map<string, ConnectorAnchor>();
+  for (const c of connectors) {
+    const fp = firstPass.get(c.id);
+    if (!fp) continue;
+    const fromGroup = sideOrder.get(`${c.from}|${c.id}`) ?? { index: 0, total: 1 };
+    const toGroup = sideOrder.get(`${c.to}|${c.id}`) ?? { index: 0, total: 1 };
+    out.set(c.id, { fSide: fp.fSide, tSide: fp.tSide, fromGroup, toGroup });
+  }
+  return out;
+}
+
+function push<K, V>(m: Map<K, V[]>, k: K, v: V): void {
+  const arr = m.get(k) ?? [];
+  arr.push(v);
+  m.set(k, arr);
 }

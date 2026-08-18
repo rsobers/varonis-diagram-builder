@@ -175,12 +175,13 @@ export type ItemDraft = Item extends infer T
   : never;
 
 /**
- * Assigns deterministic sequential IDs (i0..iN) to a list of unidentified
- * items. Keeps fixtures readable while satisfying the required-id contract.
- * Runtime code (editor) uses crypto.randomUUID slices; fixtures use this.
+ * Assigns deterministic sequential IDs (i0..iN) to items that don't already
+ * carry one. Items may pre-set `id` (as symbolic slugs like `saas-backend`)
+ * so connectors can reference them by a stable, readable name; anything
+ * unnamed falls back to `iN`.
  */
-export function withIds<T extends { kind: string }>(items: T[]): Array<T & { id: string }> {
-  return items.map((item, i) => ({ ...item, id: `i${i}` }));
+export function withIds<T extends { kind: string; id?: string }>(items: T[]): Array<T & { id: string }> {
+  return items.map((item, i) => ({ ...item, id: item.id ?? `i${i}` }));
 }
 
 /**

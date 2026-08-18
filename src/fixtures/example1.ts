@@ -2,9 +2,12 @@ import { withIds, type DiagramDoc } from '../model';
 import { namedIcon } from '../icons';
 
 /**
- * Ported from reference/ex1.py. Preserves coordinates and item order so the
- * SVG output layers match the Python oracle's layer order (boundaries → edges
- * → boundary labels → nodes → labels).
+ * Ported from reference/ex1.py, but the connectors are relationships now
+ * (kind: 'connector', from/to ids) rather than the reference's hand-placed
+ * point lists. Every edge routes from current geometry via layout.ts, so
+ * dragging an element re-anchors its connectors automatically. Element
+ * positions still match the reference so the fixture reads familiar; the
+ * paths are computed.
  */
 export const example1: DiagramDoc = {
   version: 2,
@@ -21,61 +24,61 @@ export const example1: DiagramDoc = {
     { kind: 'boundary', x: 966, y: 405, w: 250, h: 205, label: 'Azure' },
 
     // actors and identity
-    { kind: 'actor', cx: 150, y: 112, label: 'User' },
-    { kind: 'element', x: 700, y: 111, label: 'My Varonis', color: 'blue', icon: namedIcon('shield') },
-    { kind: 'element', x: 700, y: 173, label: 'Okta', color: 'gray', icon: namedIcon('lock') },
-    { kind: 'edge', points: [[168, 128], [700, 128]] },
-    { kind: 'connectorLabel', cx: 455, cy: 128, text: 'AUTHENTICATION', optional: 'https:443' },
-    { kind: 'edge', points: [[620, 128], [620, 190], [700, 190]] },
+    { id: 'user', kind: 'actor', cx: 150, y: 112, label: 'User' },
+    { id: 'my-varonis', kind: 'element', x: 700, y: 111, label: 'My Varonis', color: 'blue', icon: namedIcon('shield') },
+    { id: 'okta', kind: 'element', x: 700, y: 173, label: 'Okta', color: 'gray', icon: namedIcon('lock') },
+    { kind: 'connector', from: 'user', to: 'my-varonis', routing: 'straight',
+      label: 'AUTHENTICATION', optional: 'https:443' },
+    { kind: 'connector', from: 'my-varonis', to: 'okta', routing: 'straight' },
 
-    // web path
-    { kind: 'edge', points: [[150, 178], [150, 300], [540, 300], [540, 316]] },
-    { kind: 'connectorLabel', cx: 300, cy: 300, text: 'HTTPS:443' },
-    { kind: 'inlineControl', x: 495, y: 316, label: 'WAF', icon: namedIcon('shield') },
-    { kind: 'edge', points: [[540, 352], [540, 402]] },
-    { kind: 'element', x: 465, y: 402, label: 'Web UI', color: 'blue', icon: namedIcon('monitor') },
-    { kind: 'edge', points: [[540, 436], [540, 486]] },
+    // web path — WAF sits on the User → Web UI path
+    { id: 'waf', kind: 'inlineControl', x: 495, y: 316, label: 'WAF', icon: namedIcon('shield') },
+    { id: 'web-ui', kind: 'element', x: 465, y: 402, label: 'Web UI', color: 'blue', icon: namedIcon('monitor') },
+    { kind: 'connector', from: 'user', to: 'waf', routing: 'elbow', label: 'HTTPS:443' },
+    { kind: 'connector', from: 'waf', to: 'web-ui', routing: 'straight' },
 
     // backend and stores
-    { kind: 'element', x: 450, y: 486, label: 'Varonis SaaS backend', size: 'lg', color: 'blue', icon: namedIcon('layers'), sub: '(DatAdvantage Cloud)' },
-    { kind: 'element', x: 440, y: 680, label: 'Metadata store', icon: namedIcon('database') },
-    { kind: 'element', x: 610, y: 680, label: 'Secret store', icon: namedIcon('key') },
-    { kind: 'element', x: 780, y: 680, label: 'Log analytics', icon: namedIcon('tune') },
-    { kind: 'edge', points: [[515, 578], [515, 680]] },
-    { kind: 'edge', points: [[575, 578], [575, 640], [685, 640], [685, 680]] },
-    { kind: 'edge', points: [[630, 552], [855, 552], [855, 680]] },
-    { kind: 'connectorLabel', cx: 760, cy: 552, text: 'LOGS & METRICS' },
+    { id: 'saas-backend', kind: 'element', x: 450, y: 486, label: 'Varonis SaaS backend',
+      size: 'lg', color: 'blue', icon: namedIcon('layers'), sub: '(DatAdvantage Cloud)' },
+    { id: 'metadata-store', kind: 'element', x: 440, y: 680, label: 'Metadata store', icon: namedIcon('database') },
+    { id: 'secret-store', kind: 'element', x: 610, y: 680, label: 'Secret store', icon: namedIcon('key') },
+    { id: 'log-analytics', kind: 'element', x: 780, y: 680, label: 'Log analytics', icon: namedIcon('tune') },
+    { kind: 'connector', from: 'web-ui', to: 'saas-backend', routing: 'straight' },
+    { kind: 'connector', from: 'saas-backend', to: 'metadata-store', routing: 'straight' },
+    { kind: 'connector', from: 'saas-backend', to: 'secret-store', routing: 'elbow' },
+    { kind: 'connector', from: 'saas-backend', to: 'log-analytics', routing: 'elbow',
+      label: 'LOGS & METRICS' },
 
     // customer-side integrations
-    {
-      kind: 'grouped', x: 60, y: 428, label: 'Monitored data sources',
+    { id: 'data-sources', kind: 'grouped', x: 60, y: 428, label: 'Monitored data sources',
       children: [
         { label: 'SaaS applications', icon: namedIcon('cloud') },
         { label: 'IaaS platforms', icon: namedIcon('server') },
         { label: 'Identity providers', icon: namedIcon('key') },
       ],
     },
-    { kind: 'element', x: 60, y: 640, label: 'Ticketing integrations', size: 'md' },
-    { kind: 'element', x: 60, y: 750, label: 'SIEM & SOAR integrations', size: 'md' },
+    { id: 'ticketing', kind: 'element', x: 60, y: 640, label: 'Ticketing integrations', size: 'md' },
+    { id: 'siem-soar', kind: 'element', x: 60, y: 750, label: 'SIEM & SOAR integrations', size: 'md' },
 
-    { kind: 'edge', points: [[450, 496], [250, 496]] },
-    { kind: 'connectorLabel', cx: 350, cy: 496, text: 'COLLECT DATA', optional: 'api' },
-    { kind: 'edge', points: [[250, 522], [450, 522]] },
-    { kind: 'connectorLabel', cx: 350, cy: 522, text: 'REMEDIATION' },
-    { kind: 'edge', points: [[450, 548], [390, 548], [390, 672], [240, 672]] },
-    { kind: 'connectorLabel', cx: 315, cy: 672, text: 'TICKETS', optional: 'https:443' },
-    { kind: 'edge', points: [[450, 572], [345, 572], [345, 782], [240, 782]] },
-    { kind: 'connectorLabel', cx: 300, cy: 782, text: 'EVENTS & ALERTS' },
+    { kind: 'connector', from: 'saas-backend', to: 'data-sources', routing: 'straight',
+      label: 'COLLECT DATA', optional: 'api' },
+    { kind: 'connector', from: 'data-sources', to: 'saas-backend', routing: 'straight',
+      label: 'REMEDIATION' },
+    { kind: 'connector', from: 'saas-backend', to: 'ticketing', routing: 'elbow',
+      label: 'TICKETS', optional: 'https:443' },
+    { kind: 'connector', from: 'saas-backend', to: 'siem-soar', routing: 'elbow',
+      label: 'EVENTS & ALERTS' },
 
     // azure
-    { kind: 'element', x: 990, y: 440, label: 'Varonis AI services', size: 'md', color: 'blue', icon: namedIcon('robot') },
-    { kind: 'element', x: 990, y: 520, label: 'Azure OpenAI Service', size: 'md', color: 'gray', icon: namedIcon('cloud') },
-    { kind: 'edge', points: [[630, 512], [880, 512], [880, 472], [990, 472]] },
-    { kind: 'connectorLabel', cx: 770, cy: 512, text: 'GEN AI PROMPTS' },
-    { kind: 'edge', points: [[1080, 504], [1080, 520]] },
+    { id: 'varonis-ai', kind: 'element', x: 990, y: 440, label: 'Varonis AI services',
+      size: 'md', color: 'blue', icon: namedIcon('robot') },
+    { id: 'aoai', kind: 'element', x: 990, y: 520, label: 'Azure OpenAI Service',
+      size: 'md', color: 'gray', icon: namedIcon('cloud') },
+    { kind: 'connector', from: 'saas-backend', to: 'varonis-ai', routing: 'elbow',
+      label: 'GEN AI PROMPTS' },
+    { kind: 'connector', from: 'varonis-ai', to: 'aoai', routing: 'straight' },
 
-    {
-      kind: 'legend', x: 1060, y: 700, encoding: 'Ownership',
+    { kind: 'legend', x: 1060, y: 700, encoding: 'Ownership',
       rows: [['blue', 'Varonis'], ['white', 'Customer'], ['gray', 'Third party']],
     },
     { kind: 'caption', x: 40, y: 872, text: '14 elements · 1 hue · 0 rotated labels' },

@@ -13,7 +13,7 @@ import type {
   InlineControl, Actor, Edge, ConnectorLabel, Connector, Legend, Caption, Title,
 } from './model';
 import { textWidth, wrap } from './textMetrics';
-import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, elementWidth, type BBox } from './layout';
+import { layout, containmentDepth, inlineControlWidth, groupedWidth, zoneDividerChipWidth, elementWidth, computeConnectorAnchors, type BBox, type ConnectorAnchor } from './layout';
 import { routeConnector } from './routing';
 
 /**
@@ -62,7 +62,10 @@ export function render(doc: DiagramDoc, opts: RenderOptions = {}): RenderResult 
   // when it doesn't so fixture rendering has no new dependency at runtime.
   const hasConnector = doc.items.some((it) => it.kind === 'connector');
   const bboxes = hasConnector ? layout(doc) : new Map<string, BBox>();
-  const ctx: Ctx = { interactive: opts.interactive === true, bboxes, items: doc.items, doc };
+  const anchors = hasConnector
+    ? computeConnectorAnchors(doc.items, bboxes)
+    : new Map<string, ConnectorAnchor>();
+  const ctx: Ctx = { interactive: opts.interactive === true, bboxes, anchors, items: doc.items, doc };
 
   // Boundaries must emit outer-first so nested ones layer on top with their
   // derived fill. Everything else keeps document order.
@@ -117,7 +120,7 @@ type Layers = {
   nodes: string[]; labels: string[];
 };
 
-type Ctx = { interactive: boolean; bboxes: Map<string, BBox>; items: readonly Item[]; doc: DiagramDoc };
+type Ctx = { interactive: boolean; bboxes: Map<string, BBox>; anchors: Map<string, ConnectorAnchor>; items: readonly Item[]; doc: DiagramDoc };
 
 function renderItem(item: Item, layers: Layers, warnings: string[], ctx: Ctx): void {
   switch (item.kind) {
@@ -484,22 +487,62 @@ function pillSvg(o: { cx: number; cy: number; text: string; optional: string; nu
   return parts.join('');
 }
 
+/**
+ * Fraction along the route where this connector's label should sit, given
+ * its position within a parallel-group. Stretches from 0.28 to 0.72 as the
+ * group grows, so labels stagger without leaving the middle third of the
+ * run (where the reader expects them per §5.1).
+ */
+function labelT(index: number, total: number): number {
+  if (total <= 1) return 0.5;
+  const span = 0.44; // labels occupy this fraction of the route length
+  const step = span / (total - 1);
+  return 0.5 - span / 2 + index * step;
+}
+
+/**
+ * Walk a polyline and return the point at fraction t (0..1) of total length.
+ * For straight routes this is a simple lerp; for elbows it walks the
+ * segments so the label lands on the actual path, not a phantom straight
+ * line between endpoints.
+ */
+function pointAlongRoute(points: readonly [number, number][], t: number): [number, number] {
+  if (points.length < 2) return points[0] ?? [0, 0];
+  let total = 0;
+  const segs: number[] = [];
+  for (let i = 1; i < points.length; i++) {
+    const [x0, y0] = points[i - 1]!;
+    const [x1, y1] = points[i]!;
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    segs.push(len);
+    total += len;
+  }
+  if (total === 0) return points[0]!;
+  let target = total * t;
+  for (let i = 0; i < segs.length; i++) {
+    if (target <= segs[i]!) {
+      const [x0, y0] = points[i]!;
+      const [x1, y1] = points[i + 1]!;
+      const f = segs[i]! === 0 ? 0 : target / segs[i]!;
+      return [x0 + (x1 - x0) * f, y0 + (y1 - y0) * f];
+    }
+    target -= segs[i]!;
+  }
+  return points[points.length - 1]!;
+}
+
 function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
   const from = ctx.bboxes.get(c.from);
   const to = ctx.bboxes.get(c.to);
   if (!from || !to) return; // Endpoint gone — connector renders nothing.
 
-  // Sibling awareness: connectors sharing the same unordered endpoint pair
-  // are spaced along the shared edge per §4. We index by DOM order among
-  // items with the same {from, to} set.
-  const pairKey = [c.from, c.to].slice().sort().join('|');
-  const siblings = ctx.items.filter((it): it is Connector =>
-    it.kind === 'connector' && [it.from, it.to].slice().sort().join('|') === pairKey
+  // Per-side sibling awareness (§4). computeConnectorAnchors decides which
+  // edge of each endpoint the connector attaches to and its lateral index
+  // among siblings sharing that edge.
+  const a = ctx.anchors.get(c.id);
+  const route = routeConnector(from, to, c.routing ?? 'straight',
+    a ? { fromSide: a.fSide, toSide: a.tSide, fromGroup: a.fromGroup, toGroup: a.toGroup } : {}
   );
-  const index = siblings.findIndex((s) => s.id === c.id);
-  const total = siblings.length;
-
-  const route = routeConnector(from, to, c.routing ?? 'straight', { index, total });
   const d = 'M' + route.points.map(([x, y]) => `${num(x)},${num(y)}`).join(' L');
   const col = c.dashed ? CONN_DASHED : CONN;
   const dash = c.dashed ? ' stroke-dasharray="5 4"' : '';
@@ -513,11 +556,15 @@ function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
     `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mkStart}${mkEnd}/>`
   ));
 
-  // Optional embedded label at the route midpoint. Reuses the same pill
-  // geometry as ConnectorLabel so the two shapes are visually identical.
+  // Optional embedded label. Normally at the route midpoint; when several
+  // parallel connectors share the same side-group we stagger labels along
+  // the route so pills don't stack on top of each other. Perpendicular
+  // spacing alone (§4 route spacing) is too tight for wide labels.
   const hasLabel = (c.label && c.label.length > 0) || (c.num && c.num.length > 0);
   if (hasLabel) {
-    const [mx, my] = route.mid;
+    const [mx, my] = a && a.fromGroup.total > 1
+      ? pointAlongRoute(route.points, labelT(a.fromGroup.index, a.fromGroup.total))
+      : route.mid;
     const pill = pillSvg({
       cx: mx, cy: my,
       text: c.label ?? '',

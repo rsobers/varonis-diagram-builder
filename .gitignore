@@ -12,3 +12,8 @@ e2e/screenshots
 .env.local
 .env.*.local
 __pycache__
+# Local `tsc` runs (without --noEmit) drop .js next to their .ts sources.
+# These are never shipped and are re-generated on demand.
+src/**/*.js
+e2e/**/*.js
+tests/**/*.js
