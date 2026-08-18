@@ -406,15 +406,27 @@ export function computeConnectorAnchors(
       arr.push(l);
       bySide.set(l.side, arr);
     }
+    const elBox = bboxes.get(elId);
     for (const [side, arr] of bySide) {
       arr.sort((a, b) =>
         side === 'left' || side === 'right' ? a.farCy - b.farCy : a.farCx - b.farCx
       );
       const total = arr.length;
-      // Widest label in this group + 8px gutter. Falls back to 30 for
-      // groups of unlabelled connectors so lines still separate cleanly.
+      // Ideal spacing: widest label + gutter, but never less than 30 so lines
+      // separate. Then clamp to the edge length: N connectors spread across
+      // (N-1)*spacing must fit within the element's own edge, minus a small
+      // buffer so no anchor lands right at the corner. Small elements like
+      // an Actor icon (32px) can't accommodate a 148px-wide-label spacing —
+      // pull it in.
       const maxLabel = arr.reduce((w, l) => Math.max(w, l.labelW), 0);
-      const spacing = total <= 1 ? 0 : Math.max(30, maxLabel + 8);
+      let spacing = total <= 1 ? 0 : Math.max(30, maxLabel + 8);
+      if (elBox && total > 1) {
+        const edgeLen = side === 'top' || side === 'bottom' ? elBox.w : elBox.h;
+        const buffer = 8; // clear corners
+        const available = Math.max(0, edgeLen - 2 * buffer);
+        const maxSpacing = available / (total - 1);
+        if (spacing > maxSpacing) spacing = Math.max(0, maxSpacing);
+      }
       arr.forEach((l, i) => {
         sideOrder.set(`${elId}|${l.connId}`, { index: i, total, spacing });
       });

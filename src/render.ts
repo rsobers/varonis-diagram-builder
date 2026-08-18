@@ -559,19 +559,29 @@ function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
     `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mkStart}${mkEnd}/>`
   ));
 
-  // Optional embedded label. Straight routes: at route midpoint (with a
-  // longitudinal stagger for parallel siblings). Elbows: place on the first
-  // segment near the source rather than at the crook, which usually sits
-  // between element rows and collides with unrelated boxes. The label
-  // should read as "labels this outgoing edge."
+  // Optional embedded label placement:
+  //  - Straight routes: at route midpoint; parallel siblings stagger
+  //    longitudinally so pills don't stack.
+  //  - Elbow routes: pick the longest segment and centre the label on it.
+  //    That segment is furthest from the crook and least likely to sit
+  //    between unrelated element rows. For siblings sharing a source-side,
+  //    the picks land at different positions because the far endpoints
+  //    differ — labels separate by target rather than piling up on the
+  //    source's edge.
   const hasLabel = (c.label && c.label.length > 0) || (c.num && c.num.length > 0);
   if (hasLabel) {
     const isElbow = route.points.length >= 3;
     let mx: number, my: number;
     if (isElbow) {
-      // Midpoint of the first segment (source → first bend).
-      const [x0, y0] = route.points[0]!;
-      const [x1, y1] = route.points[1]!;
+      let bestLen = -1, bestIdx = 0;
+      for (let i = 1; i < route.points.length; i++) {
+        const [x0, y0] = route.points[i - 1]!;
+        const [x1, y1] = route.points[i]!;
+        const len = Math.hypot(x1 - x0, y1 - y0);
+        if (len > bestLen) { bestLen = len; bestIdx = i; }
+      }
+      const [x0, y0] = route.points[bestIdx - 1]!;
+      const [x1, y1] = route.points[bestIdx]!;
       mx = (x0 + x1) / 2;
       my = (y0 + y1) / 2;
     } else if (a && a.fromGroup.total > 1) {
