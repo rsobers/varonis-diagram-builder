@@ -57,7 +57,7 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
     <div class="toolbar-sep" aria-hidden="true"></div>
     <button type="button" class="tb-btn tb-export-svg" title="Download as SVG">Export SVG</button>
     <button type="button" class="tb-btn tb-export-png" title="Download as 2× transparent PNG">Export PNG</button>
-    <button type="button" class="tb-btn primary tb-generate">Generate from image</button>
+    <button type="button" class="tb-btn primary tb-generate" title="Draft a diagram from a screenshot — beta feature, results may vary">Generate from image<span class="tb-beta">Beta</span></button>
     <button type="button" class="tb-btn tb-new">New</button>
   `;
 

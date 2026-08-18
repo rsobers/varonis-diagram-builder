@@ -122,10 +122,11 @@ export function createGenerateDialog(container: HTMLElement, editor: Editor): {
     dlg.innerHTML = `
       <form method="dialog" class="gd-form">
         <header class="gd-head">
-          <h3>Generate diagram from image</h3>
+          <h3>Generate diagram from image<span class="gd-beta">Beta</span></h3>
           <button type="button" class="gd-close" aria-label="Close">×</button>
         </header>
         <div class="gd-body">
+          <p class="gd-beta-note">This feature is in beta — results may vary. Review the preview before accepting.</p>
           ${renderBody()}
         </div>
         <footer class="gd-foot">${renderFoot()}</footer>

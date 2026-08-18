@@ -365,6 +365,16 @@ body.resizing-canvas { user-select: none; }
 
 /* ---- Generate-from-image dialog ---- */
 .tb-btn.primary { background: #1c6fd0; border-color: #1c6fd0; color: #fff; }
+.tb-beta {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
 .tb-btn.primary:hover { background: #1760b6; }
 .tb-btn.primary:disabled { opacity: 0.5; cursor: default; background: #1c6fd0; }
 
@@ -415,6 +425,26 @@ body.resizing-canvas { user-select: none; }
 .gd-hint-field span { font-size: 11px; }
 .gd-hint { min-height: 40px; }
 .gd-notice { font-size: 11px; margin: 0; }
+.gd-beta {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: #e8f1fc;
+  border: 1px solid #b9d4f2;
+  color: #1c6fd0;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.gd-beta-note {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 5px;
+  background: #f2f8ff;
+  border: 1px solid #cfe2f7;
+  color: #35506b;
+  font-size: 12px;
+}
 .gd-preview {
   background: #ffffff;
   border: 1px solid #d3d9e0;
