@@ -128,18 +128,18 @@ test('grouped expands horizontally to fit a long row label (no truncation)', asy
   await page.locator('.palette-btn[data-add="grouped"]').click();
   await page.mouse.click(cb.x + 300, cb.y + 200);
 
-  // Baseline: default group is 190 wide.
+  // Baseline: default group is 180 wide.
   const outerRect = page.locator('.canvas-svg [data-item-id] rect').first();
-  expect(Number(await outerRect.getAttribute('width'))).toBe(190);
+  expect(Number(await outerRect.getAttribute('width'))).toBe(180);
 
   // Edit the first child's label via the inspector to something too long.
   const rowInput = page.locator('.inspector .grouped-row input[type="text"]').first();
   await rowInput.fill('High-Volume Classification Engine');
   await rowInput.press('Enter');
 
-  // Group should have expanded past 190 to fit the label.
+  // Group should have expanded past 180 to fit the label.
   const w = Number(await outerRect.getAttribute('width'));
-  expect(w).toBeGreaterThan(190);
+  expect(w).toBeGreaterThan(180);
 
   // The row label should render in full — no ellipsis.
   const rendered = await page.locator('.canvas-svg [data-item-id] text').nth(1).textContent();

@@ -30,7 +30,7 @@ export const TOKENS = {
       iconPlusTwoLinesRequires: 'lg',
     },
     grouped: {
-      radius: 0, stroke: 1, width: 190, maxChildren: 6,
+      radius: 0, stroke: 1, width: 180, maxChildren: 6,
       padding: { side: 10, top: 15, headerToRow: 15, rowGap: 5, bottom: 10 },
       rowHeight: 30,
     },

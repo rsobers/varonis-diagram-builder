@@ -45,7 +45,7 @@ describe('bbox', () => {
     // Header 46 + n*30 + (n-1)*5 + 10; 1 child → 86; 3 children → 156
     expect(one.h).toBe(86);
     expect(three.h).toBe(156);
-    expect(one.w).toBe(190);
+    expect(one.w).toBe(180);
   });
 
   it('enforces InlineControl min width', () => {

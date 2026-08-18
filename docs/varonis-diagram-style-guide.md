@@ -51,7 +51,7 @@ A system, service, data store, or application. **The default building block.**
 ### 3.2 Grouped Element
 A parent system containing a list of named children — modules, data sources, sub-services.
 
-- Same shell as an Element, square corners. Default 190px wide; expands horizontally when a row label needs more room (same rule as §3.1)
+- Same shell as an Element, square corners. Default 180px wide — matches the Medium/Large element so a Grouped stacked above or below an Element aligns cleanly. Expands horizontally when a row label needs more room (same rule as §3.1)
 - Header label centered; child rows are white, 30px tall, 5px gutter
 - Maximum six children. Beyond that, summarize ("+12 more") or split the diagram
 
@@ -427,7 +427,7 @@ Machine-readable spec for build tooling. These values are authoritative; the pro
                        "iconPlacement": { "sm": "inline-left", "md": "centred-above", "lg": "centred-above" },
                        "iconDefault": "none", "iconPeerGroupConsistency": true,
                        "iconPlusTwoLinesRequires": "lg" },
-    "grouped":       { "radius": 0, "stroke": 1, "width": 190, "maxChildren": 6,
+    "grouped":       { "radius": 0, "stroke": 1, "width": 180, "maxChildren": 6,
                        "padding": { "side": 10, "top": 15, "headerToRow": 15, "rowGap": 5, "bottom": 10 },
                        "rowHeight": 30 },
     "inlineControl": { "shape": "stadium", "minWidth": 90, "height": 36, "stroke": 1.5, "fill": "#ffffff", "iconSize": 16 },
