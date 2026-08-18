@@ -55,6 +55,7 @@ export type EditorAction =
   | { kind: 'removeGroupChild'; id: string; index: number }
   | { kind: 'updateGroupChild'; id: string; index: number; patch: { label?: string; icon?: IconRef | undefined } }
   | { kind: 'reverseConnector'; id: string }
+  | { kind: 'setDocTitle'; title: [string, string] | null }
   | { kind: 'load'; doc: DiagramDoc };
 
 export function initialState(doc: DiagramDoc): EditorState {
@@ -225,6 +226,16 @@ export function reduce(state: EditorState, action: EditorAction): EditorState {
         return { ...it, from: it.to, to: it.from };
       });
       return { ...state, doc: { ...state.doc, items } };
+    }
+    case 'setDocTitle': {
+      // Setting to null (or a fully empty tuple) clears the field entirely
+      // so the renderer skips the title strip.
+      if (action.title === null || (action.title[0] === '' && action.title[1] === '')) {
+        const { title: _, ...rest } = state.doc;
+        void _;
+        return { ...state, doc: rest };
+      }
+      return { ...state, doc: { ...state.doc, title: action.title } };
     }
     case 'load': return {
       ...initialState(migrateDoc(action.doc)),

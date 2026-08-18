@@ -283,6 +283,16 @@ body {
   box-shadow: 0 2px 8px rgba(31, 41, 51, 0.15);
 }
 .inline-edit:focus { outline: none; }
+.inline-edit-title {
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.35;
+  padding: 6px 10px;
+  resize: none;
+}
+
+/* Hover cue for the doc title strip — signals it's editable. */
+.canvas-svg [data-doc-title] { cursor: text; }
 
 /* ---- Generate-from-image dialog ---- */
 .tb-btn.primary { background: #1c6fd0; border-color: #1c6fd0; color: #fff; }

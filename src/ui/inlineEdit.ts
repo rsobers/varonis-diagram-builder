@@ -14,7 +14,7 @@ import type { Item } from '../model';
 export function attachInlineEdit(svg: SVGSVGElement, container: HTMLElement, editor: Editor): () => void {
   container.style.position = container.style.position || 'relative';
 
-  let activeInput: HTMLInputElement | null = null;
+  let activeInput: HTMLInputElement | HTMLTextAreaElement | null = null;
 
   function itemById(id: string): Item | undefined {
     return editor.getState().doc.items.find((i) => i.id === id);
@@ -62,11 +62,26 @@ export function attachInlineEdit(svg: SVGSVGElement, container: HTMLElement, edi
     if (!activeInput) return;
     const el = activeInput;
     activeInput = null;
+    el.remove();
+    if (!commitValue) return;
+    if (el.dataset.target === 'docTitle') {
+      commitDocTitle(el.value);
+      return;
+    }
     const id = el.dataset.itemId!;
     const field = el.dataset.field!;
-    const value = el.value;
-    el.remove();
-    if (commitValue) commit(id, field, value);
+    commit(id, field, el.value);
+  }
+
+  function commitDocTitle(value: string): void {
+    // Two lines separated by newline. First empty line clears everything;
+    // trailing empty second line just becomes an empty subtitle string.
+    const [head = '', sub = ''] = value.split('\n');
+    if (head.trim() === '' && sub.trim() === '') {
+      editor.dispatch({ kind: 'setDocTitle', title: null });
+    } else {
+      editor.dispatch({ kind: 'setDocTitle', title: [head, sub] });
+    }
   }
 
   function openInput(id: string): void {
@@ -112,8 +127,51 @@ export function attachInlineEdit(svg: SVGSVGElement, container: HTMLElement, edi
     input.select();
   }
 
+  function openDocTitle(): void {
+    const doc = editor.getState().doc;
+    const [head = '', sub = ''] = doc.title ?? ['', ''];
+
+    // The strip sits at (40, 42) baseline and (40, 62) baseline; give the
+    // editor a wide rect over that area so a two-line textarea fits.
+    const screen = svgRectToScreen(40, 28, Math.max(400, doc.width - 80), 46);
+    const containerRect = container.getBoundingClientRect();
+
+    const ta = document.createElement('textarea');
+    ta.value = doc.title ? `${head}\n${sub}` : '';
+    ta.placeholder = 'Title\nSubtitle (leave blank to hide)';
+    ta.dataset.target = 'docTitle';
+    ta.className = 'inline-edit inline-edit-title';
+    ta.style.left = `${screen.left - containerRect.left + container.scrollLeft}px`;
+    ta.style.top = `${screen.top - containerRect.top + container.scrollTop}px`;
+    ta.style.width = `${screen.width}px`;
+    ta.style.height = `${screen.height}px`;
+    ta.rows = 2;
+
+    ta.addEventListener('keydown', (e) => {
+      // Enter commits (Shift+Enter for real newline shouldn't be needed —
+      // the title is two lines by design), Escape cancels.
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); closeInput(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeInput(false); }
+    });
+    ta.addEventListener('blur', () => closeInput(true));
+    ta.addEventListener('mousedown', (e) => e.stopPropagation());
+    ta.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    if (activeInput) closeInput(true);
+    activeInput = ta;
+    container.appendChild(ta);
+    ta.focus();
+    ta.select();
+  }
+
   function onDblClick(e: MouseEvent): void {
-    const target = e.target instanceof Element ? e.target.closest('[data-item-id]') : null;
+    if (!(e.target instanceof Element)) return;
+    if (e.target.closest('[data-doc-title]')) {
+      e.preventDefault();
+      openDocTitle();
+      return;
+    }
+    const target = e.target.closest('[data-item-id]');
     if (!target) return;
     const id = target.getAttribute('data-item-id');
     if (!id) return;

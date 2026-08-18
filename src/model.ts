@@ -138,6 +138,12 @@ export type Connector = WithId & {
   label?: string;
   optional?: string;
   num?: string;
+  /**
+   * Fractional position (0–1) along the route where the label pill sits.
+   * Absent = renderer chooses (midpoint for straight, longest segment for
+   * elbow). Set when the user drags the label off the auto position.
+   */
+  labelOffset?: number;
 };
 
 export type Legend = WithId & {

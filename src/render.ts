@@ -88,10 +88,21 @@ export function render(doc: DiagramDoc, opts: RenderOptions = {}): RenderResult 
       `markerUnits="userSpaceOnUse"><path d="M0,0 L6.2,3 L0,6 Z" fill="${CONN_DASHED}"/></marker>` +
     `</defs>`;
 
-  const head = doc.title
-    ? `<text x="40" y="42" font-size="15" font-weight="600" fill="${INK}">${esc(doc.title[0])}</text>` +
-      `<text x="40" y="62" font-size="11.5" fill="${SUB}">${esc(doc.title[1])}</text>`
-    : '';
+  // Doc title strip. In interactive mode wrap it in a group with
+  // `data-doc-title` so the canvas can hit-test it (double-click to edit).
+  // Add a transparent rect so the entire strip is clickable, not just
+  // the text glyphs. Non-interactive exports get plain text only.
+  let head = '';
+  if (doc.title) {
+    const title = `<text x="40" y="42" font-size="15" font-weight="600" fill="${INK}">${esc(doc.title[0])}</text>`;
+    const sub = `<text x="40" y="62" font-size="11.5" fill="${SUB}">${esc(doc.title[1])}</text>`;
+    if (opts.interactive) {
+      const hit = `<rect x="40" y="28" width="${num(Math.max(400, doc.width - 80))}" height="46" fill="none" pointer-events="all"/>`;
+      head = `<g data-doc-title="1">${hit}${title}${sub}</g>`;
+    } else {
+      head = title + sub;
+    }
+  }
 
   const vb = opts.viewBox ?? { x: 0, y: 0, w: doc.width, h: doc.height };
   // Default (0, 0) origin omits explicit x/y attrs so fixture snapshots
@@ -570,24 +581,29 @@ function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
   //    source's edge.
   const hasLabel = (c.label && c.label.length > 0) || (c.num && c.num.length > 0);
   if (hasLabel) {
-    const isElbow = route.points.length >= 3;
     let mx: number, my: number;
-    if (isElbow) {
-      let bestLen = -1, bestIdx = 0;
-      for (let i = 1; i < route.points.length; i++) {
-        const [x0, y0] = route.points[i - 1]!;
-        const [x1, y1] = route.points[i]!;
-        const len = Math.hypot(x1 - x0, y1 - y0);
-        if (len > bestLen) { bestLen = len; bestIdx = i; }
-      }
-      const [x0, y0] = route.points[bestIdx - 1]!;
-      const [x1, y1] = route.points[bestIdx]!;
-      mx = (x0 + x1) / 2;
-      my = (y0 + y1) / 2;
-    } else if (a && a.fromGroup.total > 1) {
-      [mx, my] = pointAlongRoute(route.points, labelT(a.fromGroup.index, a.fromGroup.total));
+    if (typeof c.labelOffset === 'number') {
+      // User has dragged the label off-auto; place it at that fraction.
+      [mx, my] = pointAlongRoute(route.points, Math.max(0, Math.min(1, c.labelOffset)));
     } else {
-      [mx, my] = route.mid;
+      const isElbow = route.points.length >= 3;
+      if (isElbow) {
+        let bestLen = -1, bestIdx = 0;
+        for (let i = 1; i < route.points.length; i++) {
+          const [x0, y0] = route.points[i - 1]!;
+          const [x1, y1] = route.points[i]!;
+          const len = Math.hypot(x1 - x0, y1 - y0);
+          if (len > bestLen) { bestLen = len; bestIdx = i; }
+        }
+        const [x0, y0] = route.points[bestIdx - 1]!;
+        const [x1, y1] = route.points[bestIdx]!;
+        mx = (x0 + x1) / 2;
+        my = (y0 + y1) / 2;
+      } else if (a && a.fromGroup.total > 1) {
+        [mx, my] = pointAlongRoute(route.points, labelT(a.fromGroup.index, a.fromGroup.total));
+      } else {
+        [mx, my] = route.mid;
+      }
     }
     const pill = pillSvg({
       cx: mx, cy: my,
@@ -595,9 +611,12 @@ function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
       optional: c.optional ?? '',
       num: c.num ?? '',
     });
-    // Under interactive mode, wrap the pill under the connector's id too so
-    // clicking either the line or the label selects the connector.
-    L.labels.push(wrapId(ctx, c.id, pill));
+    // In interactive mode, wrap in a group tagged as the connector's label
+    // handle so the drag layer can pick it out and reposition along the route.
+    const wrapped = ctx.interactive
+      ? `<g data-connector-label="${c.id}" style="cursor:grab">${pill}</g>`
+      : pill;
+    L.labels.push(wrapId(ctx, c.id, wrapped));
   }
 }
 

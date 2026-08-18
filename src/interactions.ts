@@ -33,6 +33,7 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
   let drag: DragState | null = null;
   let resize: ResizeState | null = null;
   let marquee: MarqueeState | null = null;
+  let labelDrag: LabelDragState | null = null;
 
   function toSVG(e: PointerEvent | MouseEvent): { x: number; y: number } {
     const ctm = svg.getScreenCTM();
@@ -55,6 +56,35 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
   function onPointerDown(e: PointerEvent): void {
     if (e.button !== 0) return;
     const state = editor.getState();
+
+    // Connector label drag — takes priority over normal item drag. Users
+    // grab the pill directly to slide it along the connector line.
+    const labelEl = (e.target instanceof Element) ? e.target.closest('[data-connector-label]') : null;
+    const labelConnId = labelEl?.getAttribute('data-connector-label');
+    if (labelConnId && state.mode === 'select' && !state.placing) {
+      const pathEl = svg.querySelector<SVGPathElement>(
+        `[data-item-id="${cssEsc(labelConnId)}"] path`
+      );
+      const pillGroup = labelEl as SVGGElement;
+      if (pathEl) {
+        const points = parsePathPoints(pathEl.getAttribute('d') ?? '');
+        if (points.length >= 2) {
+          const bb = pillGroup.getBBox();
+          labelDrag = {
+            pointerId: e.pointerId,
+            connectorId: labelConnId,
+            routePoints: points,
+            pillGroup,
+            startCentre: { x: bb.x + bb.width / 2, y: bb.y + bb.height / 2 },
+            lastT: null,
+            moved: false,
+          };
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+      }
+    }
 
     // Resize handles take priority — overlays atop their owner's group.
     const handleEl = (e.target instanceof Element) ? e.target.closest('[data-resize]') : null;
@@ -173,6 +203,20 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
   }
 
   function onPointerMove(e: PointerEvent): void {
+    if (labelDrag && e.pointerId === labelDrag.pointerId) {
+      const now = toSVG(e);
+      const t = projectOntoPolyline(labelDrag.routePoints, now.x, now.y);
+      const [tx, ty] = pointAlongPolyline(labelDrag.routePoints, t);
+      const dx = tx - labelDrag.startCentre.x;
+      const dy = ty - labelDrag.startCentre.y;
+      labelDrag.pillGroup.setAttribute('transform', `translate(${dx} ${dy})`);
+      if (!labelDrag.moved) {
+        labelDrag.moved = true;
+        try { svg.setPointerCapture(labelDrag.pointerId); } catch { /* already */ }
+      }
+      labelDrag.lastT = t;
+      return;
+    }
     if (marquee && e.pointerId === marquee.pointerId) {
       marquee.currentSVG = toSVG(e);
       const dx = marquee.currentSVG.x - marquee.startSVG.x;
@@ -251,6 +295,19 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
   }
 
   function onPointerUp(e: PointerEvent): void {
+    if (labelDrag && e.pointerId === labelDrag.pointerId) {
+      const { connectorId, lastT, moved, pillGroup } = labelDrag;
+      labelDrag = null;
+      try { svg.releasePointerCapture(e.pointerId); } catch { /* already */ }
+      pillGroup.removeAttribute('transform');
+      if (moved && lastT !== null) {
+        editor.dispatch({
+          kind: 'update', id: connectorId,
+          patch: { labelOffset: Math.round(lastT * 1000) / 1000 },
+        });
+      }
+      return;
+    }
     if (marquee && e.pointerId === marquee.pointerId) {
       const m = marquee;
       marquee = null;
@@ -412,6 +469,87 @@ type MarqueeState = {
   rect: SVGRectElement | null;
   moved: boolean;
 };
+
+type LabelDragState = {
+  pointerId: number;
+  connectorId: string;
+  routePoints: Array<[number, number]>;
+  pillGroup: SVGGElement;
+  startCentre: { x: number; y: number };
+  lastT: number | null;
+  moved: boolean;
+};
+
+/**
+ * Parse an `M x,y L x,y L x,y ...` connector path emitted by render.ts into
+ * an array of points. The renderer only uses M and L (no curves), so a
+ * regex sweep is sufficient.
+ */
+function parsePathPoints(d: string): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  for (const m of d.matchAll(/[ML]\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/g)) {
+    out.push([parseFloat(m[1]!), parseFloat(m[2]!)]);
+  }
+  return out;
+}
+
+/** Point at arc-length fraction t (0–1) along a polyline. */
+function pointAlongPolyline(points: ReadonlyArray<[number, number]>, t: number): [number, number] {
+  if (points.length < 2) return points[0] ?? [0, 0];
+  const segLens: number[] = [];
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const len = Math.hypot(points[i]![0] - points[i - 1]![0], points[i]![1] - points[i - 1]![1]);
+    segLens.push(len);
+    total += len;
+  }
+  if (total === 0) return points[0]!;
+  let target = total * Math.max(0, Math.min(1, t));
+  for (let i = 0; i < segLens.length; i++) {
+    if (target <= segLens[i]!) {
+      const [x0, y0] = points[i]!;
+      const [x1, y1] = points[i + 1]!;
+      const f = segLens[i]! === 0 ? 0 : target / segLens[i]!;
+      return [x0 + (x1 - x0) * f, y0 + (y1 - y0) * f];
+    }
+    target -= segLens[i]!;
+  }
+  return points[points.length - 1]!;
+}
+
+/**
+ * Projects a point onto the polyline and returns the arc-length fraction
+ * (0–1) of the closest point on the polyline. Used to convert a mouse
+ * position into a labelOffset value the renderer can store.
+ */
+function projectOntoPolyline(points: ReadonlyArray<[number, number]>, x: number, y: number): number {
+  const segLens: number[] = [];
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const len = Math.hypot(points[i]![0] - points[i - 1]![0], points[i]![1] - points[i - 1]![1]);
+    segLens.push(len);
+    total += len;
+  }
+  if (total === 0) return 0.5;
+  let bestT = 0, bestDist = Infinity, accum = 0;
+  for (let i = 1; i < points.length; i++) {
+    const [x0, y0] = points[i - 1]!;
+    const [x1, y1] = points[i]!;
+    const len = segLens[i - 1]!;
+    if (len > 0) {
+      const dx = x1 - x0, dy = y1 - y0;
+      const tSeg = Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / (len * len)));
+      const px = x0 + dx * tSeg, py = y0 + dy * tSeg;
+      const dist = Math.hypot(x - px, y - py);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestT = (accum + tSeg * len) / total;
+      }
+    }
+    accum += len;
+  }
+  return bestT;
+}
 
 function normalizeRect(a: { x: number; y: number }, b: { x: number; y: number }): BBox {
   const x = Math.min(a.x, b.x);
