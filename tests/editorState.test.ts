@@ -96,6 +96,61 @@ describe('reduce', () => {
       && (s.doc.items.find((i) => i.id === 'i1') as { label: string }).label).toBe('B');
   });
 
+  it('undo: reverts the last mutating action', () => {
+    let s = seed();
+    s = reduce(s, { kind: 'move', ids: ['i0'], dx: 100, dy: 0 });
+    const moved = s.doc.items.find((i) => i.id === 'i0') as { x: number };
+    expect(moved.x).toBe(200);
+    s = reduce(s, { kind: 'undo' });
+    const reverted = s.doc.items.find((i) => i.id === 'i0') as { x: number };
+    expect(reverted.x).toBe(100);
+  });
+
+  it('redo: replays what undo reverted', () => {
+    let s = seed();
+    s = reduce(s, { kind: 'move', ids: ['i0'], dx: 100, dy: 0 });
+    s = reduce(s, { kind: 'undo' });
+    s = reduce(s, { kind: 'redo' });
+    const item = s.doc.items.find((i) => i.id === 'i0') as { x: number };
+    expect(item.x).toBe(200);
+  });
+
+  it('undo: chained across delete + move', () => {
+    let s = seed();
+    s = reduce(s, { kind: 'delete', ids: ['i1'] });
+    expect(s.doc.items).toHaveLength(1);
+    s = reduce(s, { kind: 'move', ids: ['i0'], dx: 50, dy: 0 });
+    s = reduce(s, { kind: 'undo' });   // undoes the move
+    expect(s.doc.items).toHaveLength(1);
+    s = reduce(s, { kind: 'undo' });   // undoes the delete
+    expect(s.doc.items).toHaveLength(2);
+  });
+
+  it('new mutation clears the redo stack (new branch of history)', () => {
+    let s = seed();
+    s = reduce(s, { kind: 'move', ids: ['i0'], dx: 100, dy: 0 });
+    s = reduce(s, { kind: 'undo' });
+    s = reduce(s, { kind: 'move', ids: ['i0'], dx: 20, dy: 0 });
+    // The old redo (undone 100px move) is gone.
+    s = reduce(s, { kind: 'redo' });
+    const item = s.doc.items.find((i) => i.id === 'i0') as { x: number };
+    expect(item.x).toBe(120);
+  });
+
+  it('undo on empty stack is a no-op', () => {
+    const s = seed();
+    const before = s;
+    const after = reduce(s, { kind: 'undo' });
+    expect(after).toBe(before);
+  });
+
+  it('non-mutating actions do not push undo entries', () => {
+    let s = seed();
+    s = reduce(s, { kind: 'select', ids: ['i0'], mode: 'replace' });
+    s = reduce(s, { kind: 'setMode', mode: 'connect' });
+    expect(s.undoStack).toHaveLength(0);
+  });
+
   it('delete: removes items and prunes them from selection', () => {
     let s = reduce(seed(), { kind: 'select', ids: ['i0', 'i1'], mode: 'replace' });
     s = reduce(s, { kind: 'delete', ids: ['i0'] });

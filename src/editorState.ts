@@ -28,7 +28,17 @@ export type EditorState = {
   mode: EditorMode;
   /** In connect mode, the id of the first-clicked item awaiting a target. */
   pending: string | null;
+  /**
+   * Undo/redo stacks of past and future doc snapshots. Only `doc` is
+   * historised — selection / mode / placing are UI state, not part of
+   * what the user thinks of as "their diagram". Capped at UNDO_LIMIT so
+   * a long editing session doesn't retain unbounded memory.
+   */
+  undoStack: readonly DiagramDoc[];
+  redoStack: readonly DiagramDoc[];
 };
+
+export const UNDO_LIMIT = 100;
 
 export type EditorAction =
   | { kind: 'add'; item: ItemDraft; id: string }
@@ -56,7 +66,9 @@ export type EditorAction =
   | { kind: 'updateGroupChild'; id: string; index: number; patch: { label?: string; icon?: IconRef | undefined } }
   | { kind: 'reverseConnector'; id: string }
   | { kind: 'setDocTitle'; title: [string, string] | null }
-  | { kind: 'load'; doc: DiagramDoc };
+  | { kind: 'load'; doc: DiagramDoc }
+  | { kind: 'undo' }
+  | { kind: 'redo' };
 
 export function initialState(doc: DiagramDoc): EditorState {
   return {
@@ -67,11 +79,61 @@ export function initialState(doc: DiagramDoc): EditorState {
     placing: null,
     mode: 'select',
     pending: null,
+    undoStack: [],
+    redoStack: [],
   };
 }
 
 export function reduce(state: EditorState, action: EditorAction): EditorState {
+  // Undo/redo swap the current doc with an entry from the opposite stack.
+  // Selection is cleared so no stale ids from the previous timeline linger.
+  if (action.kind === 'undo') {
+    if (state.undoStack.length === 0) return state;
+    const prev = state.undoStack[state.undoStack.length - 1]!;
+    return {
+      ...state,
+      doc: prev,
+      undoStack: state.undoStack.slice(0, -1),
+      redoStack: [...state.redoStack, state.doc],
+      selection: new Set(),
+      placing: null,
+      pending: null,
+    };
+  }
+  if (action.kind === 'redo') {
+    if (state.redoStack.length === 0) return state;
+    const next = state.redoStack[state.redoStack.length - 1]!;
+    return {
+      ...state,
+      doc: next,
+      redoStack: state.redoStack.slice(0, -1),
+      undoStack: [...state.undoStack, state.doc],
+      selection: new Set(),
+      placing: null,
+      pending: null,
+    };
+  }
+  const next = reduceInner(state, action);
+  // If the doc actually changed, snapshot the previous doc onto the undo
+  // stack and reset the redo stack (new branch of history). Reference
+  // equality is sufficient because reduceInner always returns a new doc
+  // object when it mutates.
+  if (next.doc !== state.doc) {
+    return {
+      ...next,
+      undoStack: [...state.undoStack, state.doc].slice(-UNDO_LIMIT),
+      redoStack: [],
+    };
+  }
+  return next;
+}
+
+function reduceInner(state: EditorState, action: EditorAction): EditorState {
   switch (action.kind) {
+    case 'undo':
+    case 'redo':
+      // Handled in reduce() above.
+      return state;
     case 'add': {
       let item = { ...action.item, id: action.id } as Item;
       if (item.kind !== 'connector') {

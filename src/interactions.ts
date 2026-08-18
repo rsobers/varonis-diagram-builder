@@ -402,6 +402,21 @@ export function attachInteractions(svg: SVGSVGElement, editor: Editor, options: 
     // fields so browser text-editing shortcuts keep working.
     const mod = e.metaKey || e.ctrlKey;
     const key = e.key.toLowerCase();
+    // Undo / Redo: Cmd/Ctrl-Z, Cmd/Ctrl-Shift-Z or Ctrl-Y for redo.
+    // Skip when the focus is inside a form field so the browser's own
+    // undo stack for text input keeps working.
+    if (mod && key === 'z') {
+      if (isInField()) return;
+      editor.dispatch({ kind: e.shiftKey ? 'redo' : 'undo' });
+      e.preventDefault();
+      return;
+    }
+    if (mod && key === 'y') {
+      if (isInField()) return;
+      editor.dispatch({ kind: 'redo' });
+      e.preventDefault();
+      return;
+    }
     if (mod && key === 'c') {
       if (state.selection.size === 0 || isInField()) return;
       clipboard = buildCopy(state.doc, state.selection);
