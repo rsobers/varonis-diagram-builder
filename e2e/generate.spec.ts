@@ -40,7 +40,7 @@ test('generate-from-image: upload → preview → accept loads the diagram', asy
     });
   });
 
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   await page.screenshot({ path: join(DIR, 'gen-01-idle.png') });
 
@@ -97,7 +97,7 @@ test('generate-from-image: accept confirms before overwriting a non-empty canvas
     });
   });
 
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Place a manual element first — this is the "current canvas" that we
@@ -140,7 +140,7 @@ test('generate-from-image: discard clears the preview and leaves the canvas alon
     });
   });
 
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Existing canvas has one element.

@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('two connectors between the same pair are offset along the shared edge', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');
@@ -47,7 +47,7 @@ test('two connectors between the same pair are offset along the shared edge', as
 
 test('connector arrows select mode renders marker-start via inspector', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   const canvas = page.locator('.canvas-svg');
   const cb = await canvas.boundingBox();

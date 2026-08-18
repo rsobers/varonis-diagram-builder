@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('Cmd-D duplicates the selection to a shifted copy', async ({ page, browserName }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');
@@ -34,7 +34,7 @@ test('Cmd-D duplicates the selection to a shifted copy', async ({ page, browserN
 
 test('Cmd-C then Cmd-V pastes', async ({ page, browserName }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   const canvas = page.locator('.canvas-svg');
   const cb = await canvas.boundingBox();

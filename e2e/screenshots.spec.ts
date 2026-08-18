@@ -13,7 +13,7 @@ async function shot(page: import('@playwright/test').Page, name: string) {
 
 test('golden path — screenshots for bug hunt', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   await shot(page, '01-empty');
 

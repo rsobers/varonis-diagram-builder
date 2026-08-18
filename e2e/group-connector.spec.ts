@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('grouped element connects to a medium element with a truly-straight line', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');

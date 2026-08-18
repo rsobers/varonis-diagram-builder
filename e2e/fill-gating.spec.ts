@@ -14,7 +14,7 @@ mkdirSync(DIR, { recursive: true });
  */
 test('fill gating per encoding', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   async function paletteSwatches(): Promise<string[]> {

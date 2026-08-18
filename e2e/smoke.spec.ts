@@ -1,7 +1,24 @@
 import { test, expect } from '@playwright/test';
 
-test('place, drag, connect, encoding surface a validation the user can click to fix', async ({ page }) => {
+test('preload: fresh visit shows example 1 already on the canvas', async ({ page }) => {
   await page.goto('/');
+  await expect(page.locator('.canvas-svg [data-item-id]')).not.toHaveCount(0);
+});
+
+test('toolbar: style-guide link points at the repo, example buttons swap the canvas', async ({ page }) => {
+  await page.goto('/?blank=1');
+  const link = page.locator('.tb-link');
+  await expect(link).toHaveText(/Style guide/);
+  await expect(link).toHaveAttribute('href', /docs\/varonis-diagram-style-guide\.md$/);
+
+  // Empty canvas → clicking Example 2 loads without a confirm.
+  await expect(page.locator('.canvas-svg [data-item-id]')).toHaveCount(0);
+  await page.locator('.tb-example[data-example="2"]').click();
+  await expect(page.locator('.canvas-svg [data-item-id]')).not.toHaveCount(0);
+});
+
+test('place, drag, connect, encoding surface a validation the user can click to fix', async ({ page }) => {
+  await page.goto('/?blank=1');
 
   // ---- Place two elements via click-to-arm then click on canvas.
   const canvas = page.locator('.canvas-svg');

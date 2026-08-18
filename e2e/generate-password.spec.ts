@@ -42,7 +42,7 @@ test('generate: wrong password → 401 surfaced as inline error, dialog stays op
   // Ensure no lingering saved password from previous runs.
   await page.addInitScript(() => localStorage.removeItem('vdb.generate.password'));
 
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   await page.locator('.tb-generate').click();
   await page.locator('.gd-file').setInputFiles({
@@ -64,7 +64,7 @@ test('generate: right password → preview appears, password persists to localSt
   await gatedRoute(page, 'letmein');
   await page.addInitScript(() => localStorage.removeItem('vdb.generate.password'));
 
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   await page.locator('.tb-generate').click();
   await page.locator('.gd-file').setInputFiles({

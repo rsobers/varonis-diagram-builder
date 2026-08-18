@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('boundary fill flips live when dragged inside another (§3.4 v2.3)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');

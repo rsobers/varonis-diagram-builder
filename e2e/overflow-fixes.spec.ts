@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('inline control pill fits a long label like "Metadata & Logs" without clipping', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');
@@ -38,7 +38,7 @@ test('inline control pill fits a long label like "Metadata & Logs" without clipp
 
 test('grouped row has spec §9 padding (15px on each side of centred label)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   const canvas = page.locator('.canvas-svg');
   const cb = await canvas.boundingBox();
@@ -58,7 +58,7 @@ test('grouped row has spec §9 padding (15px on each side of centred label)', as
 
 test('title item renders bold 18px and is inline-editable', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   const canvas = page.locator('.canvas-svg');
   const cb = await canvas.boundingBox();
@@ -86,7 +86,7 @@ test('title item renders bold 18px and is inline-editable', async ({ page }) => 
 
 test('small element expands horizontally to fit a long label (no clipping)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   const canvas = page.locator('.canvas-svg');
   const cb = await canvas.boundingBox();
@@ -118,7 +118,7 @@ test('small element expands horizontally to fit a long label (no clipping)', asy
 
 test('grouped expands horizontally to fit a long row label (no truncation)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');

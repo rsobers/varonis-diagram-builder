@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('inline label editing: dblclick → edit → Enter commits', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');
@@ -46,7 +46,7 @@ test('inline label editing: dblclick → edit → Enter commits', async ({ page 
 
 test('inline label editing: Escape cancels without change', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');

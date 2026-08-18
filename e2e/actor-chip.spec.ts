@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('palette actor chips center vertically', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Screenshot just the ACTORS section.

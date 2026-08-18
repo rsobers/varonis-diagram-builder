@@ -1,5 +1,10 @@
 import type { Editor, EditorState, EditorMode } from '../editorState';
-import type { Encoding } from '../model';
+import type { DiagramDoc, Encoding } from '../model';
+import { example1 } from '../fixtures/example1';
+import { example2 } from '../fixtures/example2';
+
+const REPO_BASE = 'https://github.com/rsobers/varonis-diagram-builder/blob/main';
+const STYLE_GUIDE_URL = `${REPO_BASE}/docs/varonis-diagram-style-guide.md`;
 
 /**
  * Top toolbar: mode toggle (Select/Connect), encoding selector, snap toggle,
@@ -27,6 +32,13 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
       <input type="checkbox" class="tb-snap"> Snap to grid
     </label>
     <span class="toolbar-grow"></span>
+    <div class="toolbar-group" role="group" aria-label="Load example">
+      <span class="toolbar-hint">Examples</span>
+      <button type="button" class="tb-btn tb-example" data-example="1">1</button>
+      <button type="button" class="tb-btn tb-example" data-example="2">2</button>
+    </div>
+    <a class="tb-link" href="${STYLE_GUIDE_URL}" target="_blank" rel="noopener noreferrer" title="Open the Varonis diagram style guide (source of truth)">Style guide ↗</a>
+    <div class="toolbar-sep" aria-hidden="true"></div>
     <button type="button" class="tb-btn tb-export-svg" title="Download as SVG">Export SVG</button>
     <button type="button" class="tb-btn tb-export-png" title="Download as 2× transparent PNG">Export PNG</button>
     <button type="button" class="tb-btn primary tb-generate">Generate from image</button>
@@ -56,6 +68,18 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
     editor.dispatch({
       kind: 'load',
       doc: { version: 2, width: editor.getState().doc.width, height: editor.getState().doc.height, items: [] },
+    });
+  });
+
+  const exampleBtns = container.querySelectorAll<HTMLButtonElement>('.tb-example');
+  const examples: Record<string, DiagramDoc> = { '1': example1, '2': example2 };
+  exampleBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const which = btn.dataset.example!;
+      const doc = examples[which];
+      if (!doc) return;
+      if (editor.getState().doc.items.length > 0 && !confirm(`Load example ${which}? Current canvas will be replaced.`)) return;
+      editor.dispatch({ kind: 'load', doc });
     });
   });
 

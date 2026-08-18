@@ -23,7 +23,7 @@ test('add a vendor mark by domain via logo.dev → available in the palette', as
     });
   });
 
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Scroll to the Vendor marks section and type a domain.
@@ -57,7 +57,7 @@ test('logo.dev failure surfaces a clear error in the palette', async ({ page }) 
     await route.fulfill({ status: 500, contentType: 'text/plain', body: 'oops' });
   });
 
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
   await page.locator('.palette h3', { hasText: 'Vendor marks' }).scrollIntoViewIfNeeded();
   await page.locator('.palette-add-mark-input').fill('slack.com');

@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('vendor mark palette places a marked element', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Scroll palette to reveal the Vendor marks section.
@@ -32,7 +32,7 @@ test('vendor mark palette places a marked element', async ({ page }) => {
 
 test('vendor mark on a boundary renders as a top-right badge', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');
@@ -54,7 +54,7 @@ test('vendor mark on a boundary renders as a top-right badge', async ({ page }) 
 
 test('mark on a blue element is blocked and explained', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Switch to Ownership so blue becomes available.

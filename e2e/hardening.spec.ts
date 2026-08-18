@@ -13,7 +13,7 @@ async function shot(page: import('@playwright/test').Page, name: string) {
 
 test('drag-and-drop ghost + snap preview shows in the canvas', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Simulate a dragover event with a real palette payload — Playwright's
@@ -39,7 +39,7 @@ test('drag-and-drop ghost + snap preview shows in the canvas', async ({ page }) 
 
 test('dropping into a boundary registers within it', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Place a large boundary.

@@ -9,7 +9,7 @@ mkdirSync(DIR, { recursive: true });
 
 test('Export SVG downloads a valid SVG', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   // Place an element so the export isn't empty.
@@ -37,7 +37,7 @@ test('Export SVG downloads a valid SVG', async ({ page }) => {
 
 test('Export PNG downloads a valid transparent PNG at 2×', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/?blank=1');
   await page.waitForLoadState('networkidle');
 
   const canvas = page.locator('.canvas-svg');
