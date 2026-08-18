@@ -11,8 +11,16 @@
     "id": "okta",
     "name": "Okta",
     "file": "okta.webp",
-    "aliases": ["okta", "okta identity"],
+    "aliases": ["okta", "okta identity", "okta.com"],
     "source": "https://www.okta.com/press-room/media-assets-guidelines/",
     "retrieved": "2026-08-17"
+  },
+  {
+    "id": "azure",
+    "name": "Microsoft Azure",
+    "file": "azure.png",
+    "aliases": ["azure", "azure.com", "microsoft azure", "aoai"],
+    "source": "https://img.logo.dev/azure.com",
+    "retrieved": "2026-08-18"
   }
 ]

@@ -23,8 +23,8 @@ export const example1: DiagramDoc = {
 
     // actors and identity
     { id: 'user', kind: 'actor', cx: 150, y: 112, label: 'User' },
-    { id: 'my-varonis', kind: 'element', x: 700, y: 104, label: 'My Varonis', color: 'blue', icon: namedIcon('shield') },
-    { id: 'okta', kind: 'element', x: 700, y: 160, label: 'Okta', color: 'gray', icon: namedIcon('lock') },
+    { id: 'my-varonis', kind: 'element', x: 700, y: 104, label: 'My Varonis', color: 'blue', markId: 'varonis' },
+    { id: 'okta', kind: 'element', x: 700, y: 160, label: 'Okta', color: 'gray', markId: 'okta' },
     { kind: 'connector', from: 'user', to: 'my-varonis', routing: 'straight',
       label: 'AUTHENTICATION', optional: 'https:443' },
     { kind: 'connector', from: 'my-varonis', to: 'okta', routing: 'straight' },
@@ -71,7 +71,7 @@ export const example1: DiagramDoc = {
     { id: 'varonis-ai', kind: 'element', x: 1020, y: 438, label: 'Varonis AI services',
       size: 'md', color: 'blue', icon: namedIcon('robot') },
     { id: 'aoai', kind: 'element', x: 1020, y: 518, label: 'Azure OpenAI Service',
-      size: 'md', color: 'gray', icon: namedIcon('cloud') },
+      size: 'md', color: 'gray', markId: 'azure' },
     { kind: 'connector', from: 'saas-backend', to: 'varonis-ai', routing: 'elbow',
       label: 'GEN AI PROMPTS' },
     { kind: 'connector', from: 'varonis-ai', to: 'aoai', routing: 'straight' },

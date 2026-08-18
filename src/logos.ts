@@ -90,7 +90,14 @@ export async function fetchLogoFromDomain(rawDomain: string): Promise<LogoEntry>
   const domain = normalizeDomain(rawDomain);
   if (!domain) throw new Error('Enter a vendor domain (e.g. aws.amazon.com).');
   const id = idFromDomain(domain);
-  const existing = runtime.get(id) ?? SHIPPED.find((l) => l.id === id);
+  // Check by exact id (both tiers), then by alias — so a typed
+  // "azure.com" resolves to the shipped "azure" entry instead of
+  // fetching a duplicate.
+  const stem = domain.split('.')[0] ?? domain;
+  const existing =
+    runtime.get(id) ??
+    SHIPPED.find((l) => l.id === id) ??
+    SHIPPED.find((l) => l.aliases.some((a) => a.toLowerCase() === domain || a.toLowerCase() === stem));
   if (existing) return existing;
 
   const token = import.meta.env['VITE_LOGODEV_TOKEN'] as string | undefined;
