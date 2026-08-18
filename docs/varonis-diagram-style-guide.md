@@ -251,6 +251,8 @@ Corrected: firewall and WAF become grayscale Inline Controls. Blue is declared a
 
 **Within a peer group, icons are all or nothing.** Sibling elements inside the same boundary, or a row of elements serving the same role, either all carry icons or none do. A mixed row reads as an oversight rather than a decision. Different peer groups in the same diagram may make different choices.
 
+**What counts as a peer group.** The rule applies to elements sharing a boundary or the rows of a grouped element — cases where the reader will read the members as one set. It does not apply to unrelated elements that merely sit outside every boundary; those are not peers of each other and can each make their own icon choice. Automated style checks enforce this at the boundary/grouped-element scope only, for the same reason.
+
 ### 7.3 Specification
 
 - **Source:** Google Material Symbols only. Settings: Weight 200, Grade 200, Optical size 24
@@ -279,7 +281,7 @@ A vendor logo is a claim that **this specific vendor** matters to the diagram. U
 - The vendor is one example among many. If the honest label is "for example, Databricks", the element should say `Data warehouse` and the vendor belongs in the narration
 - The mark is there to signal breadth. A grid of vendor tiles is a marketing claim about coverage, not an architecture statement. It belongs on a web page, not in a system diagram
 
-**Peer-group consistency applies exactly as it does for icons (§7.2):** within a boundary or a row of sibling elements, either all carry marks or none do.
+**Peer-group consistency applies exactly as it does for icons (§7.2):** within a boundary or the rows of a grouped element, either all carry marks or none do. See §7.2 for the scope of "peer group."
 
 ### 8.2 Placement and sizing
 

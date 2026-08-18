@@ -179,4 +179,17 @@ describe('validate — peer-group icon consistency', () => {
     ]);
     expect(validate(doc).some((x) => x.id.startsWith('mixed-icons:'))).toBe(false);
   });
+
+  it('does not treat root-level elements as an implied peer group', () => {
+    // Elements outside every boundary are not automatically peers of each
+    // other (see §7.2). Mixed icons at root level must not fire.
+    const doc = docWith([
+      { kind: 'element', x: 20, y: 20, label: 'a', icon: namedIcon('shield') },
+      { kind: 'element', x: 200, y: 20, label: 'b' },
+      { kind: 'element', x: 20, y: 200, label: 'c', markId: 'okta' },
+    ]);
+    const v = validate(doc);
+    expect(v.some((x) => x.id.startsWith('mixed-icons:'))).toBe(false);
+    expect(v.some((x) => x.id.startsWith('mixed-marks-icons:'))).toBe(false);
+  });
 });

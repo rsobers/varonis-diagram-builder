@@ -9,6 +9,7 @@ export const example2: DiagramDoc = {
   version: 2,
   width: 1160,
   height: 930,
+  encoding: 'state',
   title: [
     'Example 2 — Email security scanning pipeline',
     'Color encoding: State. Amber marks where untrusted content is handled.',

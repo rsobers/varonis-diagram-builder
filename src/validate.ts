@@ -230,44 +230,44 @@ export function validate(doc: DiagramDoc): Violation[] {
     });
   }
 
-  // §7.2 / §8.1 — Mixed marks and icons in a peer group.
+  // §7.2 / §8.1 — Mixed marks and icons in a peer group. Scoped to elements
+  // sharing a boundary. Root-level elements are not treated as an implied
+  // peer group: the spec's other peer-group case ("a row of elements serving
+  // the same role") is a design intent we cannot infer from geometry, and
+  // the historical root-level heuristic produced far more false positives
+  // than real catches.
   const groups2 = elementsByBoundary(doc);
   for (const [container, els] of groups2) {
+    if (container === null) continue;
     if (els.length < 2) continue;
     const withMark = els.filter((e) => !!e.markId);
     const withIcon = els.filter((e) => !!e.icon);
     const withoutAny = els.filter((e) => !e.markId && !e.icon);
-    // Trigger if the group has any mix of marks vs icons vs neither.
     const distinctCategories = [withMark.length > 0, withIcon.length > 0, withoutAny.length > 0].filter(Boolean).length;
     if (distinctCategories > 1) {
       violations.push({
-        id: `mixed-marks-icons:${container ?? 'root'}`,
+        id: `mixed-marks-icons:${container}`,
         severity: 'warn',
         ruleRef: '§8.1',
-        message: container
-          ? `Elements inside "${container}" mix vendor marks and icons — peer groups should be all-or-nothing (§7.2, §8.1).`
-          : `Root-level elements mix vendor marks and icons — peer groups should be all-or-nothing (§7.2, §8.1).`,
+        message: `Elements inside "${container}" mix vendor marks and icons — peer groups should be all-or-nothing (§7.2, §8.1).`,
         itemIds: els.map((e) => e.id),
       });
     }
   }
 
-  // §7.2 — Mixed icons within a peer group (elements sharing a boundary,
-  // or root-level elements). Only applied to Elements, per the spec's
-  // "sibling elements" wording.
+  // §7.2 — Mixed icons within a peer group. Same scoping rule as above.
   const peerGroups = elementsByBoundary(doc);
   for (const [container, els] of peerGroups) {
+    if (container === null) continue;
     if (els.length < 2) continue;
     const withIcon = els.filter((e) => e.icon);
     const withoutIcon = els.filter((e) => !e.icon);
     if (withIcon.length > 0 && withoutIcon.length > 0) {
       violations.push({
-        id: `mixed-icons:${container ?? 'root'}`,
+        id: `mixed-icons:${container}`,
         severity: 'warn',
         ruleRef: '§7.2',
-        message: container
-          ? `Elements inside "${container}" have mixed icons — a peer group should be all-or-nothing.`
-          : `Root-level elements have mixed icons — a peer group should be all-or-nothing.`,
+        message: `Elements inside "${container}" have mixed icons — a peer group should be all-or-nothing.`,
         itemIds: withIcon.length < withoutIcon.length
           ? withIcon.map((e) => e.id)
           : withoutIcon.map((e) => e.id),

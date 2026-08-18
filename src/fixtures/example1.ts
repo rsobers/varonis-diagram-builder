@@ -10,6 +10,7 @@ export const example1: DiagramDoc = {
   version: 2,
   width: 1290,
   height: 900,
+  encoding: 'ownership',
   title: [
     'Example 1 — Varonis SaaS platform architecture',
     'Color encoding: Ownership. Firewall perimeter is a Zone Divider; WAF is an Inline Control.',
