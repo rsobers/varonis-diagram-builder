@@ -27,16 +27,25 @@ Interactions:
 
 - **Drag** from the left palette onto the canvas — a real-size ghost previews
   where the item will land, snapped to the 10px grid. Click-to-arm then click
-  the canvas is a fallback.
+  the canvas is a fallback. Works for element kit and vendor marks alike.
 - **Drag** an item to move it. Shift-click to multi-select. Drag on the empty
   canvas to marquee-select.
 - **Double-click** any label to edit it in place. Enter commits, Esc cancels.
+  Works on element labels, connector labels, group rows, titles, captions.
 - **Cmd/Ctrl-C / V / D** for copy, paste, duplicate. Connectors carry across
   the copy only when both endpoints are in the selection.
 - **Connect mode** (toolbar): click a source element, then a target.
 - **Encoding selector** (toolbar): declare Ownership / Emphasis / State per
   spec §6.2. The fill palette contextualizes; violations surface in the
   right-side panel with one-click fixes.
+- **Text** section in the palette places a Title (bold heading) or Caption
+  (encoding declaration, legend callout).
+- **Vendor marks** section places official brand marks inline or as a full
+  badge; the toolbar toggle picks the style. Ship marks live in
+  `assets/logos/`; the palette can also fetch on demand from logo.dev.
+- **Generate from image** (toolbar): upload a screenshot; the app calls
+  Anthropic's vision API and drops the parsed diagram onto the canvas.
+  Password-gated so the API key doesn't burn on public traffic.
 
 ## Architecture
 
@@ -46,7 +55,9 @@ framework needed for the canvas.
 | File | Role |
 |---|---|
 | `src/render.ts` | **Pure** function `(doc) => svg`. No DOM, no globals, no side effects. The constraint that makes snapshot tests possible. |
-| `src/model.ts` | Typed, versioned `DiagramDoc`. Discriminated `Item` union: element, grouped, boundary, zone divider, inline control, actor, connector, connector-label, edge, legend, caption. |
+| `src/model.ts` | Typed, versioned `DiagramDoc`. Discriminated `Item` union: element, grouped, boundary, zone divider, inline control, actor, connector, connector-label, edge, legend, caption, title. Forward-migration lives in `migrateDoc`. |
+| `src/logos.ts` | Two-tier vendor mark registry: marks shipped in `assets/logos/logos.json`, plus a runtime cache for anything fetched from logo.dev during a session. |
+| `src/ai.ts` / `api/generate.ts` | Client + serverless endpoint for image-to-diagram. Anthropic key stays server-side; `GENERATE_PASSWORD` gates the endpoint. |
 | `src/tokens.ts` | Mirrors section 11 of the style guide verbatim (JSON block). A test asserts they don't drift. |
 | `src/icons.ts` | Curated Material Symbols kit. Icons stored in the model as `{ path, name? }` so exports are self-contained and don't change when Google updates a glyph. |
 | `src/layout.ts` | `layout(doc)` → `Map<id, BBox>`. Used for selection overlays, hit-testing, connector routing, containment checks. |
@@ -88,33 +99,37 @@ into per-item feedback the user can click to fix. Examples:
 - Blue > 33% under Emphasis → warning naming the offending elements.
 - Tinted boundary under a non-State encoding → **Remove tint** button.
 - Elements with mixed icons inside the same boundary (§7.2 peer group) →
-  warning naming the odd-ones-out.
+  warning naming the odd-ones-out. Scoped to boundary siblings only — root
+  elements are not treated as an implied peer group.
 
 Nothing mutates without an explicit user click.
 
 ## Testing
 
 ```sh
-npm test              # 79 unit tests (vitest)
-npm run e2e           # 18 Playwright specs
+npm test              # 115 unit tests (vitest)
+npm run e2e           # 21 Playwright specs, 41 cases
 npm run typecheck
 npm run build
 ```
 
 The unit suite covers the reducer, text metrics, routing, layout, copy/paste,
-validation rules, and the two golden-file renderer snapshots. E2e specs
-exercise the browser flows (place, drag, connect, encoding change,
-inline-edit, marquee, drag ghost, icon picker, copy/paste/duplicate,
-zone-divider resize, arrow modes).
+validation rules, tokens/guide drift, and the two golden-file renderer
+snapshots. E2e specs exercise browser flows: place, drag, connect, encoding
+change, inline-edit, marquee, drag ghost, icon picker, copy/paste/duplicate,
+zone-divider resize, vendor marks, badge sizing, generate-from-image with
+password gate.
 
 ## Not doing (out of scope)
 
-- Custom element sizes — §3.1 forbids scaling; the sm/md/lg presets stay.
+- Custom element sizes — §3.1 fixes the sm/md/lg heights. Widths do expand
+  horizontally to fit long labels (§3.1 v2.3), but nothing scales the type
+  or crushes padding.
 - Freeform container shapes — §1 says that's marketing-graphic work, not
   architecture-diagram work.
 - Rotated text — §5.2 bans it; the renderer physically can't emit it.
-- Third-party brand marks — icons are Material Symbols only; vendor logos
-  come from the Brand Team, and the app does not ship or fetch them.
+- Auto-generated icons on every element — icons are opt-in (§7.1) and peer
+  groups must be all-or-nothing (§7.2). The app enforces this per boundary.
 
 ## Reference
 

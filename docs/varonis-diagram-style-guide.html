@@ -35,200 +35,9 @@ Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and syste
 <p><strong>One idea per diagram.</strong> If you need a legend with more than five entries, or the element count is over ~18, you have two diagrams.</p>
 <p><strong>Composition over creation.</strong> Build from the elements defined here. If you need something that doesn't exist, request it from the Brand Team rather than inventing it locally — a one-off shape in one deck becomes a competing standard within a quarter.</p>
 <hr />
-<figure><svg role="img" aria-label="Before and after: rotated labels and decorative colour removed" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 1000 470" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
-  <defs>
-    <marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M0,0 L6.2,3 L0,6 Z" fill="#3f4a56"/></marker>
-  </defs>
-  <rect width="1000" height="470" fill="#ffffff"/>
-
-  <!-- divider -->
-  <line x1="500" y1="24" x2="500" y2="446" stroke="#e4e8ec" stroke-width="1"/>
-
-  <!-- ============ BEFORE ============ -->
-  <g transform="translate(0,0)">
-    <text x="40" y="42" font-size="13" font-weight="600" fill="#b4232a">Before</text>
-    <text x="40" y="62" font-size="11.5" fill="#5a6570">Rotated labels. Red and green encoding nothing.</text>
-
-    <!-- user -->
-    <rect x="40" y="110" width="120" height="34" rx="6" fill="#ffffff" stroke="#d3d9e0"/>
-    <g transform="translate(50,119) scale(0.583)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g>
-    <text x="74" y="131" font-size="12" fill="#1f2933">User</text>
-
-    <!-- firewall rotated red -->
-    <path d="M160,127 L214,127" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
-    <rect x="214" y="95" width="30" height="64" rx="15" fill="#fdeaea" stroke="#eda9a9"/>
-    <text transform="translate(233,127) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
-      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">FIREWALL</text>
-
-    <!-- red dashed boundary line -->
-    <line x1="229" y1="165" x2="229" y2="420" stroke="#eda9a9" stroke-width="1" stroke-dasharray="5 4"/>
-
-    <!-- down to https rotated -->
-    <path d="M244,127 L290,127 L290,196" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
-    <rect x="275" y="200" width="30" height="70" rx="15" fill="#ffffff" stroke="#cdd4dc"/>
-    <text transform="translate(294,235) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
-      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">HTTPS:443</text>
-
-    <!-- waf rotated green -->
-    <path d="M290,270 L290,300" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
-    <rect x="275" y="300" width="30" height="60" rx="15" fill="#eef8e4" stroke="#b9dd9a"/>
-    <text transform="translate(294,330) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
-      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">WAF</text>
-
-    <path d="M290,360 L290,392" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
-    <rect x="230" y="396" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
-    <text x="290" y="417" text-anchor="middle" font-size="12" fill="#1f2933">Web UI</text>
-
-    <!-- okta in blue (third party) -->
-    <path d="M244,120 L360,120 L360,150" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
-    <rect x="300" y="154" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
-    <text x="360" y="175" text-anchor="middle" font-size="12" fill="#1f2933">Okta</text>
-
-    <text x="40" y="452" font-size="10.5" fill="#b4232a">3 rotated labels · 3 hues · blue mixes Varonis and third party</text>
-  </g>
-
-  <!-- ============ AFTER ============ -->
-  <g transform="translate(500,0)">
-    <text x="40" y="42" font-size="13" font-weight="600" fill="#2c7a3f">After</text>
-    <text x="40" y="62" font-size="11.5" fill="#5a6570">Horizontal throughout. Blue declared as ownership.</text>
-
-    <!-- boundary -->
-    <rect x="30" y="255" width="430" height="180" rx="8" fill="none" stroke="#a9b2bd" stroke-width="1.2" stroke-dasharray="6 4"/>
-    <text x="45" y="276" font-size="12" fill="#5a6570">Varonis cloud account</text>
-
-    <!-- user -->
-    <rect x="30" y="110" width="120" height="34" rx="6" fill="#ffffff" stroke="#d3d9e0"/>
-    <g transform="translate(40,119) scale(0.583)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g>
-    <text x="64" y="131" font-size="12" fill="#1f2933">User</text>
-
-    <!-- inline control: firewall (horizontal, grayscale) -->
-    <path d="M150,127 L184,127" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
-    <rect x="184" y="109" width="96" height="36" rx="18" fill="#ffffff" stroke="#cdd4dc" stroke-width="1.5"/>
-    <g transform="translate(194,119) scale(0.667)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="#263238"/></g>
-    <text x="216" y="131" font-size="12" fill="#1f2933">Firewall</text>
-
-    <!-- to okta, gray third party -->
-    <path d="M280,120 L340,120 L340,150" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
-    <rect x="280" y="154" width="120" height="34" rx="6" fill="#f4f6f8" stroke="#d3d9e0"/>
-    <text x="340" y="175" text-anchor="middle" font-size="12" fill="#1f2933">Okta</text>
-
-    <!-- down path with horizontal connector label -->
-    <path d="M232,145 L232,300" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
-    <rect x="196" y="200" width="72" height="18" rx="9" fill="#ffffff" stroke="#cdd4dc"/>
-    <text x="232" y="212" text-anchor="middle" font-size="8" font-weight="700"
-      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">HTTPS:443</text>
-
-    <!-- inline control: WAF grayscale horizontal -->
-    <rect x="184" y="300" width="96" height="36" rx="18" fill="#ffffff" stroke="#cdd4dc" stroke-width="1.5"/>
-    <g transform="translate(196,310) scale(0.667)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#263238"/></g>
-    <text x="222" y="322" font-size="12" fill="#1f2933">WAF</text>
-
-    <path d="M232,336 L232,372" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
-    <rect x="172" y="376" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
-    <text x="232" y="397" text-anchor="middle" font-size="12" fill="#1f2933">Web UI</text>
-
-    <!-- legend -->
-    <rect x="330" y="300" width="120" height="52" rx="6" fill="#ffffff" stroke="#e4e8ec"/>
-    <text x="342" y="317" font-size="9" font-weight="600" fill="#5a6570">OWNERSHIP</text>
-    <rect x="342" y="325" width="14" height="10" rx="2" fill="#e8f1fc" stroke="#a3c2ea"/>
-    <text x="362" y="334" font-size="10" fill="#1f2933">Varonis</text>
-    <rect x="342" y="339" width="14" height="10" rx="2" fill="#f4f6f8" stroke="#d3d9e0"/>
-    <text x="362" y="348" font-size="10" fill="#1f2933">Third party</text>
-
-    <text x="30" y="452" font-size="10.5" fill="#2c7a3f">0 rotated labels · 1 hue · blue means one thing</text>
-  </g>
-</svg>
-<figcaption>Before and after: rotated labels and decorative colour removed</figcaption></figure>
-
-<h2>2. What changed in v2.0</h2>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Change</th>
-<th>Why</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td><strong>Rotated text is banned.</strong> All type is horizontal.</td>
-<td>Vertical labels are slow to read, break on mobile, and are inaccessible to screen readers and alt text.</td>
-</tr>
-<tr>
-<td>2</td>
-<td><strong>Inline Control introduced</strong> as a distinct element type.</td>
-<td>Firewalls, WAFs, proxies, and gateways were being drawn as connector labels. They are components, not annotations.</td>
-</tr>
-<tr>
-<td>3</td>
-<td><strong>Zone Divider introduced</strong> for linear trust boundaries.</td>
-<td>Boundaries were being drawn as colored dashed connectors, which reads as data flow.</td>
-</tr>
-<tr>
-<td>4</td>
-<td><strong>Color rules rewritten</strong> (section 6) around a single declared encoding.</td>
-<td>Red and green were being used decoratively, encoding nothing and failing color-blind readers.</td>
-</tr>
-<tr>
-<td>5</td>
-<td><strong>Boundaries and containers are never colored.</strong></td>
-<td>Color belongs to elements. Zones tint the whole reading.</td>
-</tr>
-<tr>
-<td>6</td>
-<td><strong>Icons align to cap height</strong>, stroke weight paired to type weight.</td>
-<td>Icons were floating optically high next to labels.</td>
-</tr>
-<tr>
-<td>7</td>
-<td><strong>Square corners confirmed</strong> for elements and boundaries; rounding reserved for pills and Inline Controls.</td>
-<td>Shape now carries meaning. v1 was already square; a rounded interim draft was reverted.</td>
-</tr>
-<tr>
-<td>8</td>
-<td><strong>v1 padding restated as mandatory</strong>, with the consequence that icon plus two lines needs a Large element.</td>
-<td>Padding was being silently crushed to fit long labels.</td>
-</tr>
-<tr>
-<td>9</td>
-<td><strong>Connectors terminate on edge centre lines.</strong></td>
-<td>Arrows landing near corners read as misses.</td>
-</tr>
-<tr>
-<td>10</td>
-<td><strong>Boundary labels sit above connectors</strong> and may move to the top-right.</td>
-<td>Connectors were cutting through zone labels.</td>
-</tr>
-<tr>
-<td>11</td>
-<td><strong>Icons are now opt-in, with peer-group consistency required</strong> (section 7.1–7.2).</td>
-<td>Icons were being applied by default, adding weight without information.</td>
-</tr>
-<tr>
-<td>12</td>
-<td><strong>Connectors spaced evenly and centred on shared edges</strong>; aligned elements share a centre line.</td>
-<td>Arrows were landing near corners and boxes sat a few pixels out of true.</td>
-</tr>
-<tr>
-<td>13</td>
-<td><strong>40px minimum between unconnected stacked elements</strong>; use the smallest size that fits.</td>
-<td>Unrelated elements were reading as groups, and oversized boxes implied false importance.</td>
-</tr>
-<tr>
-<td>14</td>
-<td><strong>Boundary fill derived from nesting depth</strong>, not offered as a choice. Max two levels of nesting.</td>
-<td>"Dashed boundary" and "filled region" behaved identically because the rule was never mechanical — and the reference examples applied it inconsistently.</td>
-</tr>
-<tr>
-<td>15</td>
-<td><strong>Section 8 rewritten</strong> around when a vendor mark is warranted, plus platform badges on boundaries.</td>
-<td>The old section covered how to place a mark but never when to use one.</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Migration:</strong> existing diagrams don't need retroactive rework. Apply v2.0 the next time a diagram is edited. The two changes worth backporting immediately are un-rotating text and removing decorative red/green.</p>
+<h2>2. About this version</h2>
+<p>Version 2.3 is the current guide. It supersedes the v1 Diagram Toolkit (PDF), which introduced the element kit but left color, icons, and vendor marks to convention. If you're new to Varonis diagrams, skip to §3 — the taxonomy, color model, and worked examples in §3–§10 are all you need. The v1 → v2 changelog and migration notes live in <a href="#appendix-a">Appendix A</a> for anyone maintaining older material.</p>
+<hr />
 <h2>3. Element taxonomy</h2>
 <h3>3.0 Shape is semantic</h3>
 <p>Corner treatment is not decoration — it tells the reader what kind of thing they are looking at, and it is the fastest signal in the diagram.</p>
@@ -254,27 +63,29 @@ Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and syste
 </tbody>
 </table>
 <p>Never soften an element's corners and never square off a pill. A 6px radius on a box and an 18px radius on a stadium is a weak distinction that readers miss; square against stadium is unmistakable at thumbnail size. Square corners also carry the technical, engineered register these diagrams are meant to have.</p>
-<p>Six element types. Each has one job. The most common failure in v1 was using one type to do another's job.</p>
+<p>Six element types (§3.1–§3.6) plus two text overlays (§3.7). Each has one job. The most common failure in v1 was using one type to do another's job.</p>
 <h3>3.1 Element</h3>
 <p>A system, service, data store, or application. <strong>The default building block.</strong></p>
 <ul>
 <li><strong>Square corners</strong>, 1px stroke</li>
 <li>Three sizes: Small <code>150×34</code>, Medium <code>180×64</code>, Large <code>180×92</code></li>
 <li>Label in sentence case, 12.5px. Optional second line at 11.5px</li>
-<li>Optional icon, 24px, top-left inset 8px (medium/large) or inline-left (small)</li>
-<li>Never scale or stretch. Pick the size that fits; wrap the label to a maximum of three lines</li>
+<li>Optional icon or vendor mark (see §7, §8): inline-left on Small; centred horizontally above the label on Medium and Large</li>
+<li><strong>Height is fixed</strong> by size choice. <strong>Width is a floor</strong> — a small element is at least 150px wide, but its box grows horizontally to fit a label the default width can't hold. Do not shrink type or crush padding to make text fit. Pick the size whose height suits the number of lines (see §9 for the icon-plus-two-lines case), and let the width follow the label</li>
+<li>Labels wrap to a maximum of three lines</li>
 </ul>
 <h3>3.2 Grouped Element</h3>
 <p>A parent system containing a list of named children — modules, data sources, sub-services.</p>
 <ul>
-<li>Same shell as an Element, square corners, 190px wide</li>
-<li>Header label centered; child rows are white, 30px tall, 8px gutter</li>
+<li>Same shell as an Element, square corners. Default 190px wide; expands horizontally when a row label needs more room (same rule as §3.1)</li>
+<li>Header label centered; child rows are white, 30px tall, 5px gutter</li>
 <li>Maximum six children. Beyond that, summarize ("+12 more") or split the diagram</li>
 </ul>
 <h3>3.3 Inline Control <em>(new in v2.0)</em></h3>
 <p><strong>A component that traffic passes through.</strong> Firewall, WAF, proxy, load balancer, gateway, API gateway, CASB.</p>
 <ul>
-<li>Stadium shape (fully rounded), <code>min 90 × 36</code>, 1.5px stroke, white fill</li>
+<li>Stadium shape (fully rounded), height 36px, 1.5px stroke, white fill</li>
+<li>Width: 90px floor, expands horizontally to fit the label (same rule as §3.1)</li>
 <li>Label in sentence case, 12px, horizontal. Optional 16px icon, left</li>
 <li>Sits <strong>on</strong> the connector path, with the line entering and exiting it</li>
 <li>Grayscale by default. Color only under a declared State encoding (section 6)</li>
@@ -306,6 +117,20 @@ Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and syste
 <li>32px person or group icon, centered, no containing box</li>
 <li>Label beneath, sentence case, 12px</li>
 <li>Actors sit outside boundaries unless the diagram is specifically about an insider</li>
+</ul>
+<h3>3.7 Text overlays</h3>
+<p>Two placeable text items sit outside the shape kit. They carry no border, no fill, and no icon — text and nothing else.</p>
+<ul>
+<li><strong>Title.</strong> The diagram's heading. Bold, 18px, ink <code>#1f2933</code>. One per diagram. Placed anywhere on the canvas (typically top-left). Use it instead of setting title text through slide chrome</li>
+<li><strong>Caption.</strong> Secondary explanatory text. Regular, 11px, <code>#5a6570</code>. A caption declares the color encoding (§6.2), calls out a legend, or notes an assumption. Not for arbitrary annotations — those belong on the elements or connectors they describe</li>
+</ul>
+<h3>3.8 Legend</h3>
+<p>Not an element in the usual sense: a small keyed swatch table required when more than six elements are colored, or whenever State encoding is used (§6.3.9).</p>
+<ul>
+<li>Auto-sized rectangle, 1px stroke <code>#d3d9e0</code>, white fill</li>
+<li>Header names the encoding (<code>OWNERSHIP</code>, <code>EMPHASIS</code>, <code>STATE</code>) in uppercase 9px, <code>#5a6570</code></li>
+<li>One row per swatch: 14×10px chip in the palette color, followed by the reader-facing label at 10px <code>#1f2933</code></li>
+<li>Placed in a corner where it does not compete with the flow. One legend per diagram</li>
 </ul>
 <h2>4. Connectors</h2>
 <ul>
@@ -475,11 +300,13 @@ Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and syste
 <p><strong>Peer-group consistency applies exactly as it does for icons (§7.2):</strong> within a boundary or a row of sibling elements, either all carry marks or none do.</p>
 <h3>8.2 Placement and sizing</h3>
 <ul>
-<li>Official SVG brand marks only, at 24px (0.33in) — the same slot and size as an icon: inline-left on Small elements, centred above the label on Medium and Large</li>
+<li>Official SVG brand marks only. The same slot as an icon: inline-left on Small elements, centred above the label on Medium and Large</li>
+<li><strong>Rendered size:</strong> 16px on Small, 20px on Medium and Large. The 24px figure in §7.3 is the source glyph size; on-canvas it renders proportionate to the element so it never overwhelms the label</li>
 <li>A mark <strong>replaces</strong> the icon. Never both</li>
 <li>Never recolor, rotate, outline, crop, or add effects</li>
 <li><strong>Marks sit on white or gray fills only.</strong> A mark on a blue or State-colored element is a violation</li>
 </ul>
+<p><strong>Badge form.</strong> As an alternative to inline placement, a mark may take over an element as a square badge — the mark centred, the text label suppressed. Use it for a Grouped Element header or a standalone vendor tile where the mark is the whole point. Badge sizes track the element choice (Small 64, Medium 90, Large 120). The suppressed label still lives in the model for accessibility.</p>
 <h3>8.3 Platform badges on boundaries</h3>
 <p>Where a boundary represents a specific cloud account, tenant, or platform, the mark sits in the <strong>top-right corner of the boundary</strong>, opposite the label, at 24px. This identifies the environment without claiming that anything inside it belongs to that vendor — which is why an AWS badge on the boundary and a blue Varonis service inside it do not contradict each other.</p>
 <h3>8.4 The Varonis mark</h3>
@@ -569,6 +396,202 @@ Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and syste
 <p>The question a security architect actually brings to this diagram is <em>where does untrusted content go, and what stops it escaping.</em> That is a State question, so amber marks the phishing sandbox zone and the internet — the two places untrusted content lives. Everything inside the tinted zone stays white, because the zone is already making the claim. One hue, one question answered, and the containment argument is legible in about a second.</p>
 <p>This diagram had nine rotated labels in v1 and has none now.</p>
 <p><strong>The general rule this establishes:</strong> choose the encoding that answers the reader's question. Element-count caps are a check on that choice, not a substitute for making it.</p>
+<hr />
+<h2 id="appendix-a">Appendix A — What changed in v2.0</h2>
+<p>For readers coming from the v1 Diagram Toolkit (PDF, July 2026). Newcomers can skip this section entirely — the current guide (§1–§10) is complete on its own.</p>
+<figure><svg role="img" aria-label="Before and after: rotated labels and decorative colour removed" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 1000 470" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="6.2" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L6.2,3 L0,6 Z" fill="#3f4a56"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#ffffff"/>
+
+  <!-- divider -->
+  <line x1="500" y1="24" x2="500" y2="446" stroke="#e4e8ec" stroke-width="1"/>
+
+  <!-- ============ BEFORE ============ -->
+  <g transform="translate(0,0)">
+    <text x="40" y="42" font-size="13" font-weight="600" fill="#b4232a">Before</text>
+    <text x="40" y="62" font-size="11.5" fill="#5a6570">Rotated labels. Red and green encoding nothing.</text>
+
+    <!-- user -->
+    <rect x="40" y="110" width="120" height="34" rx="6" fill="#ffffff" stroke="#d3d9e0"/>
+    <g transform="translate(50,119) scale(0.583)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g>
+    <text x="74" y="131" font-size="12" fill="#1f2933">User</text>
+
+    <!-- firewall rotated red -->
+    <path d="M160,127 L214,127" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="214" y="95" width="30" height="64" rx="15" fill="#fdeaea" stroke="#eda9a9"/>
+    <text transform="translate(233,127) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">FIREWALL</text>
+
+    <!-- red dashed boundary line -->
+    <line x1="229" y1="165" x2="229" y2="420" stroke="#eda9a9" stroke-width="1" stroke-dasharray="5 4"/>
+
+    <!-- down to https rotated -->
+    <path d="M244,127 L290,127 L290,196" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="275" y="200" width="30" height="70" rx="15" fill="#ffffff" stroke="#cdd4dc"/>
+    <text transform="translate(294,235) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">HTTPS:443</text>
+
+    <!-- waf rotated green -->
+    <path d="M290,270 L290,300" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="275" y="300" width="30" height="60" rx="15" fill="#eef8e4" stroke="#b9dd9a"/>
+    <text transform="translate(294,330) rotate(-90)" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">WAF</text>
+
+    <path d="M290,360 L290,392" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="230" y="396" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="290" y="417" text-anchor="middle" font-size="12" fill="#1f2933">Web UI</text>
+
+    <!-- okta in blue (third party) -->
+    <path d="M244,120 L360,120 L360,150" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="300" y="154" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="360" y="175" text-anchor="middle" font-size="12" fill="#1f2933">Okta</text>
+
+    <text x="40" y="452" font-size="10.5" fill="#b4232a">3 rotated labels · 3 hues · blue mixes Varonis and third party</text>
+  </g>
+
+  <!-- ============ AFTER ============ -->
+  <g transform="translate(500,0)">
+    <text x="40" y="42" font-size="13" font-weight="600" fill="#2c7a3f">After</text>
+    <text x="40" y="62" font-size="11.5" fill="#5a6570">Horizontal throughout. Blue declared as ownership.</text>
+
+    <!-- boundary -->
+    <rect x="30" y="255" width="430" height="180" rx="8" fill="none" stroke="#a9b2bd" stroke-width="1.2" stroke-dasharray="6 4"/>
+    <text x="45" y="276" font-size="12" fill="#5a6570">Varonis cloud account</text>
+
+    <!-- user -->
+    <rect x="30" y="110" width="120" height="34" rx="6" fill="#ffffff" stroke="#d3d9e0"/>
+    <g transform="translate(40,119) scale(0.583)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#263238"/></g>
+    <text x="64" y="131" font-size="12" fill="#1f2933">User</text>
+
+    <!-- inline control: firewall (horizontal, grayscale) -->
+    <path d="M150,127 L184,127" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="184" y="109" width="96" height="36" rx="18" fill="#ffffff" stroke="#cdd4dc" stroke-width="1.5"/>
+    <g transform="translate(194,119) scale(0.667)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="#263238"/></g>
+    <text x="216" y="131" font-size="12" fill="#1f2933">Firewall</text>
+
+    <!-- to okta, gray third party -->
+    <path d="M280,120 L340,120 L340,150" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="280" y="154" width="120" height="34" rx="6" fill="#f4f6f8" stroke="#d3d9e0"/>
+    <text x="340" y="175" text-anchor="middle" font-size="12" fill="#1f2933">Okta</text>
+
+    <!-- down path with horizontal connector label -->
+    <path d="M232,145 L232,300" stroke="#3f4a56" stroke-width="1.3" fill="none"/>
+    <rect x="196" y="200" width="72" height="18" rx="9" fill="#ffffff" stroke="#cdd4dc"/>
+    <text x="232" y="212" text-anchor="middle" font-size="8" font-weight="700"
+      font-family="ui-monospace,Menlo,Consolas,monospace" fill="#263238">HTTPS:443</text>
+
+    <!-- inline control: WAF grayscale horizontal -->
+    <rect x="184" y="300" width="96" height="36" rx="18" fill="#ffffff" stroke="#cdd4dc" stroke-width="1.5"/>
+    <g transform="translate(196,310) scale(0.667)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#263238"/></g>
+    <text x="222" y="322" font-size="12" fill="#1f2933">WAF</text>
+
+    <path d="M232,336 L232,372" stroke="#3f4a56" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+    <rect x="172" y="376" width="120" height="34" rx="6" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="232" y="397" text-anchor="middle" font-size="12" fill="#1f2933">Web UI</text>
+
+    <!-- legend -->
+    <rect x="330" y="300" width="120" height="52" rx="6" fill="#ffffff" stroke="#e4e8ec"/>
+    <text x="342" y="317" font-size="9" font-weight="600" fill="#5a6570">OWNERSHIP</text>
+    <rect x="342" y="325" width="14" height="10" rx="2" fill="#e8f1fc" stroke="#a3c2ea"/>
+    <text x="362" y="334" font-size="10" fill="#1f2933">Varonis</text>
+    <rect x="342" y="339" width="14" height="10" rx="2" fill="#f4f6f8" stroke="#d3d9e0"/>
+    <text x="362" y="348" font-size="10" fill="#1f2933">Third party</text>
+
+    <text x="30" y="452" font-size="10.5" fill="#2c7a3f">0 rotated labels · 1 hue · blue means one thing</text>
+  </g>
+</svg>
+<figcaption>Before and after: rotated labels and decorative colour removed</figcaption></figure>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Change</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Rotated text is banned.</strong> All type is horizontal.</td>
+<td>Vertical labels are slow to read, break on mobile, and are inaccessible to screen readers and alt text.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Inline Control introduced</strong> as a distinct element type.</td>
+<td>Firewalls, WAFs, proxies, and gateways were being drawn as connector labels. They are components, not annotations.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Zone Divider introduced</strong> for linear trust boundaries.</td>
+<td>Boundaries were being drawn as colored dashed connectors, which reads as data flow.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Color rules rewritten</strong> (section 6) around a single declared encoding.</td>
+<td>Red and green were being used decoratively, encoding nothing and failing color-blind readers.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Boundaries and containers are never colored.</strong></td>
+<td>Color belongs to elements. Zones tint the whole reading.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Icons align to cap height</strong>, stroke weight paired to type weight.</td>
+<td>Icons were floating optically high next to labels.</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Square corners confirmed</strong> for elements and boundaries; rounding reserved for pills and Inline Controls.</td>
+<td>Shape now carries meaning. v1 was already square; a rounded interim draft was reverted.</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>v1 padding restated as mandatory</strong>, with the consequence that icon plus two lines needs a Large element.</td>
+<td>Padding was being silently crushed to fit long labels.</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Connectors terminate on edge centre lines.</strong></td>
+<td>Arrows landing near corners read as misses.</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Boundary labels sit above connectors</strong> and may move to the top-right.</td>
+<td>Connectors were cutting through zone labels.</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>Icons are now opt-in, with peer-group consistency required</strong> (section 7.1–7.2).</td>
+<td>Icons were being applied by default, adding weight without information.</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>Connectors spaced evenly and centred on shared edges</strong>; aligned elements share a centre line.</td>
+<td>Arrows were landing near corners and boxes sat a few pixels out of true.</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>40px minimum between unconnected stacked elements</strong>; use the smallest size that fits.</td>
+<td>Unrelated elements were reading as groups, and oversized boxes implied false importance.</td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>Boundary fill derived from nesting depth</strong>, not offered as a choice. Max two levels of nesting.</td>
+<td>"Dashed boundary" and "filled region" behaved identically because the rule was never mechanical — and the reference examples applied it inconsistently.</td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>Section 8 rewritten</strong> around when a vendor mark is warranted, plus platform badges on boundaries.</td>
+<td>The old section covered how to place a mark but never when to use one.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Migration:</strong> existing diagrams don't need retroactive rework. Apply v2.0 the next time a diagram is edited. The two changes worth backporting immediately are un-rotating text and removing decorative red/green.</p>
 <h2>11. Tokens</h2>
 <p>Machine-readable spec for build tooling. These values are authoritative; the prose above describes them, it does not override them.</p>
 <pre><code class="language-json">{

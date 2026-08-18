@@ -19,33 +19,11 @@ This file is the source of truth for both people and tooling. Humans read sectio
 
 ---
 
-![Before and after: rotated labels and decorative colour removed](v2-before-after.svg)
+## 2. About this version
 
-## 2. What changed in v2.0
-
-| # | Change | Why |
-|---|--------|-----|
-| 1 | **Rotated text is banned.** All type is horizontal. | Vertical labels are slow to read, break on mobile, and are inaccessible to screen readers and alt text. |
-| 2 | **Inline Control introduced** as a distinct element type. | Firewalls, WAFs, proxies, and gateways were being drawn as connector labels. They are components, not annotations. |
-| 3 | **Zone Divider introduced** for linear trust boundaries. | Boundaries were being drawn as colored dashed connectors, which reads as data flow. |
-| 4 | **Color rules rewritten** (section 6) around a single declared encoding. | Red and green were being used decoratively, encoding nothing and failing color-blind readers. |
-| 5 | **Boundaries and containers are never colored.** | Color belongs to elements. Zones tint the whole reading. |
-| 6 | **Icons align to cap height**, stroke weight paired to type weight. | Icons were floating optically high next to labels. |
-| 7 | **Square corners confirmed** for elements and boundaries; rounding reserved for pills and Inline Controls. | Shape now carries meaning. v1 was already square; a rounded interim draft was reverted. |
-| 8 | **v1 padding restated as mandatory**, with the consequence that icon plus two lines needs a Large element. | Padding was being silently crushed to fit long labels. |
-| 9 | **Connectors terminate on edge centre lines.** | Arrows landing near corners read as misses. |
-| 10 | **Boundary labels sit above connectors** and may move to the top-right. | Connectors were cutting through zone labels. |
-| 11 | **Icons are now opt-in, with peer-group consistency required** (section 7.1–7.2). | Icons were being applied by default, adding weight without information. |
-| 12 | **Connectors spaced evenly and centred on shared edges**; aligned elements share a centre line. | Arrows were landing near corners and boxes sat a few pixels out of true. |
-| 13 | **40px minimum between unconnected stacked elements**; use the smallest size that fits. | Unrelated elements were reading as groups, and oversized boxes implied false importance. |
-| 14 | **Boundary fill derived from nesting depth**, not offered as a choice. Max two levels of nesting. | "Dashed boundary" and "filled region" behaved identically because the rule was never mechanical — and the reference examples applied it inconsistently. |
-| 15 | **Section 8 rewritten** around when a vendor mark is warranted, plus platform badges on boundaries. | The old section covered how to place a mark but never when to use one. |
-
-**Migration:** existing diagrams don't need retroactive rework. Apply v2.0 the next time a diagram is edited. The two changes worth backporting immediately are un-rotating text and removing decorative red/green.
+Version 2.3 is the current guide. It supersedes the v1 Diagram Toolkit (PDF), which introduced the element kit but left color, icons, and vendor marks to convention. If you're new to Varonis diagrams, skip to §3 — the taxonomy, color model, and worked examples in §3–§10 are all you need. The v1 → v2 changelog and migration notes live in [Appendix A](#appendix-a--what-changed-in-v20) for anyone maintaining older material.
 
 ---
-
-## 3. Element taxonomy
 
 ### 3.0 Shape is semantic
 
@@ -58,7 +36,7 @@ Corner treatment is not decoration — it tells the reader what kind of thing th
 
 Never soften an element's corners and never square off a pill. A 6px radius on a box and an 18px radius on a stadium is a weak distinction that readers miss; square against stadium is unmistakable at thumbnail size. Square corners also carry the technical, engineered register these diagrams are meant to have.
 
-Six element types. Each has one job. The most common failure in v1 was using one type to do another's job.
+Six element types (§3.1–§3.6) plus two text overlays (§3.7). Each has one job. The most common failure in v1 was using one type to do another's job.
 
 ### 3.1 Element
 A system, service, data store, or application. **The default building block.**
@@ -66,20 +44,22 @@ A system, service, data store, or application. **The default building block.**
 - **Square corners**, 1px stroke
 - Three sizes: Small `150×34`, Medium `180×64`, Large `180×92`
 - Label in sentence case, 12.5px. Optional second line at 11.5px
-- Optional icon, 24px, top-left inset 8px (medium/large) or inline-left (small)
-- Never scale or stretch. Pick the size that fits; wrap the label to a maximum of three lines
+- Optional icon or vendor mark (see §7, §8): inline-left on Small; centred horizontally above the label on Medium and Large
+- **Height is fixed** by size choice. **Width is a floor** — a small element is at least 150px wide, but its box grows horizontally to fit a label the default width can't hold. Do not shrink type or crush padding to make text fit. Pick the size whose height suits the number of lines (see §9 for the icon-plus-two-lines case), and let the width follow the label
+- Labels wrap to a maximum of three lines
 
 ### 3.2 Grouped Element
 A parent system containing a list of named children — modules, data sources, sub-services.
 
-- Same shell as an Element, square corners, 190px wide
-- Header label centered; child rows are white, 30px tall, 8px gutter
+- Same shell as an Element, square corners. Default 190px wide; expands horizontally when a row label needs more room (same rule as §3.1)
+- Header label centered; child rows are white, 30px tall, 5px gutter
 - Maximum six children. Beyond that, summarize ("+12 more") or split the diagram
 
 ### 3.3 Inline Control *(new in v2.0)*
 **A component that traffic passes through.** Firewall, WAF, proxy, load balancer, gateway, API gateway, CASB.
 
-- Stadium shape (fully rounded), `min 90 × 36`, 1.5px stroke, white fill
+- Stadium shape (fully rounded), height 36px, 1.5px stroke, white fill
+- Width: 90px floor, expands horizontally to fit the label (same rule as §3.1)
 - Label in sentence case, 12px, horizontal. Optional 16px icon, left
 - Sits **on** the connector path, with the line entering and exiting it
 - Grayscale by default. Color only under a declared State encoding (section 6)
@@ -112,6 +92,20 @@ A human role: user, administrator, analyst, attacker.
 - 32px person or group icon, centered, no containing box
 - Label beneath, sentence case, 12px
 - Actors sit outside boundaries unless the diagram is specifically about an insider
+
+### 3.7 Text overlays
+Two placeable text items sit outside the shape kit. They carry no border, no fill, and no icon — text and nothing else.
+
+- **Title.** The diagram's heading. Bold, 18px, ink `#1f2933`. One per diagram. Placed anywhere on the canvas (typically top-left). Use it instead of setting title text through slide chrome
+- **Caption.** Secondary explanatory text. Regular, 11px, `#5a6570`. A caption declares the color encoding (§6.2), calls out a legend, or notes an assumption. Not for arbitrary annotations — those belong on the elements or connectors they describe
+
+### 3.8 Legend
+Not an element in the usual sense: a small keyed swatch table required when more than six elements are colored, or whenever State encoding is used (§6.3.9).
+
+- Auto-sized rectangle, 1px stroke `#d3d9e0`, white fill
+- Header names the encoding (`OWNERSHIP`, `EMPHASIS`, `STATE`) in uppercase 9px, `#5a6570`
+- One row per swatch: 14×10px chip in the palette color, followed by the reader-facing label at 10px `#1f2933`
+- Placed in a corner where it does not compete with the flow. One legend per diagram
 
 ---
 
@@ -285,10 +279,13 @@ A vendor logo is a claim that **this specific vendor** matters to the diagram. U
 
 ### 8.2 Placement and sizing
 
-- Official SVG brand marks only, at 24px (0.33in) — the same slot and size as an icon: inline-left on Small elements, centred above the label on Medium and Large
+- Official SVG brand marks only. The same slot as an icon: inline-left on Small elements, centred above the label on Medium and Large
+- **Rendered size:** 16px on Small, 20px on Medium and Large. The 24px figure in §7.3 is the source glyph size; on-canvas it renders proportionate to the element so it never overwhelms the label
 - A mark **replaces** the icon. Never both
 - Never recolor, rotate, outline, crop, or add effects
 - **Marks sit on white or gray fills only.** A mark on a blue or State-colored element is a violation
+
+**Badge form.** As an alternative to inline placement, a mark may take over an element as a square badge — the mark centred, the text label suppressed. Use it for a Grouped Element header or a standalone vendor tile where the mark is the whole point. Badge sizes track the element choice (Small 64, Medium 90, Large 120). The suppressed label still lives in the model for accessibility.
 
 ### 8.3 Platform badges on boundaries
 
@@ -372,6 +369,34 @@ The question a security architect actually brings to this diagram is *where does
 This diagram had nine rotated labels in v1 and has none now.
 
 **The general rule this establishes:** choose the encoding that answers the reader's question. Element-count caps are a check on that choice, not a substitute for making it.
+
+---
+
+## Appendix A — What changed in v2.0
+
+For readers coming from the v1 Diagram Toolkit (PDF, July 2026). Newcomers can skip this section entirely — the current guide (§1–§10) is complete on its own.
+
+![Before and after: rotated labels and decorative colour removed](v2-before-after.svg)
+
+| # | Change | Why |
+|---|--------|-----|
+| 1 | **Rotated text is banned.** All type is horizontal. | Vertical labels are slow to read, break on mobile, and are inaccessible to screen readers and alt text. |
+| 2 | **Inline Control introduced** as a distinct element type. | Firewalls, WAFs, proxies, and gateways were being drawn as connector labels. They are components, not annotations. |
+| 3 | **Zone Divider introduced** for linear trust boundaries. | Boundaries were being drawn as colored dashed connectors, which reads as data flow. |
+| 4 | **Color rules rewritten** (section 6) around a single declared encoding. | Red and green were being used decoratively, encoding nothing and failing color-blind readers. |
+| 5 | **Boundaries and containers are never colored.** | Color belongs to elements. Zones tint the whole reading. |
+| 6 | **Icons align to cap height**, stroke weight paired to type weight. | Icons were floating optically high next to labels. |
+| 7 | **Square corners confirmed** for elements and boundaries; rounding reserved for pills and Inline Controls. | Shape now carries meaning. v1 was already square; a rounded interim draft was reverted. |
+| 8 | **v1 padding restated as mandatory**, with the consequence that icon plus two lines needs a Large element. | Padding was being silently crushed to fit long labels. |
+| 9 | **Connectors terminate on edge centre lines.** | Arrows landing near corners read as misses. |
+| 10 | **Boundary labels sit above connectors** and may move to the top-right. | Connectors were cutting through zone labels. |
+| 11 | **Icons are now opt-in, with peer-group consistency required** (section 7.1–7.2). | Icons were being applied by default, adding weight without information. |
+| 12 | **Connectors spaced evenly and centred on shared edges**; aligned elements share a centre line. | Arrows were landing near corners and boxes sat a few pixels out of true. |
+| 13 | **40px minimum between unconnected stacked elements**; use the smallest size that fits. | Unrelated elements were reading as groups, and oversized boxes implied false importance. |
+| 14 | **Boundary fill derived from nesting depth**, not offered as a choice. Max two levels of nesting. | "Dashed boundary" and "filled region" behaved identically because the rule was never mechanical — and the reference examples applied it inconsistently. |
+| 15 | **Section 8 rewritten** around when a vendor mark is warranted, plus platform badges on boundaries. | The old section covered how to place a mark but never when to use one. |
+
+**Migration:** existing diagrams don't need retroactive rework. Apply v2.0 the next time a diagram is edited. The two changes worth backporting immediately are un-rotating text and removing decorative red/green.
 
 ---
 
