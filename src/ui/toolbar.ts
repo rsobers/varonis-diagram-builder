@@ -10,6 +10,7 @@ import {
 
 const REPO_BASE = 'https://github.com/rsobers/varonis-diagram-builder/blob/main';
 const STYLE_GUIDE_URL = `${REPO_BASE}/docs/varonis-diagram-style-guide.md`;
+const TUTORIAL_URL = 'https://app.trupeer.ai/view/T70tJPmwr/varonis-diagram-builder-user-guide';
 
 /**
  * Top toolbar: mode toggle (Select/Connect), encoding selector, snap toggle,
@@ -53,6 +54,7 @@ export function createToolbar(container: HTMLElement, editor: Editor): () => voi
       <button type="button" class="tb-btn tb-example" data-example="2">2</button>
       <button type="button" class="tb-btn tb-example" data-example="3">3</button>
     </div>
+    <a class="tb-link" href="${TUTORIAL_URL}" target="_blank" rel="noopener noreferrer" title="Watch the user-guide video">Tutorial ↗</a>
     <a class="tb-link" href="${STYLE_GUIDE_URL}" target="_blank" rel="noopener noreferrer" title="Open the Varonis diagram style guide (source of truth)">Style guide ↗</a>
     <div class="toolbar-sep" aria-hidden="true"></div>
     <button type="button" class="tb-btn tb-export-svg" title="Download as SVG">Export SVG</button>

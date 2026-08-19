@@ -7,9 +7,10 @@ test('preload: fresh visit shows example 1 already on the canvas', async ({ page
 
 test('toolbar: style-guide link points at the repo, example buttons swap the canvas', async ({ page }) => {
   await page.goto('/?blank=1');
-  const link = page.locator('.tb-link');
-  await expect(link).toHaveText(/Style guide/);
-  await expect(link).toHaveAttribute('href', /docs\/varonis-diagram-style-guide\.md$/);
+  const styleGuide = page.locator('.tb-link', { hasText: 'Style guide' });
+  await expect(styleGuide).toHaveAttribute('href', /docs\/varonis-diagram-style-guide\.md$/);
+  const tutorial = page.locator('.tb-link', { hasText: 'Tutorial' });
+  await expect(tutorial).toHaveAttribute('href', /trupeer\.ai/);
 
   // Empty canvas → clicking Example 2 loads without a confirm.
   await expect(page.locator('.canvas-svg [data-item-id]')).toHaveCount(0);
