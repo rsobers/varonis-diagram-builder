@@ -45,7 +45,7 @@ test('two connectors between the same pair are offset along the shared edge', as
   await page.screenshot({ path: join(DIR, 'parallel-connectors.png') });
 });
 
-test('connector inside a boundary is clickable 5px off its line (hit-target padding)', async ({ page }) => {
+test('connector inside a boundary is clickable ~10px off its line (hit-target padding)', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.waitForLoadState('networkidle');
@@ -57,12 +57,14 @@ test('connector inside a boundary is clickable 5px off its line (hit-target padd
   // line falls through to the boundary rect (pointer-events="all") and the
   // connector is impossible to grab without pixel-perfect aim.
   //
-  // Click 5px below the y=492 horizontal segment at x=820 (past the label
+  // Click 10px below the y=492 horizontal segment at x=820 (past the label
   // pill so we don't trigger the label-drag branch instead of selection).
+  // 10px sits comfortably inside the 24px hit stroke (12px each side) with
+  // margin for browser rounding.
   const cp = await canvas.evaluate((svg) => {
     const s = svg as SVGSVGElement;
     const pt = s.createSVGPoint();
-    pt.x = 820; pt.y = 497;
+    pt.x = 820; pt.y = 502;
     const p = pt.matrixTransform(s.getScreenCTM()!);
     return { x: p.x, y: p.y };
   });

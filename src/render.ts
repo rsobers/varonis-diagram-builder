@@ -433,11 +433,16 @@ function renderEdge(e: Edge, L: Layers, ctx: Ctx): void {
 }
 
 /**
- * Invisible wider stroke sitting underneath a connector/edge line so clicks
+ * Invisible wide stroke sitting underneath a connector/edge line so clicks
  * near the line still resolve to the item. Without it, the visible 1.3px
  * stroke is the only hit surface, and any click a few pixels off the line
  * falls through to whatever is below — usually a boundary rect with
  * `pointer-events="all"`, which is impossible to precisely miss.
+ *
+ * 24px = 12px of grabbable padding on each side of the visible line — well
+ * beyond the ~2px accuracy typical of a mouse click. Bigger would start
+ * catching clicks meant for adjacent elements when connectors run close to
+ * or between shapes.
  *
  * `pointer-events="stroke"` makes the stroke area hit-testable regardless
  * of stroke visibility. Emitted only in interactive mode so exports stay
@@ -445,7 +450,7 @@ function renderEdge(e: Edge, L: Layers, ctx: Ctx): void {
  */
 function hitTargetPath(d: string, ctx: Ctx): string {
   if (!ctx.interactive) return '';
-  return `<path d="${d}" fill="none" stroke="transparent" stroke-width="14" pointer-events="stroke"/>`;
+  return `<path d="${d}" fill="none" stroke="transparent" stroke-width="24" pointer-events="stroke"/>`;
 }
 
 function renderConnectorLabel(c: ConnectorLabel, L: Layers, ctx: Ctx): void {
