@@ -18,12 +18,18 @@ const DEFAULT_PNG_SCALE = TOKENS.export.png.scale;
 const EXPORT_PADDING = 40;
 
 /**
- * Union bbox of every item plus EXPORT_PADDING on every side, clipped to
- * non-negative coordinates. The doc-level title strip lives outside the
- * item bboxes (render.ts emits it at fixed y=42 / y=62), so we fold it
- * into the union explicitly — otherwise a diagram whose first item sits
- * below y=88 gets its title clipped off the top of the export. Empty
- * diagrams fall back to the doc's declared canvas dimensions.
+ * Union bbox of every item plus EXPORT_PADDING on every side. The doc-level
+ * title strip lives outside the item bboxes (render.ts emits it at fixed
+ * y=42 / y=62), so we fold it into the union explicitly — otherwise a
+ * diagram whose first item sits below y=88 gets its title clipped off the
+ * top of the export.
+ *
+ * viewBox coordinates may be negative when content sits close to the (0,0)
+ * origin — SVG handles this fine, and it keeps the padding around every
+ * side symmetric. Clamping to non-negative used to shave up to EXPORT_PADDING
+ * px off the top edge when the title was near y=0, making it look squished
+ * against the top even though it wasn't technically clipped. Empty diagrams
+ * fall back to the doc's declared canvas dimensions.
  */
 export function contentViewBox(doc: DiagramDoc): { x: number; y: number; w: number; h: number } {
   const bboxes = layout(doc);
@@ -37,21 +43,23 @@ export function contentViewBox(doc: DiagramDoc): { x: number; y: number; w: numb
     if (b.x + b.w > maxX) maxX = b.x + b.w;
     if (b.y + b.h > maxY) maxY = b.y + b.h;
   }
-  const x = Math.max(0, minX - EXPORT_PADDING);
-  const y = Math.max(0, minY - EXPORT_PADDING);
+  const x = minX - EXPORT_PADDING;
+  const y = minY - EXPORT_PADDING;
   return { x, y, w: (maxX - x) + EXPORT_PADDING, h: (maxY - y) + EXPORT_PADDING };
 }
 
 /**
  * Bounding box of the doc-level title strip. Coordinates match render.ts:
- * title text baseline at y=42 (font-size 15, so glyphs start ~y=28), sub
- * baseline at y=62 (font-size 11.5, glyphs end ~y=64). Left inset 40.
- * Width uses the same width-aware metric as element labels — a long
- * subtitle otherwise would still overhang the export on the right.
+ * title text baseline at y=42 (font-size 15, ascent ~12 so tallest glyph
+ * top sits at ~y=30), sub baseline at y=62 (font-size 11.5, descender ends
+ * ~y=65). Left inset 40. Bbox top is pulled up to y=30 so EXPORT_PADDING
+ * gives the title 40px of visual whitespace above the tallest glyph,
+ * matching what elements get. Width uses the same width-aware metric as
+ * element labels so a long subtitle doesn't overhang the export on the right.
  */
 function docTitleBBox(title: readonly [string, string]): { x: number; y: number; w: number; h: number } {
   const w = Math.max(textWidth(title[0], 15), textWidth(title[1], 11.5));
-  return { x: 40, y: 28, w, h: 36 };
+  return { x: 40, y: 30, w, h: 35 };
 }
 
 /**

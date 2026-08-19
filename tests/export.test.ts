@@ -39,17 +39,20 @@ describe('contentViewBox', () => {
     expect(vb).toEqual({ x: 160, y: 260, w: 530, h: 214 });
   });
 
-  it('clamps to non-negative coordinates', () => {
+  it('permits negative viewBox coordinates so padding stays symmetric', () => {
+    // Content near the (0,0) origin used to be clamped to non-negative,
+    // which shaved padding off the top/left. SVG handles negative viewBox
+    // origins fine, so we keep the full 40px on every side.
     const doc: DiagramDoc = {
       version: 2, width: 1200, height: 800,
       items: [{ id: 'a', kind: 'element', x: 20, y: 20, label: 'A' }],
     };
     const vb = contentViewBox(doc);
-    expect(vb.x).toBe(0);
-    expect(vb.y).toBe(0);
+    expect(vb.x).toBe(-20); // 20 - 40 padding
+    expect(vb.y).toBe(-20);
   });
 
-  it('expands the crop upward to include the doc title strip', () => {
+  it('expands the crop upward to include the doc title strip with full padding', () => {
     // Item well below the title (y=300). Without the title in the union,
     // export would crop to (y=260, h=214) and clip the title text at y=42.
     const doc: DiagramDoc = {
@@ -58,8 +61,8 @@ describe('contentViewBox', () => {
       items: [{ id: 'a', kind: 'element', x: 200, y: 300, label: 'A' }],
     };
     const vb = contentViewBox(doc);
-    // Title strip top is y=28; export padding lifts to 0 (clamped).
-    expect(vb.y).toBe(0);
+    // Title bbox top is y=30 (tallest glyph top); -40 padding → -10.
+    expect(vb.y).toBe(-10);
     // Bottom of items (334) + 40 padding = 374; total h reflects that.
     expect(vb.y + vb.h).toBeGreaterThanOrEqual(374);
   });
