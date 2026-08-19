@@ -2,6 +2,7 @@ import { render, type RenderOptions } from './render';
 import { layout } from './layout';
 import type { DiagramDoc } from './model';
 import { TOKENS } from './tokens';
+import { textWidth } from './textMetrics';
 
 /**
  * Export pipeline. SVG for editing/re-rendering; PNG at 2x for slides and
@@ -18,12 +19,16 @@ const EXPORT_PADDING = 40;
 
 /**
  * Union bbox of every item plus EXPORT_PADDING on every side, clipped to
- * non-negative coordinates. Falls back to (0, 0, doc.width, doc.height)
- * for empty diagrams.
+ * non-negative coordinates. The doc-level title strip lives outside the
+ * item bboxes (render.ts emits it at fixed y=42 / y=62), so we fold it
+ * into the union explicitly — otherwise a diagram whose first item sits
+ * below y=88 gets its title clipped off the top of the export. Empty
+ * diagrams fall back to the doc's declared canvas dimensions.
  */
 export function contentViewBox(doc: DiagramDoc): { x: number; y: number; w: number; h: number } {
   const bboxes = layout(doc);
   const rects = [...bboxes.values()];
+  if (doc.title) rects.push(docTitleBBox(doc.title));
   if (rects.length === 0) return { x: 0, y: 0, w: doc.width, h: doc.height };
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const b of rects) {
@@ -35,6 +40,18 @@ export function contentViewBox(doc: DiagramDoc): { x: number; y: number; w: numb
   const x = Math.max(0, minX - EXPORT_PADDING);
   const y = Math.max(0, minY - EXPORT_PADDING);
   return { x, y, w: (maxX - x) + EXPORT_PADDING, h: (maxY - y) + EXPORT_PADDING };
+}
+
+/**
+ * Bounding box of the doc-level title strip. Coordinates match render.ts:
+ * title text baseline at y=42 (font-size 15, so glyphs start ~y=28), sub
+ * baseline at y=62 (font-size 11.5, glyphs end ~y=64). Left inset 40.
+ * Width uses the same width-aware metric as element labels — a long
+ * subtitle otherwise would still overhang the export on the right.
+ */
+function docTitleBBox(title: readonly [string, string]): { x: number; y: number; w: number; h: number } {
+  const w = Math.max(textWidth(title[0], 15), textWidth(title[1], 11.5));
+  return { x: 40, y: 28, w, h: 36 };
 }
 
 /**

@@ -48,6 +48,30 @@ describe('contentViewBox', () => {
     expect(vb.x).toBe(0);
     expect(vb.y).toBe(0);
   });
+
+  it('expands the crop upward to include the doc title strip', () => {
+    // Item well below the title (y=300). Without the title in the union,
+    // export would crop to (y=260, h=214) and clip the title text at y=42.
+    const doc: DiagramDoc = {
+      version: 2, width: 1200, height: 800,
+      title: ['Example title', 'Some subtitle explaining the diagram'],
+      items: [{ id: 'a', kind: 'element', x: 200, y: 300, label: 'A' }],
+    };
+    const vb = contentViewBox(doc);
+    // Title strip top is y=28; export padding lifts to 0 (clamped).
+    expect(vb.y).toBe(0);
+    // Bottom of items (334) + 40 padding = 374; total h reflects that.
+    expect(vb.y + vb.h).toBeGreaterThanOrEqual(374);
+  });
+
+  it('does not expand the crop when the doc has no title', () => {
+    const doc: DiagramDoc = {
+      version: 2, width: 1200, height: 800,
+      items: [{ id: 'a', kind: 'element', x: 200, y: 300, label: 'A' }],
+    };
+    const vb = contentViewBox(doc);
+    expect(vb.y).toBe(260); // 300 - 40 padding
+  });
 });
 
 describe('exportSvg', () => {
