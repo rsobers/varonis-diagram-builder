@@ -427,8 +427,25 @@ function renderEdge(e: Edge, L: Layers, ctx: Ctx): void {
   const arrow = e.arrow !== false;
   const mk = arrow ? ` marker-end="url(#${e.dashed ? 'ard' : 'ar'})"` : '';
   L.edges.push(wrapId(ctx, e.id,
+    hitTargetPath(d, ctx) +
     `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mk}/>`
   ));
+}
+
+/**
+ * Invisible wider stroke sitting underneath a connector/edge line so clicks
+ * near the line still resolve to the item. Without it, the visible 1.3px
+ * stroke is the only hit surface, and any click a few pixels off the line
+ * falls through to whatever is below — usually a boundary rect with
+ * `pointer-events="all"`, which is impossible to precisely miss.
+ *
+ * `pointer-events="stroke"` makes the stroke area hit-testable regardless
+ * of stroke visibility. Emitted only in interactive mode so exports stay
+ * clean.
+ */
+function hitTargetPath(d: string, ctx: Ctx): string {
+  if (!ctx.interactive) return '';
+  return `<path d="${d}" fill="none" stroke="transparent" stroke-width="14" pointer-events="stroke"/>`;
 }
 
 function renderConnectorLabel(c: ConnectorLabel, L: Layers, ctx: Ctx): void {
@@ -567,6 +584,7 @@ function renderConnector(c: Connector, L: Layers, ctx: Ctx): void {
   const mkStart = arrows === 'source' || arrows === 'both' ? ` marker-start="url(#${arrowId})"` : '';
 
   L.edges.push(wrapId(ctx, c.id,
+    hitTargetPath(d, ctx) +
     `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.3"${dash}${mkStart}${mkEnd}/>`
   ));
 

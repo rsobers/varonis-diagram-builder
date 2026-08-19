@@ -45,6 +45,42 @@ test('two connectors between the same pair are offset along the shared edge', as
   await page.screenshot({ path: join(DIR, 'parallel-connectors.png') });
 });
 
+test('connector inside a boundary is clickable 5px off its line (hit-target padding)', async ({ page }) => {
+  page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  const canvas = page.locator('.canvas-svg');
+
+  // Example 1's connector "M660,492 L840,492 …" sits inside the "Varonis
+  // cloud account (AWS)" boundary at (450, 370, 530, 456). Without the
+  // invisible hit-target stroke, a click a few pixels off the 1.3px visible
+  // line falls through to the boundary rect (pointer-events="all") and the
+  // connector is impossible to grab without pixel-perfect aim.
+  //
+  // Click 5px below the y=492 horizontal segment at x=820 (past the label
+  // pill so we don't trigger the label-drag branch instead of selection).
+  const cp = await canvas.evaluate((svg) => {
+    const s = svg as SVGSVGElement;
+    const pt = s.createSVGPoint();
+    pt.x = 820; pt.y = 497;
+    const p = pt.matrixTransform(s.getScreenCTM()!);
+    return { x: p.x, y: p.y };
+  });
+  await page.mouse.click(cp.x, cp.y);
+
+  // Selection is signalled by a blue ring rect appended to the SVG.
+  const rings = await canvas.evaluate((svg) =>
+    [...svg.querySelectorAll('rect')]
+      .filter((r) => r.getAttribute('stroke') === '#4c86d3')
+      .map((r) => ({ x: Number(r.getAttribute('x')), y: Number(r.getAttribute('y')) }))
+  );
+  expect(rings.length).toBe(1);
+  // Connector bbox spans (660, 470) to (1020, 492); ring insets by 4 (see
+  // makeRing) so x ≈ 656.
+  expect(rings[0].x).toBeGreaterThanOrEqual(650);
+  expect(rings[0].x).toBeLessThanOrEqual(670);
+});
+
 test('connector arrows select mode renders marker-start via inspector', async ({ page }) => {
   page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/?blank=1');
