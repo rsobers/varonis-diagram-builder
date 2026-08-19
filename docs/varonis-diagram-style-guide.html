@@ -310,7 +310,7 @@ Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and syste
 <h3>8.3 Platform badges on boundaries</h3>
 <p>Where a boundary represents a specific cloud account, tenant, or platform, the mark sits in the <strong>top-right corner of the boundary</strong>, opposite the label, at 24px. This identifies the environment without claiming that anything inside it belongs to that vendor — which is why an AWS badge on the boundary and a blue Varonis service inside it do not contradict each other.</p>
 <h3>8.4 The Varonis mark</h3>
-<p><strong>The Varonis mark appears at most once per diagram</strong>, and only where a diagram mixes Varonis and non-Varonis components at the same level and the distinction would otherwise be unclear. Varonis components are identified by the blue Ownership fill, not by repeating the logo.</p>
+<p>Under Ownership encoding the blue fill already identifies Varonis-operated surfaces, so a Varonis logo on every one is usually redundant. Use it deliberately: on the specific surfaces you want a reader to recognise on sight (a hosted platform, a named service, a landing page). More than one Varonis mark in a diagram is allowed — the earlier "at most once per diagram" cap is retired.</p>
 <h3>8.5 Sourcing and rights</h3>
 <p>Marks come from each vendor's official brand page. Do not trace, redraw, screenshot, or pull a logo from a search result — wrong versions and outdated marks are the most common way a diagram ends up looking unofficial. Requests for marks not in the library go to the Brand Team.</p>
 <p>Vendor marks carry trademark obligations, and using one can imply a partnership or endorsement that does not exist. Anything customer-facing that shows a vendor mark in a partnership, certification, or co-selling context goes past Legal before it ships. This guide governs how a mark is drawn, not whether you have the right to use it.</p>
@@ -670,8 +670,7 @@ Supersedes the Diagram Toolkit (July 2026). Covers architecture, flow, and syste
   },
   &quot;vendorMarks&quot;: {
     &quot;size&quot;: 24, &quot;replacesIcon&quot;: true, &quot;allowedFills&quot;: &quot;any&quot;,
-    &quot;boundaryBadgePosition&quot;: &quot;top-right&quot;, &quot;peerGroupConsistency&quot;: true,
-    &quot;varonisMarkMaxPerDiagram&quot;: 1
+    &quot;boundaryBadgePosition&quot;: &quot;top-right&quot;, &quot;peerGroupConsistency&quot;: true
   },
   &quot;export&quot;: { &quot;png&quot;: { &quot;scale&quot;: 2, &quot;background&quot;: &quot;transparent&quot; }, &quot;svg&quot;: true, &quot;jpg&quot;: false }
 }

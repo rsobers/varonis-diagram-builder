@@ -293,7 +293,7 @@ Where a boundary represents a specific cloud account, tenant, or platform, the m
 
 ### 8.4 The Varonis mark
 
-**The Varonis mark appears at most once per diagram**, and only where a diagram mixes Varonis and non-Varonis components at the same level and the distinction would otherwise be unclear. Varonis components are identified by the blue Ownership fill, not by repeating the logo.
+Under Ownership encoding the blue fill already identifies Varonis-operated surfaces, so a Varonis logo on every one is usually redundant. Use it deliberately: on the specific surfaces you want a reader to recognise on sight (a hosted platform, a named service, a landing page). More than one Varonis mark in a diagram is allowed — the earlier "at most once per diagram" cap is retired.
 
 ### 8.5 Sourcing and rights
 
@@ -481,8 +481,7 @@ Machine-readable spec for build tooling. These values are authoritative; the pro
   },
   "vendorMarks": {
     "size": 24, "replacesIcon": true, "allowedFills": "any",
-    "boundaryBadgePosition": "top-right", "peerGroupConsistency": true,
-    "varonisMarkMaxPerDiagram": 1
+    "boundaryBadgePosition": "top-right", "peerGroupConsistency": true
   },
   "export": { "png": { "scale": 2, "background": "transparent" }, "svg": true, "jpg": false }
 }

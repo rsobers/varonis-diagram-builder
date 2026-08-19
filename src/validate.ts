@@ -203,21 +203,12 @@ export function validate(doc: DiagramDoc): Violation[] {
   // more from letting authors pair marks with meaningful fills than
   // from a blanket "white or gray only" rule.
 
-  // §8.4 — Varonis mark appears at most once per diagram.
-  const varonisCount = doc.items.filter(
-    (i) => (i.kind === 'element' || i.kind === 'boundary') && i.markId === 'varonis',
-  ).length;
-  if (varonisCount > 1) {
-    violations.push({
-      id: 'varonis-mark-repeated',
-      severity: 'warn',
-      ruleRef: '§8.4',
-      message: `The Varonis mark appears ${varonisCount} times. §8.4 caps it at 1 per diagram — use the blue Ownership fill instead.`,
-      itemIds: doc.items
-        .filter((i) => (i.kind === 'element' || i.kind === 'boundary') && i.markId === 'varonis')
-        .map((i) => i.id),
-    });
-  }
+  // §8.4 "at most one Varonis mark per diagram" rule retired. Same
+  // reasoning as §8.2 above: with Ownership encoding making blue the
+  // Varonis identifier already, an author choosing to also badge specific
+  // Varonis surfaces (see example 1: My Varonis + Varonis AI services)
+  // is reinforcement rather than repetition. Peer-group consistency
+  // (§7.2 / §8.1) still catches marks-mixed-with-icons within a boundary.
 
   // §7.2 / §8.1 — Mixed marks and icons in a peer group. Scoped to elements
   // sharing a boundary. Root-level elements are not treated as an implied

@@ -92,7 +92,6 @@ export const TOKENS = {
   vendorMarks: {
     size: 24, replacesIcon: true, allowedFills: 'any',
     boundaryBadgePosition: 'top-right', peerGroupConsistency: true,
-    varonisMarkMaxPerDiagram: 1,
   },
   export: { png: { scale: 2, background: 'transparent' }, svg: true, jpg: false },
 } as const;
