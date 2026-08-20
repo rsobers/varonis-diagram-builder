@@ -72,15 +72,15 @@ test('connector inside a boundary is clickable ~10px off its line (hit-target pa
 
   // Selection is signalled by a blue ring rect appended to the SVG.
   const rings = await canvas.evaluate((svg) =>
-    [...svg.querySelectorAll('rect')]
+    Array.from(svg.querySelectorAll('rect'))
       .filter((r) => r.getAttribute('stroke') === '#4c86d3')
       .map((r) => ({ x: Number(r.getAttribute('x')), y: Number(r.getAttribute('y')) }))
   );
   expect(rings.length).toBe(1);
   // Connector bbox spans (660, 470) to (1020, 492); ring insets by 4 (see
   // makeRing) so x ≈ 656.
-  expect(rings[0].x).toBeGreaterThanOrEqual(650);
-  expect(rings[0].x).toBeLessThanOrEqual(670);
+  expect(rings[0]!.x).toBeGreaterThanOrEqual(650);
+  expect(rings[0]!.x).toBeLessThanOrEqual(670);
 });
 
 test('connector arrows select mode renders marker-start via inspector', async ({ page }) => {
